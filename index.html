@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#e9edf4"><title>SBP Accounting — UI Preview</title>
+<style>
+:root{--bg:#e9edf4;--ink:#243047;--muted:#68758b;--blue:#356fc5;--green:#27866a;--s1:#c8ced8;--s2:#fff;--line:#d5dce6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",Arial,sans-serif}
+.app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.side{padding:20px 15px;background:#e4e9f1;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:18px}
+.brand{display:flex;align-items:center;gap:12px;padding:5px 6px 20px;border-bottom:1px solid var(--line)}.logo{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;color:var(--blue);font-weight:900;background:var(--bg);box-shadow:6px 6px 12px var(--s1),-6px -6px 12px var(--s2)}.brand b{display:block}.brand small{font-size:10px;letter-spacing:1px;color:var(--muted)}
+.nav{display:grid;gap:9px}.nav button,.tile,.btn,.quick button{border:0;background:var(--bg);color:var(--ink);box-shadow:5px 5px 10px var(--s1),-5px -5px 10px var(--s2);border-radius:14px;font-weight:700;cursor:pointer}.nav button{padding:12px;display:flex;align-items:center;gap:12px;text-align:left}.nav button.active{color:var(--blue);box-shadow:inset 4px 4px 8px var(--s1),inset -4px -4px 8px var(--s2)}.nav svg{width:24px;height:24px}.smallcap{font-size:10px;letter-spacing:1.5px;color:#8792a4;font-weight:800;padding-left:10px}.sidefoot{margin-top:auto;border-radius:14px;padding:14px;color:var(--muted);font-size:12px;box-shadow:inset 4px 4px 8px var(--s1),inset -4px -4px 8px var(--s2)}
+main{min-width:0;padding:25px 30px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}.eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:800}h1{font-size:clamp(26px,2.5vw,35px);margin:4px 0 0}.status{border-radius:30px;padding:9px 13px;color:var(--green);font-weight:800;font-size:12px;white-space:nowrap;box-shadow:inset 3px 3px 6px var(--s1),inset -3px -3px 6px var(--s2)}
+.welcome{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:23px}.welcome h2{font-size:19px;margin:0}.welcome p{color:var(--muted);margin:5px 0 0}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{padding:12px 15px}.btn.primary{background:var(--blue);color:white}
+.stitle{display:flex;justify-content:space-between;align-items:center;margin:25px 0 14px}.stitle h2{font-size:16px;margin:0}.stitle span{font-size:12px;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.metric,.panel{border-radius:18px;background:var(--bg);box-shadow:8px 8px 16px var(--s1),-8px -8px 16px var(--s2);padding:17px;min-width:0}.mhead{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;gap:7px}.mico,.tico{display:grid;place-items:center;color:var(--blue);box-shadow:inset 4px 4px 7px var(--s1),inset -4px -4px 7px var(--s2);border-radius:14px}.mico{width:39px;height:39px}.mico svg{width:22px;height:22px}.metric strong{display:block;font-size:24px;margin-top:10px}.metric small{font-size:11px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:15px}.tile{min-height:130px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}.tile:active,.quick button:active{box-shadow:inset 4px 4px 8px var(--s1),inset -4px -4px 8px var(--s2)}.tico{width:52px;height:52px}.tico svg{width:29px;height:29px}.tile span:last-child{font-size:13px}
+.lower{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}.panel h3{font-size:15px;margin:0 0 13px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted)}.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick button{text-align:left;padding:13px}.quick small{display:block;color:var(--muted);font-weight:500;margin-top:4px}.notice{margin-top:13px;background:#e1e9f4;padding:12px;border-radius:12px;color:#52637c;font-size:12px}footer{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px;padding:22px 0}
+@media(max-width:1050px){.app{grid-template-columns:215px 1fr}main{padding:20px}.metrics{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:repeat(3,minmax(110px,1fr))}.lower{grid-template-columns:1fr}}
+@media(max-width:700px){.app{grid-template-columns:1fr}.side{padding:12px;border-right:0;border-bottom:1px solid var(--line)}.brand{padding-bottom:10px}.smallcap,.sidefoot{display:none}.nav{display:flex;overflow:auto}.nav button{min-width:max-content}.nav svg{width:20px;height:20px}main{padding:16px 13px}.top{align-items:flex-start}.welcome{align-items:flex-start;flex-direction:column}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics{gap:11px}.metric{padding:13px}.metric strong{font-size:21px}footer{flex-direction:column}}
+</style></head><body>
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+<symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="book" viewBox="0 0 24 24"><path d="M4 4a3 3 0 0 1 3-3h13v19H7a3 3 0 0 0-3 3zM4 4v19M8 6h8M8 10h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="list" viewBox="0 0 24 24"><path d="M9 5h11M9 12h11M9 19h11M4 5h.01M4 12h.01M4 19h.01" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></symbol>
+<symbol id="chart" viewBox="0 0 24 24"><path d="M3 3v18h18M7 15l4-4 3 2 5-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="wallet" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 8h18M16 14h2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="sync" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5 9a7 7 0 0 1 13-3l2 6M4 12l2 6a7 7 0 0 0 13-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="printer" viewBox="0 0 24 24"><path d="M7 8V3h10v5M7 17H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-3M7 14h10v7H7zM18 11h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11zM9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="file" viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 14.5 21 16l-2 4-3-.5-2 1L13 23h-3l-1-2.5-2-1L4 20l-2-4 2-1.5v-3L2 10l2-4 3 .5 2-1L10 3h3l1 2.5 2 1 3-.5 2 4-2 1.5z" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+</svg>
+<div class="app"><aside class="side"><div class="brand"><div class="logo">SBP</div><div><b>SBP ACCOUNTING</b><small>PT. SURYA BRATASENA</small></div></div><div class="smallcap">MENU UTAMA</div>
+<nav class="nav">
+<button class="active" data-page="Dashboard"><svg><use href="#grid"/></svg>Dashboard</button>
+<button data-page="Jurnal Baru"><svg><use href="#book"/></svg>Jurnal Baru</button>
+<button data-page="Daftar Jurnal"><svg><use href="#list"/></svg>Daftar Jurnal</button>
+<button data-page="Buku Besar"><svg><use href="#chart"/></svg>Buku Besar</button>
+<button data-page="Saldo & Akun"><svg><use href="#wallet"/></svg>Saldo &amp; Akun</button>
+<button data-page="Laporan Keuangan"><svg><use href="#file"/></svg>Laporan Keuangan</button>
+<button data-page="Sinkronisasi DBF"><svg><use href="#sync"/></svg>Sinkronisasi DBF</button>
+<button data-page="Cetak & Preview"><svg><use href="#printer"/></svg>Cetak &amp; Preview</button>
+<button data-page="Audit Trail"><svg><use href="#shield"/></svg>Audit Trail</button>
+<button data-page="Pengaturan"><svg><use href="#settings"/></svg>Pengaturan</button>
+</nav><div class="sidefoot"><b>MODE OFFLINE</b><br>Prototipe visual. Database belum terhubung.</div></aside>
+<main><header class="top"><div><div class="eyebrow">Sistem Pembukuan Perusahaan</div><h1 id="title">Dashboard</h1></div><span class="status">● OFFLINE READY</span></header>
+<section class="welcome"><div><h2>Selamat datang di SBP Accounting</h2><p>Ringkasan pembukuan • PT. Surya Bratasena Plantation</p></div><div class="actions"><button class="btn" id="print">▣ Print Preview</button><button class="btn primary" data-page="Jurnal Baru">＋ Jurnal Baru</button></div></section>
+<div class="stitle"><h2>Ringkasan Keuangan</h2><span>Data contoh — bukan data perusahaan</span></div>
+<section class="metrics">
+<article class="metric"><div class="mhead">Total Jurnal <span class="mico"><svg><use href="#book"/></svg></span></div><strong>—</strong><small>Menunggu database terhubung</small></article>
+<article class="metric"><div class="mhead">Saldo Debit <span class="mico"><svg><use href="#chart"/></svg></span></div><strong>Rp —</strong><small>Periode belum dipilih</small></article>
+<article class="metric"><div class="mhead">Saldo Kredit <span class="mico"><svg><use href="#wallet"/></svg></span></div><strong>Rp —</strong><small>Periode belum dipilih</small></article>
+<article class="metric"><div class="mhead">Status Database <span class="mico"><svg><use href="#shield"/></svg></span></div><strong style="font-size:19px">Belum aktif</strong><small>Prototipe antarmuka</small></article></section>
+<div class="stitle"><h2>Akses Cepat</h2><span>Pilih menu untuk melihat rancangan</span></div>
+<section class="tiles">
+<button class="tile" data-page="Jurnal Baru"><span class="tico"><svg><use href="#book"/></svg></span><span>Jurnal Baru</span></button>
+<button class="tile" data-page="Daftar Jurnal"><span class="tico"><svg><use href="#list"/></svg></span><span>Daftar Jurnal</span></button>
+<button class="tile" data-page="Buku Besar"><span class="tico"><svg><use href="#chart"/></svg></span><span>Buku Besar</span></button>
+<button class="tile" data-page="Saldo & Akun"><span class="tico"><svg><use href="#wallet"/></svg></span><span>Saldo &amp; Akun</span></button>
+<button class="tile" data-page="Laporan Keuangan"><span class="tico"><svg><use href="#file"/></svg></span><span>Laporan Keuangan</span></button>
+<button class="tile" data-page="Sinkronisasi DBF"><span class="tico"><svg><use href="#sync"/></svg></span><span>Sinkronisasi DBF</span></button>
+<button class="tile" data-page="Cetak & Preview"><span class="tico"><svg><use href="#printer"/></svg></span><span>Cetak &amp; Preview</span></button>
+<button class="tile" data-page="Audit Trail"><span class="tico"><svg><use href="#shield"/></svg></span><span>Audit Trail</span></button>
+<button class="tile" data-page="Pencarian Data"><span class="tico"><svg><use href="#search"/></svg></span><span>Pencarian Data</span></button>
+<button class="tile" data-page="Pengaturan"><span class="tico"><svg><use href="#settings"/></svg></span><span>Pengaturan</span></button>
+</section>
+<div class="stitle"><h2>Aktivitas Terbaru</h2><span>Contoh tabel</span></div>
+<section class="lower"><div class="panel"><h3>Jurnal Terakhir</h3><div class="tablewrap"><table><thead><tr><th>TANGGAL</th><th>NO. BUKTI</th><th>KETERANGAN</th><th>STATUS</th></tr></thead><tbody><tr><td>—</td><td>—</td><td>Database belum terhubung</td><td>PROTOTIPE</td></tr><tr><td colspan="4">Data transaksi perusahaan tidak ditampilkan pada prototipe.</td></tr></tbody></table></div></div>
+<div class="panel"><h3>Perintah Cepat</h3><div class="quick"><button data-page="Backup">Backup Database<small>Rancangan backup lokal</small></button><button data-page="Restore">Restore Data<small>Pemulihan backup</small></button><button data-page="Cetak & Preview">Print Preview<small>Pratinjau cetak</small></button><button data-page="Sinkronisasi DBF">Tinjau DBF<small>Periksa sebelum sinkronisasi</small></button></div><div class="notice">Ini prototipe visual: belum menyimpan transaksi dan belum terhubung ke SQLite atau DBF.</div></div></section>
+<footer><span>SBP Accounting • Desktop-first Soft UI</span><span>Rancangan 0.1 • Data operasional tetap lokal</span></footer></main></div>
+<script>
+function page(n){document.getElementById('title').textContent=n;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===n));if(n!=='Dashboard')alert(n+': ini masih prototipe visual. Fitur pembukuan belum diaktifkan.');}
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));
+document.getElementById('print').addEventListener('click',()=>window.print());
+</script></body></html>
