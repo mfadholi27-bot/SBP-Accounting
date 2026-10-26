@@ -1,16 +1,10 @@
-# SBP Accounting V3 — Paket Inti Terintegrasi (Starter)
+# SBP Accounting V3 — Animated Preview
 
-Paket ini adalah **starter pengembangan**, bukan aplikasi Windows produksi siap pakai. Paket berisi rencana implementasi, kontrak data awal, checklist pengujian, dan prototype dashboard V3.
+Update UI: ikon lebih besar, animasi hover/floating halus, dan judul menu/modul lebih tebal. Animasi menghormati pengaturan `prefers-reduced-motion`.
 
-## Isi folder
-- `prototype/index.html` — dashboard preview interaktif (navigasi, cetak halaman, penanda prioritas fitur).
-- `docs/ROADMAP.md` — urutan implementasi yang disarankan.
-- `docs/DATA_SAFETY.md` — batasan keamanan data legacy.
-- `docs/TEST_CHECKLIST.md` — daftar pengujian sebelum produksi.
-- `docs/INTEGRATION_NOTES.md` — catatan integrasi ke source C# WinForms + SQLite.
+## GitHub Pages
+1. Buka `prototype/index.html` dan salin file itu ke root repository sebagai `index.html` (timpa versi lama).
+2. Commit changes.
+3. Refresh GitHub Pages dengan Ctrl+F5.
 
-## Penting
-- UI prototype tidak menjalankan jurnal akuntansi sungguhan dan tidak tersambung ke SQLite.
-- Belum termasuk source project C# lengkap karena source project terbaru belum diberikan pada percakapan ini.
-- Jangan masukkan database perusahaan, NPTRANS.DBF, NPSALDO.DBF, kredensial, atau transaksi asli ke repository publik.
-- Jangan menimpa aplikasi produksi dengan paket ini tanpa mengintegrasikan dan menguji source lengkap.
+Dokumentasi roadmap, keamanan data, dan checklist berada di folder `docs/`. Ini tetap prototype UI; belum terhubung ke database atau mesin akuntansi C#.
