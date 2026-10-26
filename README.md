@@ -1,13 +1,32 @@
-# SBP Accounting GitHub Pages V8 — Local-only, no SQL
+# SBP Accounting — Local NoSQL Edition
 
-This preview uses browser `localStorage` for its journal list and offers JSON backup/restore and CSV export. It does not use SQL, SQLite, a backend, or a server database.
+Versi browser dengan tema V3, tanpa SQL dan tanpa backend. Buka `index.html` di browser atau salin ke root repositori GitHub Pages.
 
-## Install
-Replace the root `index.html` in `mfadholi27-bot/SBP-Accounting` with this package's `index.html`, then commit the change. GitHub Pages rebuilds the preview automatically.
+## Modul
+- Dashboard
+- Input jurnal dengan beberapa baris, validasi debit/kredit, simpan, edit
+- Daftar jurnal, pencarian/filter, edit/hapus
+- Import massal CSV dan Excel, preview, validasi kelompok jurnal
+- Buku besar dengan saldo berjalan
+- Saldo & akun / COA
+- Laporan rekap jurnal, neraca saldo berbasis mutasi, ringkasan pendapatan/beban
+- Jurnal koreksi (membuat jurnal pembalik)
+- Pencarian global
+- Backup/restore JSON, ekspor CSV
+- Audit trail
+- Pengaturan lokal
 
-## Important limitations
-- Browser localStorage belongs to the current browser profile and device. It does not sync to GitHub or other devices.
-- Clearing browser/site data can remove the local journal list. Use **Backup JSON** regularly and store backup files outside the repository.
-- Excel import preview reads `.xlsx` via an external SheetJS library if internet access is available; CSV import works without that library. Imported rows currently enter the journal-list prototype after validation.
-- This remains a browser preview/prototype. It is not yet a complete accounting system: account master persistence, detailed journal lines, edit/post workflows, formal financial statements, access control, and production audit guarantees require further implementation/testing.
-- Do not commit real company accounting data or JSON backup files to the public GitHub repository.
+## Cara pakai
+1. Ekstrak ZIP.
+2. Buka `index.html` dengan Chrome atau Edge.
+3. Untuk GitHub Pages, ganti `index.html` di root repository dengan file dari ZIP, lalu commit ke branch `main`.
+4. Refresh website dengan `Ctrl+F5`.
+
+## Format impor
+Kolom: `Tanggal, Nomor, Keterangan, Akun, Debit, Kredit`. Satu baris per akun. Setiap nomor jurnal harus seimbang dan setiap akun harus ada di daftar COA. Gunakan template yang diunduh dari aplikasi.
+
+## Penting
+- Data disimpan pada `localStorage` browser. Tidak sinkron antarperangkat dan dapat hilang jika data situs/browser dihapus.
+- Backup JSON secara berkala.
+- Impor file Excel `.xlsx/.xls` memakai library SheetJS dari CDN sehingga perlu internet; CSV dapat digunakan tanpa library Excel.
+- Ini aplikasi browser lokal/prototipe, bukan pengganti sistem akuntansi produksi yang telah diaudit. Tidak ada login/hak akses sungguhan. Uji dengan data dummy dan verifikasi laporan sebelum pemakaian resmi.
