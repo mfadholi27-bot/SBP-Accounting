@@ -1,0 +1,30 @@
+# Build outputs
+bin/
+obj/
+publish/
+artifacts/
+.vs/
+*.user
+*.suo
+
+# Local accounting databases and backups — NEVER commit production data
+*.db
+*.db3
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.bak
+*.backup
+Data/App/
+Data/Backups/
+Data/App/AdminBackup/
+
+# Legacy source files may contain company data
+*.DBF
+*.dbf
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
