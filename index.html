@@ -5,6 +5,33 @@
 :root{--bg:#e9eef5;--ink:#25354b;--muted:#718097;--blue:#4169e1;--green:#16866b;--red:#b64242;--shadow:7px 7px 16px #cbd2dc,-7px -7px 16px #fff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",Arial,sans-serif}.app{display:grid;grid-template-columns:235px 1fr;min-height:100vh}.side{padding:20px 14px;border-right:1px solid #d7dfe9}.brand{font-size:20px;font-weight:900;padding:12px;margin-bottom:20px}.brand small{display:block;font-size:11px;color:var(--muted);font-weight:600}.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;text-align:left;padding:11px;border-radius:12px;color:#596a82;cursor:pointer;font-weight:750}.nav button.active,.nav button:hover{box-shadow:inset 3px 3px 7px #cbd2dc,inset -3px -3px 7px #fff;color:var(--blue)}.main{padding:25px;min-width:0}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.top h1{margin:3px 0;font-size:29px}.muted,.sub{color:var(--muted)}.notice{padding:12px 15px;border-radius:13px;background:#e1f3eb;color:#226a55;margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}.card,.panel,.tile{border-radius:17px;box-shadow:var(--shadow);padding:17px;background:var(--bg)}.card small{color:var(--muted)}.card strong{display:block;font-size:24px;margin:8px 0}.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:18px}.tile{border:0;cursor:pointer;text-align:left;font-weight:800;min-height:100px}.tile span{display:block;font-size:27px;margin-bottom:7px}.btn{border:0;border-radius:10px;padding:10px 13px;background:var(--bg);box-shadow:var(--shadow);cursor:pointer;font-weight:750;color:var(--ink)}.primary{background:var(--blue);color:white}.danger{color:var(--red)}.hidden{display:none!important}.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:14px 0}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12px;color:var(--muted);font-weight:800}.field input,.field select,.field textarea{width:100%;border:1px solid #d4dce7;border-radius:9px;padding:10px;background:#f8fafc;color:var(--ink);font:inherit}.tablewrap{overflow:auto;margin-top:12px}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:9px;border-bottom:1px solid #d7dfe9;font-size:12px}th{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.5px}.line input,.line select{width:100%;padding:8px;border:1px solid #d4dce7;border-radius:8px;background:#f8fafc}.totals{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}.total{flex:1;min-width:130px;padding:12px;border-radius:11px;box-shadow:inset 3px 3px 7px #cbd2dc,inset -3px -3px 7px #fff}.total small{display:block;color:var(--muted)}.total b{font-size:18px}.actions{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}.status{padding:10px 12px;border-radius:9px;margin:10px 0;background:#e5edf8}.status.good{background:#e1f3eb;color:#226a55}.status.bad{background:#ffeded;color:#a33d3d}.bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:12px;background:#f4f7fb;border-radius:12px;margin-bottom:14px}.bar input[type=file]{max-width:230px}.small{font-size:12px}.footer{margin:22px 0;text-align:center;color:var(--muted);font-size:11px}
 @media(max-width:900px){.app{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid #d7dfe9}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.formgrid{grid-template-columns:1fr 1fr}.main{padding:16px}}@media(max-width:540px){.grid,.tiles,.formgrid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}@media print{.side,.top .btn,.actions,.bar{display:none!important}.app{display:block}.main{padding:0}.panel,.card{box-shadow:none}}
+
+/* UI polish: precise icons, restrained motion, tidy headings */
+:root{--icon-size:24px;--icon-bg:#e4ebf6;--icon-ink:#3159a8}
+.brand{display:flex;align-items:center;gap:10px;line-height:1.25;letter-spacing:-.35px}
+.brand::first-letter{color:var(--blue)}
+.brand small{line-height:1.45;letter-spacing:.15px}
+.nav{gap:7px}
+.nav button{display:flex;align-items:center;gap:11px;min-height:44px;line-height:1.3;white-space:normal;overflow-wrap:anywhere;padding:10px 12px}
+.nav button .nav-ico{display:inline-grid;place-items:center;flex:0 0 27px;width:27px;height:27px;border-radius:8px;background:var(--icon-bg);color:var(--icon-ink);font-size:17px;font-weight:800;line-height:1;transition:transform .22s ease,background .22s ease;transform-origin:center}
+.nav button.active .nav-ico,.nav button:hover .nav-ico{background:#d7e3fb;transform:translateY(-1px) scale(1.04)}
+.top{align-items:center;min-width:0}
+.top>div:first-child{min-width:0;flex:1}
+.top .muted{letter-spacing:1.15px;font-weight:800;line-height:1.4}
+.top h1{font-size:clamp(24px,2.2vw,31px);line-height:1.18;letter-spacing:-.65px;font-weight:850;overflow-wrap:anywhere;word-break:normal;margin:6px 0 0;max-width:100%}
+.actions{align-items:center;gap:9px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;min-width:0;line-height:1.35;padding:19px 14px;overflow-wrap:anywhere;transition:transform .2s ease,box-shadow .2s ease}
+.tile>span{display:grid;place-items:center;width:48px;height:48px;flex:0 0 48px;margin:0 auto 2px;border-radius:15px;background:var(--icon-bg);color:var(--icon-ink);font-size:25px;font-weight:800;line-height:1;box-shadow:inset 1px 1px 2px #fff,2px 3px 7px #cbd5e1;animation:iconBreath 4.8s ease-in-out infinite;transform-origin:center}
+.tile:nth-child(3n)>span{animation-delay:.35s}.tile:nth-child(3n + 1)>span{animation-delay:.7s}
+.tile:hover{transform:translateY(-2px)}.tile:hover>span{animation:iconNudge .28s ease-out 1}
+.tile small{display:block;max-width:100%;font-size:12px;font-weight:550;line-height:1.45}
+.btn{line-height:1.25;white-space:normal}
+@keyframes iconBreath{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2px) scale(1.025)}}
+@keyframes iconNudge{0%{transform:scale(1)}50%{transform:scale(1.08) rotate(-2deg)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.tile,.tile>span,.nav button .nav-ico{animation:none!important;transition:none!important}}
+@media(max-width:900px){.nav button{min-width:0}.top{align-items:flex-start}.top h1{font-size:27px}}
+@media(max-width:540px){.top{gap:10px}.top h1{font-size:25px;line-height:1.2}.actions{width:100%}.actions .btn{flex:1}.nav button{font-size:13px;padding:9px}.nav button .nav-ico{flex-basis:25px;width:25px;height:25px}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head>
 <body><div class="app"><aside class="side"><div class="brand">▦ SBP Accounting<small>V3 Theme • Local Browser Edition</small></div><div class="nav" id="nav">
@@ -80,4 +107,20 @@ function loadSettings(){$('companyName').value=db.settings.companyName||'';$('cu
 function saveSettings(){db.settings={companyName:$('companyName').value.trim(),currency:$('currency').value,userName:$('userName').value.trim()||'Admin'};audit('UBAH','Pengaturan','Pengaturan lokal disimpan');persist();status('settingsStatus','Pengaturan tersimpan.','good')}
 function wipeAll(){if(!confirm('Hapus semua jurnal, akun, audit, dan pengaturan lokal? Buat backup dahulu.'))return;if(!confirm('Konfirmasi terakhir: data lokal akan diganti kondisi awal. Lanjutkan?'))return;db={journals:[],accounts:defaultAccounts.map(a=>({...a})),audit:[],settings:{companyName:'',currency:'IDR',userName:'Admin'}};localStorage.removeItem(KEY);audit('RESET','Semua data','Data lokal direset');persist();renderDashboard();status('settingsStatus','Data lokal direset.','good')}
 load();resetForm();renderDashboard();renderList();
-</script></body></html>
+</script>
+<script>
+(function tidyNavigationIcons(){
+  const buttons=document.querySelectorAll('#nav button[data-page]');
+  buttons.forEach(button=>{
+    if(button.querySelector('.nav-ico')) return;
+    const raw=button.textContent.trim();
+    const match=raw.match(/^(\S+)\s+(.+)$/u);
+    if(!match) return;
+    const icon=document.createElement('span'); icon.className='nav-ico'; icon.setAttribute('aria-hidden','true'); icon.textContent=match[1];
+    const label=document.createElement('span'); label.className='nav-label'; label.textContent=match[2];
+    button.replaceChildren(icon,label);
+  });
+})();
+</script>
+
+</body></html>
