@@ -1,6 +1,10 @@
-SBP Accounting GitHub Pages V5 — pembaruan inti preview
-- Tema V3 tetap dipertahankan.
-- Ditambahkan formulir demo Jurnal: tanggal, nomor bukti, keterangan, baris akun, debit/kredit, tambah/hapus baris, total dan selisih.
-- Validasi memeriksa field wajib, minimal dua baris, akun terpilih, nilai positif, satu sisi per baris, dan total debit = kredit.
-- Ini hanya demo browser; tidak menyimpan transaksi ke SQLite dan tidak mengubah aplikasi desktop.
-Cara terapkan: GitHub > index.html > Edit (pensil) > ganti seluruh isi dengan index.html paket ini > Commit changes. Jangan unggah file sebagai file baru bernama lain.
+SBP Accounting GitHub Pages V6 — Journal Workflow Preview
+Tema V3 dipertahankan.
+Baru:
+- Input Jurnal demo dengan validasi seimbang.
+- Daftar Jurnal demo dengan pencarian/filter dan tombol koreksi.
+- Jurnal Koreksi: mencatat alasan koreksi sebagai demo, tidak mengubah jurnal sumber.
+- Input Massal/Import: pratinjau file CSV lokal, maksimum 100 baris pertama ditampilkan.
+Semua data bersifat sesi browser dan tidak tersimpan ke SQLite. Jangan gunakan data perusahaan pada preview publik.
+Cara update: ganti isi index.html di root repository melalui GitHub Edit, lalu Commit changes.
+Belum diuji pada build aplikasi desktop; ini HTML preview saja.
