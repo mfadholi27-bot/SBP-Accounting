@@ -1,109 +1,22 @@
 <!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SBP Accounting — Desktop Preview V2</title>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SBP Accounting V3 — Preview</title>
 <style>
-:root{--bg:#e9eef5;--panel:#e9eef5;--ink:#263449;--muted:#748197;--blue:#4169e1;--green:#16866b;--orange:#b76b16;--red:#bf4c55;--shadow1:8px 8px 18px #cbd2dc;--shadow2:-8px -8px 18px #fff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",Arial,sans-serif}
-button,input,select{font:inherit}button{cursor:pointer;border:0;color:inherit}
-.app{display:grid;grid-template-columns:245px 1fr;min-height:100vh}.side{padding:25px 18px;border-right:1px solid #dce3ec}.brand{display:flex;gap:12px;align-items:center;padding:5px 9px 25px}.logo{width:43px;height:43px;border-radius:14px;background:var(--bg);box-shadow:var(--shadow1),var(--shadow2);display:grid;place-items:center;font-weight:900;color:var(--blue);font-size:19px}.brand b{display:block;font-size:17px}.brand small{color:var(--muted)}.navlabel{font-size:10px;letter-spacing:1.7px;color:#8c97a9;margin:19px 10px 9px;font-weight:800}.nav{display:flex;flex-direction:column;gap:7px}.nav button{background:transparent;text-align:left;padding:12px 13px;border-radius:13px;color:#65738a;display:flex;gap:12px;align-items:center}.nav button.active,.nav button:hover{background:var(--bg);box-shadow:inset 3px 3px 7px #cbd2dc,inset -3px -3px 7px #fff;color:var(--blue)}.ico{font-size:20px;width:25px;text-align:center}.sidefoot{position:sticky;top:calc(100vh - 90px);margin-top:38px;padding:14px;border-radius:16px;box-shadow:var(--shadow1),var(--shadow2);font-size:12px;color:var(--muted)}.main{padding:28px 32px;min-width:0}.top{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:25px}.eyebrow{font-size:11px;letter-spacing:1.6px;color:var(--muted);font-weight:800}.top h1{font-size:27px;margin:4px 0 0}.topright{display:flex;gap:10px;align-items:center}.pill{border-radius:12px;padding:11px 14px;background:var(--bg);box-shadow:var(--shadow1),var(--shadow2);font-weight:650}.primary{background:var(--blue);color:white;box-shadow:4px 4px 10px #b9c5df,-4px -4px 10px #fff}.status{font-size:12px;color:var(--green);font-weight:700}.notice{padding:14px 17px;border-radius:14px;background:#e3f4ed;color:#256d58;border:1px solid #c9e8dc;margin-bottom:20px}.notice b{margin-right:7px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px}.metric,.tile,.panel{border-radius:20px;background:var(--panel);box-shadow:var(--shadow1),var(--shadow2)}.metric{padding:19px}.metric .label{color:var(--muted);font-size:12px}.metric .value{font-size:25px;font-weight:800;margin:8px 0 4px}.metric .hint{font-size:11px;color:var(--muted)}.sectionhead{display:flex;justify-content:space-between;align-items:end;margin:28px 0 15px}.sectionhead h2{margin:0;font-size:18px}.sectionhead p{margin:4px 0 0;color:var(--muted);font-size:12px}.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:15px}.tile{min-height:132px;padding:19px 13px;text-align:center;transition:.15s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}.tile:hover{transform:translateY(-2px)}.tile .bigico{font-size:31px}.tile b{font-size:13px}.tile small{font-size:11px;color:var(--muted)}.lower{display:grid;grid-template-columns:1.5fr 1fr;gap:17px;margin-top:22px}.panel{padding:20px;min-width:0}.panel h3{margin:0 0 14px;font-size:16px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:460px;font-size:12px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #d7dee8}th{color:var(--muted);font-weight:700}td strong{font-weight:700}.tag{padding:5px 8px;border-radius:7px;background:#e0f3eb;color:#28755e;font-size:11px}.tag.wait{background:#fff0dc;color:#9a6118}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions button{padding:14px 10px;border-radius:12px;background:var(--bg);box-shadow:var(--shadow1),var(--shadow2);text-align:left;font-weight:650}.actions span{display:block;color:var(--muted);font-weight:400;font-size:11px;margin-top:4px}.featurebox{margin-top:22px;padding:20px;border-radius:20px;background:var(--panel);box-shadow:var(--shadow1),var(--shadow2)}.featuretop{display:flex;justify-content:space-between;gap:15px;align-items:start}.featuretop h2{margin:0 0 4px;font-size:18px}.featuretop p{margin:0;color:var(--muted);font-size:12px}.toggles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:17px}.toggle{display:flex;gap:12px;align-items:center;padding:13px;border-radius:14px;box-shadow:inset 3px 3px 7px #cbd2dc,inset -3px -3px 7px #fff}.toggle b{display:block;font-size:12px}.toggle small{color:var(--muted);font-size:11px}.switch{margin-left:auto;flex-shrink:0;width:39px;height:22px;border-radius:30px;background:#c7cfda;position:relative;cursor:pointer}.switch:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #999;transition:.15s}.switch.on{background:var(--green)}.switch.on:after{left:20px}.footer{margin-top:22px;text-align:center;font-size:11px;color:#8490a2}.hidden{display:none!important}
-@media(max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:repeat(3,1fr)}.toggles{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.app{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid #dce3ec}.nav{display:grid;grid-template-columns:repeat(2,1fr)}.sidefoot{display:none}.main{padding:22px 16px}.top{align-items:flex-start;flex-direction:column}.tiles{grid-template-columns:repeat(2,1fr)}.lower{grid-template-columns:1fr}.toggles{grid-template-columns:1fr}}
-@media print{.side,.topright,.featurebox,.actions,.footer{display:none!important}.app{display:block}.main{padding:0}.metric,.tile,.panel{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
-</style>
-</head>
-<body>
-<div class="app">
-<aside class="side">
- <div class="brand"><div class="logo">SBP</div><div><b>SBP Accounting</b><small>Offline Desktop System</small></div></div>
- <div class="navlabel">WORKSPACE</div>
- <nav class="nav">
-  <button class="active" data-page="Dashboard"><span class="ico">▦</span>Dashboard</button>
-  <button data-page="NPTRANS"><span class="ico">⇄</span>NPTRANS</button>
-  <button data-page="Jurnal"><span class="ico">▤</span>Jurnal</button>
-  <button data-page="Buku Besar"><span class="ico">▥</span>Buku Besar</button>
-  <button data-page="Saldo & Akun"><span class="ico">◎</span>Saldo & Akun</button>
-  <button data-page="Laporan"><span class="ico">▧</span>Laporan</button>
-  <div class="navlabel">KONTROL SISTEM</div>
-  <button data-page="Backup & Restore"><span class="ico">⤓</span>Backup & Restore</button>
-  <button data-page="Audit Trail"><span class="ico">◷</span>Audit Trail</button>
-  <button data-page="Pengaturan"><span class="ico">⚙</span>Pengaturan</button>
- </nav>
- <div class="sidefoot"><b>Mode Preview V2</b><br>Data contoh. Belum terhubung ke database SQLite/DBF.</div>
-</aside>
-<main class="main">
- <div class="top"><div><div class="eyebrow">SBP ACCOUNTING / WORKSPACE</div><h1 id="pageTitle">Dashboard</h1></div><div class="topright"><button class="pill" onclick="window.print()">⎙ Cetak / Preview</button><button class="pill primary" onclick="alert('Preview V2: form jurnal akan disambungkan pada tahap implementasi database.')">＋ Jurnal Baru</button></div></div>
- <div class="notice"><b>✓</b> Tampilan V2 aktif — modul dapat dipilih dan fitur kontrol dapat dinyalakan bersamaan. <strong>Belum untuk transaksi produksi.</strong></div>
- <section id="dashboardPage">
-  <div class="grid">
-   <div class="metric"><div class="label">Saldo Debit (contoh)</div><div class="value">Rp 0</div><div class="hint">Akan dihitung dari database</div></div>
-   <div class="metric"><div class="label">Saldo Kredit (contoh)</div><div class="value">Rp 0</div><div class="hint">Validasi seimbang diperlukan</div></div>
-   <div class="metric"><div class="label">Jurnal Bulan Ini</div><div class="value">0</div><div class="hint">Data belum dimuat</div></div>
-   <div class="metric"><div class="label">Status Database</div><div class="value" style="font-size:20px;color:#b76b16">Preview</div><div class="hint">SQLite belum terhubung</div></div>
-  </div>
-  <div class="sectionhead"><div><h2>Modul Utama</h2><p>Pilih modul. Ikon besar dan label dibuat untuk layar desktop.</p></div><span class="status">● Desktop-first</span></div>
-  <div class="tiles">
-   <button class="tile" data-page="NPTRANS"><span class="bigico">⇄</span><b>NPTRANS</b><small>Impor / tinjau data</small></button>
-   <button class="tile" data-page="Jurnal"><span class="bigico">▤</span><b>Jurnal</b><small>Input dan koreksi</small></button>
-   <button class="tile" data-page="Buku Besar"><span class="bigico">▥</span><b>Buku Besar</b><small>Mutasi akun</small></button>
-   <button class="tile" data-page="Saldo & Akun"><span class="bigico">◎</span><b>Saldo & Akun</b><small>COA dan saldo</small></button>
-   <button class="tile" data-page="Laporan"><span class="bigico">▧</span><b>Laporan</b><small>Rekap dan cetak</small></button>
-   <button class="tile" data-page="Backup & Restore"><span class="bigico">⤓</span><b>Backup & Restore</b><small>Cadangan lokal</small></button>
-   <button class="tile" data-page="Audit Trail"><span class="bigico">◷</span><b>Audit Trail</b><small>Riwayat perubahan</small></button>
-   <button class="tile" data-page="Pengaturan"><span class="bigico">⚙</span><b>Pengaturan</b><small>Kontrol aplikasi</small></button>
-   <button class="tile" data-page="Pusat Cetak"><span class="bigico">▣</span><b>Pusat Cetak</b><small>Preview dan PDF</small></button>
-   <button class="tile" data-page="Pencarian Global"><span class="bigico">⌕</span><b>Pencarian Global</b><small>Cari data akuntansi</small></button>
-  </div>
-  <div class="lower">
-   <div class="panel"><h3>Jurnal Terbaru — Contoh Tampilan</h3><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan</th><th>Status</th></tr></thead><tbody><tr><td>—</td><td>—</td><td>Belum ada data yang dimuat</td><td><span class="tag wait">Preview</span></td></tr></tbody></table></div></div>
-   <div class="panel"><h3>Aksi Cepat</h3><div class="actions"><button onclick="go('Jurnal')">＋ Buat Jurnal<span>Input transaksi baru</span></button><button onclick="go('Laporan')">▧ Buka Laporan<span>Rekap dan cetak</span></button><button onclick="go('Backup & Restore')">⤓ Backup Lokal<span>Amankan data</span></button><button onclick="go('Audit Trail')">◷ Audit Trail<span>Telusuri aktivitas</span></button></div></div>
-  </div>
- </section>
- <section id="otherPage" class="hidden">
-  <div class="panel"><h3 id="otherTitle">Modul</h3><p id="otherDesc" style="color:var(--muted)">Ini pratinjau navigasi modul.</p><div class="notice" style="margin-top:18px;background:#fff0dc;color:#875819">Fungsi bisnis belum diaktifkan pada prototype ini. Tahap berikutnya adalah menghubungkan modul ke kode C# WinForms dan SQLite, bukan hanya halaman GitHub Pages.</div><button class="pill" onclick="go('Dashboard')">← Kembali ke Dashboard</button></div>
- </section>
- <section class="featurebox">
-  <div class="featuretop"><div><h2>Fitur Pengaman — bisa aktif bersamaan</h2><p>Nyalakan beberapa fitur sekaligus untuk menentukan prioritas implementasi.</p></div><button class="pill" onclick="toggleAll(true)">Aktifkan Semua</button></div>
-  <div class="toggles" id="toggles">
-   <div class="toggle"><span>🛡️</span><div><b>Validasi jurnal seimbang</b><small>Debit = kredit</small></div><div class="switch on" role="switch" aria-checked="true" tabindex="0"></div></div>
-   <div class="toggle"><span>⤓</span><div><b>Backup lokal</b><small>Cadangan database</small></div><div class="switch on" role="switch" aria-checked="true" tabindex="0"></div></div>
-   <div class="toggle"><span>◷</span><div><b>Audit trail</b><small>Riwayat perubahan</small></div><div class="switch on" role="switch" aria-checked="true" tabindex="0"></div></div>
-   <div class="toggle"><span>🖨️</span><div><b>Preview cetak / PDF</b><small>Periksa sebelum cetak</small></div><div class="switch on" role="switch" aria-checked="true" tabindex="0"></div></div>
-   <div class="toggle"><span>⌕</span><div><b>Pencarian global</b><small>Cari jurnal dan akun</small></div><div class="switch" role="switch" aria-checked="false" tabindex="0"></div></div>
-   <div class="toggle"><span>🔐</span><div><b>Hak akses pengguna</b><small>Peran dan izin</small></div><div class="switch" role="switch" aria-checked="false" tabindex="0"></div></div>
-  </div>
-  <p id="activeCount" style="font-size:12px;color:var(--muted);margin:15px 0 0">4 dari 6 fitur ditandai aktif untuk prioritas desain.</p>
- </section>
- <div class="footer">SBP Accounting • UI Preview V2 • Tidak membaca atau mengubah NPTRANS.DBF / NPSALDO.DBF.</div>
-</main>
-</div>
+:root{--bg:#e9eef5;--ink:#27364b;--muted:#77849a;--blue:#4169e1;--green:#16866b;--shadow:8px 8px 18px #cbd2dc,-8px -8px 18px #fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px "Segoe UI",Arial,sans-serif}.app{display:grid;grid-template-columns:235px 1fr;min-height:100vh}.side{padding:22px 16px;border-right:1px solid #d7dfe9}.brand{display:flex;gap:10px;align-items:center;margin:4px 8px 30px}.logo{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;box-shadow:var(--shadow);font-weight:900;color:var(--blue)}.brand b{display:block;font-size:16px}.brand small{color:var(--muted)}.label{margin:18px 10px 8px;color:#8b97a9;font-size:10px;letter-spacing:1.5px;font-weight:800}.nav{display:grid;gap:7px}.nav button{border:0;background:transparent;text-align:left;padding:12px;border-radius:12px;color:#637189;cursor:pointer}.nav button.active,.nav button:hover{box-shadow:inset 3px 3px 7px #cbd2dc,inset -3px -3px 7px #fff;color:var(--blue)}.main{padding:28px;min-width:0}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:22px}.eyebrow{color:var(--muted);font-size:10px;letter-spacing:1.5px;font-weight:800}.top h1{margin:5px 0;font-size:27px}.btn{border:0;border-radius:12px;padding:12px 15px;box-shadow:var(--shadow);background:var(--bg);cursor:pointer;font-weight:700}.primary{background:var(--blue);color:white}.notice{padding:14px;border-radius:13px;background:#e1f3eb;color:#226a55;margin-bottom:20px}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.card,.tile,.panel{border-radius:18px;box-shadow:var(--shadow);padding:18px;background:var(--bg)}.card small{color:var(--muted)}.card strong{display:block;font-size:23px;margin:9px 0}.section{margin:26px 0 14px}.section h2{margin:0 0 5px;font-size:18px}.section p{margin:0;color:var(--muted);font-size:12px}.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}.tile{border:0;cursor:pointer;text-align:center;min-height:125px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px}.tile span{font-size:30px}.tile small{color:var(--muted)}.lower{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:20px}.panel h3{margin:0 0 12px}.togglegrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:15px}.toggle{display:flex;align-items:center;gap:10px;padding:13px;border-radius:12px;box-shadow:inset 3px 3px 7px #cbd2dc,inset -3px -3px 7px #fff}.toggle small{display:block;color:var(--muted);font-size:11px}.switch{margin-left:auto;width:38px;height:22px;border-radius:20px;background:#c5ceda;position:relative;cursor:pointer;flex-shrink:0}.switch:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:.15s}.switch.on{background:var(--green)}.switch.on:after{left:19px}.footer{color:var(--muted);text-align:center;font-size:11px;margin-top:25px}.hidden{display:none!important}@media(max-width:1050px){.cards{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:repeat(3,1fr)}.togglegrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.app{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid #d7dfe9}.nav{grid-template-columns:repeat(2,1fr)}.main{padding:18px}.top{align-items:flex-start;flex-direction:column}.tiles{grid-template-columns:repeat(2,1fr)}.lower{grid-template-columns:1fr}.togglegrid{grid-template-columns:1fr}}@media print{.side,.top button,.togglegrid{display:none}.app{display:block}.main{padding:0}.card,.tile,.panel{box-shadow:none;border:1px solid #ddd}}
+</style></head><body><div class="app"><aside class="side"><div class="brand"><div class="logo">SBP</div><div><b>SBP Accounting</b><small>V3 • Offline Desktop</small></div></div><div class="label">MENU UTAMA</div><div class="nav"><button class="active" data-page="Dashboard">▦　Dashboard</button><button data-page="Jurnal">▤　Jurnal</button><button data-page="Buku Besar">▥　Buku Besar</button><button data-page="Saldo & Akun">◎　Saldo & Akun</button><button data-page="Laporan">▧　Laporan</button><div class="label">KONTROL</div><button data-page="Backup & Restore">⤓　Backup & Restore</button><button data-page="Audit Trail">◷　Audit Trail</button><button data-page="Pengaturan">⚙　Pengaturan</button></div></aside>
+<main class="main"><div class="top"><div><div class="eyebrow">SBP ACCOUNTING / V3 STARTER</div><h1 id="title">Dashboard</h1></div><div><button class="btn" onclick="window.print()">Cetak / Preview</button> <button class="btn primary" onclick="alert('Ini prototype UI. Form jurnal nyata perlu diintegrasikan ke project C# dan SQLite.')">＋ Jurnal Baru</button></div></div>
+<div class="notice"><b>Preview V3 tersedia.</b> Data di bawah adalah contoh placeholder, belum membaca database akuntansi.</div>
+<div id="dash"><div class="cards"><div class="card"><small>Total Debit</small><strong>Rp 0</strong><small>Menunggu integrasi database</small></div><div class="card"><small>Total Kredit</small><strong>Rp 0</strong><small>Validasi seimbang diperlukan</small></div><div class="card"><small>Jurnal Bulan Ini</small><strong>0</strong><small>Data belum dimuat</small></div><div class="card"><small>Status Sistem</small><strong style="font-size:18px;color:#b76b16">Preview</strong><small>SQLite belum terhubung</small></div></div>
+<div class="section"><h2>Modul Utama</h2><p>Desktop-first, ikon besar dan navigasi ringkas.</p></div><div class="tiles"><button class="tile" data-page="Jurnal"><span>▤</span><b>Jurnal</b><small>Input & validasi</small></button><button class="tile" data-page="Buku Besar"><span>▥</span><b>Buku Besar</b><small>Mutasi akun</small></button><button class="tile" data-page="Saldo & Akun"><span>◎</span><b>Saldo & Akun</b><small>COA dan saldo</small></button><button class="tile" data-page="Laporan"><span>▧</span><b>Laporan</b><small>Rekap dan cetak</small></button><button class="tile" data-page="Backup & Restore"><span>⤓</span><b>Backup</b><small>Cadangan lokal</small></button><button class="tile" data-page="Audit Trail"><span>◷</span><b>Audit Trail</b><small>Riwayat perubahan</small></button><button class="tile" data-page="Pengaturan"><span>⚙</span><b>Pengaturan</b><small>Konfigurasi</small></button></div>
+<div class="lower"><div class="panel"><h3>Jurnal Terbaru</h3><p style="color:var(--muted)">Belum ada data yang dimuat. Tabel transaksi akan dihubungkan saat integrasi source.</p></div><div class="panel"><h3>Prioritas implementasi</h3><p>1. Backup & restore<br>2. Validasi jurnal<br>3. Audit trail<br>4. Buku Besar dan laporan<br>5. Ekspor dan pencarian</p></div></div></div>
+<div id="other" class="panel hidden"><h3 id="otherTitle">Modul</h3><p id="desc" style="color:var(--muted)">Prototype navigasi.</p><p style="margin-top:20px">Fitur akuntansi sebenarnya belum berjalan pada halaman preview. Integrasi membutuhkan source project C# WinForms dan SQLite yang terbaru.</p><button class="btn" onclick="go('Dashboard')">← Kembali</button></div>
+<div class="section"><h2>Kontrol fitur — pilihan prioritas</h2><p>Penanda ini membantu memilih fitur yang ingin dikerjakan bersama; bukan pengaturan sistem produksi.</p></div>
+<div class="togglegrid"><div class="toggle">🛡️ <div><b>Validasi jurnal</b><small>Debit = kredit</small></div><div class="switch on"></div></div><div class="toggle">⤓ <div><b>Backup lokal</b><small>Backup dan restore</small></div><div class="switch on"></div></div><div class="toggle">◷ <div><b>Audit trail</b><small>Jejak tindakan</small></div><div class="switch on"></div></div><div class="toggle">🖨️ <div><b>Preview cetak</b><small>PDF dan print</small></div><div class="switch on"></div></div><div class="toggle">⌕ <div><b>Pencarian global</b><small>Jurnal dan akun</small></div><div class="switch"></div></div><div class="toggle">🔐 <div><b>Hak akses</b><small>Peran pengguna</small></div><div class="switch"></div></div></div><p id="count" style="color:var(--muted);font-size:12px">4 dari 6 fitur ditandai prioritas.</p><button class="btn" onclick="allOn()">Tandai Semua sebagai Prioritas</button><div class="footer">SBP Accounting V3 Starter • Offline concept • DBF legacy tidak diubah</div></main></div>
 <script>
-const descriptions={
-'NPTRANS':'Tinjau data sumber NPTRANS secara aman. Prinsip: baca saja; jangan menulis balik atau mengubah file DBF asli.',
-'Jurnal':'Input, validasi debit-kredit, simpan transaksi ke SQLite lokal, dan koreksi melalui prosedur audit.',
-'Buku Besar':'Tampilkan mutasi per akun berdasarkan jurnal yang tervalidasi.',
-'Saldo & Akun':'Kelola daftar akun dan saldo awal dengan pemeriksaan konsistensi.',
-'Laporan':'Pilih periode dan jenis laporan; tampilkan pratinjau sebelum mencetak atau ekspor PDF.',
-'Backup & Restore':'Buat backup SQLite ke lokasi yang dipilih dan uji restore sebelum dipakai.',
-'Audit Trail':'Catat pengguna, waktu, tindakan, dan alasan koreksi atau pembatalan.',
-'Pengaturan':'Atur profil perusahaan, periode, tampilan, dan hak akses.',
-'Pusat Cetak':'Pilih laporan, orientasi kertas, margin, dan pratinjau hasil cetak.',
-'Pencarian Global':'Cari nomor bukti, tanggal, keterangan, akun, atau nilai transaksi.'
-};
-function go(page){
- document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
- document.getElementById('pageTitle').textContent=page;
- const dash=page==='Dashboard';
- document.getElementById('dashboardPage').classList.toggle('hidden',!dash);
- document.getElementById('otherPage').classList.toggle('hidden',dash);
- if(!dash){document.getElementById('otherTitle').textContent=page;document.getElementById('otherDesc').textContent=descriptions[page]||'Pratinjau modul.'}
- window.scrollTo({top:0,behavior:'smooth'});
-}
+const desc={'Jurnal':'Input jurnal, validasi debit-kredit, dan proses posting harus diterapkan ke backend C# + SQLite.','Buku Besar':'Mutasi harus berasal dari jurnal yang telah diposting dan tervalidasi.','Saldo & Akun':'Master akun dan saldo awal perlu dicocokkan dengan aturan database yang sudah ada.','Laporan':'Neraca saldo, laporan jurnal, filter periode, preview cetak, dan ekspor.','Backup & Restore':'Backup SQLite, verifikasi file, dan restore dengan konfirmasi serta backup sebelum pemulihan.','Audit Trail':'Catat waktu, pengguna, tindakan, objek, dan alasan koreksi.','Pengaturan':'Konfigurasi lokal dan hak akses.','Dashboard':'Ringkasan placeholder.'};
+function go(p){document.getElementById('title').textContent=p;document.getElementById('dash').classList.toggle('hidden',p!=='Dashboard');document.getElementById('other').classList.toggle('hidden',p==='Dashboard');document.getElementById('otherTitle').textContent=p;document.getElementById('desc').textContent=desc[p]||'';document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===p));scrollTo({top:0,behavior:'smooth'})}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
-function toggleAll(on){document.querySelectorAll('.switch').forEach(s=>setSwitch(s,on));updateCount()}
-function setSwitch(s,on){s.classList.toggle('on',on);s.setAttribute('aria-checked',String(on))}
-document.querySelectorAll('.switch').forEach(s=>{s.addEventListener('click',()=>{setSwitch(s,!s.classList.contains('on'));updateCount()});s.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSwitch(s,!s.classList.contains('on'));updateCount()}})});
-function updateCount(){let n=[...document.querySelectorAll('.switch')].filter(s=>s.classList.contains('on')).length;document.getElementById('activeCount').textContent=n+' dari 6 fitur ditandai aktif untuk prioritas desain.'}
-</script>
-</body></html>
+function update(){let n=[...document.querySelectorAll('.switch')].filter(x=>x.classList.contains('on')).length;document.getElementById('count').textContent=n+' dari 6 fitur ditandai prioritas.'}
+document.querySelectorAll('.switch').forEach(s=>s.addEventListener('click',()=>{s.classList.toggle('on');update()}));
+function allOn(){document.querySelectorAll('.switch').forEach(s=>s.classList.add('on'));update()}
+</script></body></html>
