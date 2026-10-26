@@ -1,18 +1,13 @@
-# SBP Accounting V7 — GitHub Pages Preview
+# SBP Accounting GitHub Pages V8 — Local-only, no SQL
 
-V7 mempertahankan tema visual V3 dan menambahkan workflow demo: input jurnal, daftar jurnal, koreksi demo, pratinjau impor Excel/CSV, validasi per nomor jurnal, serta template Excel/CSV.
+This preview uses browser `localStorage` for its journal list and offers JSON backup/restore and CSV export. It does not use SQL, SQLite, a backend, or a server database.
 
-## Impor Excel
-1. Buka menu **Input Massal / Import**.
-2. Unduh **Template Excel**.
-3. Isi kolom `Tanggal`, `Nomor`, `Keterangan`, `Akun`, `Debit`, `Kredit`; satu baris untuk setiap akun dalam jurnal.
-4. Pilih file `.xlsx` atau `.xls`, lalu klik **Pratinjau & Validasi**.
-5. Perbaiki jurnal yang tidak seimbang/kolom yang salah. Klik **Tambahkan Jurnal Valid ke Daftar Demo** untuk mencoba alur browser.
+## Install
+Replace the root `index.html` in `mfadholi27-bot/SBP-Accounting` with this package's `index.html`, then commit the change. GitHub Pages rebuilds the preview automatically.
 
-Excel dibaca menggunakan SheetJS CDN sehingga perlu internet untuk memuat library; jika offline gunakan CSV.
-
-## Batasan penting
-Ini hanya preview browser statis. Data hanya masuk ke array sesi browser, tidak tersimpan ke SQLite, tidak mengubah aplikasi C# desktop, dan tidak cocok untuk data perusahaan rahasia. Untuk aktivasi sebenarnya, fungsi impor harus diimplementasikan di WinForms dan transaksi disimpan dalam SQLite dalam satu transaksi database setelah validasi. GitHub Pages tidak dapat mengakses SQLite lokal di laptop.
-
-## Pasang ke GitHub Pages
-Ganti file `index.html` di root repository dengan file ini lalu commit ke branch yang dipakai GitHub Pages. ZIP ini belum otomatis diunggah ke repository.
+## Important limitations
+- Browser localStorage belongs to the current browser profile and device. It does not sync to GitHub or other devices.
+- Clearing browser/site data can remove the local journal list. Use **Backup JSON** regularly and store backup files outside the repository.
+- Excel import preview reads `.xlsx` via an external SheetJS library if internet access is available; CSV import works without that library. Imported rows currently enter the journal-list prototype after validation.
+- This remains a browser preview/prototype. It is not yet a complete accounting system: account master persistence, detailed journal lines, edit/post workflows, formal financial statements, access control, and production audit guarantees require further implementation/testing.
+- Do not commit real company accounting data or JSON backup files to the public GitHub repository.
