@@ -33,7 +33,115 @@
 @media(max-width:540px){.top{gap:10px}.top h1{font-size:25px;line-height:1.2}.actions{width:100%}.actions .btn{flex:1}.nav button{font-size:13px;padding:9px}.nav button .nav-ico{flex-basis:25px;width:25px;height:25px}}
 
 </style>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
+
+/* SBP Accounting Premium Green UI layer */
+:root{
+  --bg:#f4f8f5;--ink:#183329;--muted:#71847a;--blue:#16845b;--green:#12845a;
+  --shadow:0 8px 24px rgba(25,75,52,.07),0 1px 3px rgba(25,75,52,.05);
+  --surface:#ffffff;--line:#e2ece5;--green-soft:#e8f5ed;--green-dark:#0c6845;
+}
+html{scroll-behavior:smooth}
+body{background:linear-gradient(145deg,#f6faf7 0%,#eef5f0 100%);color:var(--ink);font-family:Inter,"Segoe UI",Arial,sans-serif;letter-spacing:.005em}
+.app{grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.side{padding:24px 17px;background:rgba(255,255,255,.86);border-right:1px solid var(--line);box-shadow:5px 0 22px rgba(22,73,49,.025);backdrop-filter:blur(12px)}
+.brand{gap:13px;margin:4px 8px 30px}
+.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(145deg,#16845b,#35b47b);color:#fff;box-shadow:0 8px 18px rgba(22,132,91,.23);font-size:15px;letter-spacing:.04em}
+.brand b{font-size:18px;letter-spacing:-.035em;color:#183329}
+.brand small{display:block;margin-top:3px;color:#71847a;font-size:11px}
+.label{margin:22px 10px 10px;color:#94a69a;font-size:10px;letter-spacing:1.5px}
+.nav{gap:6px}
+.nav button{display:flex;align-items:center;gap:8px;min-height:44px;padding:10px 12px;border-radius:12px;color:#607368;font-size:13px;font-weight:650;transition:background .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease}
+.nav button .ni{display:inline-flex;align-items:center;justify-content:center;flex:0 0 27px;width:27px;height:27px;border-radius:8px;font-size:18px;line-height:1;color:#5e8872;vertical-align:middle}
+.nav button.active,.nav button:hover{background:#e9f6ee;box-shadow:inset 0 0 0 1px #d7ecdf;color:#08764d;transform:translateX(2px)}
+.nav button.active .ni,.nav button:hover .ni{background:#d4efdf;color:#08764d}
+.main{padding:32px clamp(18px,3vw,42px);min-width:0;max-width:1800px;width:100%;margin:0 auto}
+.top{align-items:center;margin-bottom:25px}
+.eyebrow{color:#7d9385;font-size:10px;letter-spacing:1.8px}
+.top h1{margin:7px 0 0;font-size:clamp(25px,2.5vw,34px);line-height:1.22;letter-spacing:-.045em;color:#17372a;font-weight:850;overflow-wrap:anywhere}
+.btn{border:1px solid #e0ebe3;border-radius:11px;padding:11px 15px;box-shadow:0 2px 7px rgba(28,75,51,.045);background:#fff;color:#244b37;font-size:13px;font-weight:700;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 7px 16px rgba(28,75,51,.1)}
+.btn.primary,.primary{background:linear-gradient(135deg,#16845b,#0f704b);color:#fff;border-color:#16845b;box-shadow:0 5px 13px rgba(22,132,91,.17)}
+.notice{padding:14px 17px;border:1px solid #d5eddf;border-radius:14px;background:#edf8f1;color:#226849;font-size:13px;line-height:1.65;margin-bottom:22px}
+.cards{gap:16px}
+.card,.tile,.panel{border:1px solid rgba(218,233,222,.9);border-radius:17px;box-shadow:var(--shadow);background:rgba(255,255,255,.93);padding:20px}
+.card{position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}
+.card:before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,#12845a,#7ed3a4);opacity:.85}
+.card small{color:#7b8e82;font-size:12px}
+.card strong{font-size:clamp(22px,2vw,28px);letter-spacing:-.035em;color:#173b2b}
+.section{margin:30px 0 16px}
+.section h2{font-size:21px;letter-spacing:-.035em;color:#1c3c2d}
+.section p{color:#7b8e82;font-size:13px}
+.tiles{gap:14px}
+.tile{position:relative;min-height:148px;gap:11px;padding:19px 12px;align-items:center;justify-content:center;border-color:#e2ece5;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;background:#fff}
+.tile:hover{transform:translateY(-3px);border-color:#c8e7d3;box-shadow:0 12px 24px rgba(29,91,58,.09)}
+.tile .bigico{display:grid;place-items:center;width:54px;height:54px;border-radius:16px;background:linear-gradient(145deg,#eaf7ef,#f6fbf7);color:#138157;font-size:32px;line-height:1;filter:none;animation:premiumFloat 4.8s ease-in-out infinite}
+.tile:nth-child(2n) .bigico{animation-delay:.35s}
+.tile:nth-child(3n) .bigico{animation-delay:.7s}
+.tile b{font-size:14px;font-weight:800;letter-spacing:-.015em;color:#234433;text-align:center;line-height:1.35}
+.tile small{color:#829488;font-size:11px;text-align:center;line-height:1.45}
+.lower{gap:16px;margin-top:22px}
+.panel h3{font-size:17px;letter-spacing:-.025em;color:#1d3b2c}
+.panel p{color:#6f8377}
+.togglegrid{gap:12px}
+.toggle{border:1px solid #e0ebe3;border-radius:13px;background:#fff;box-shadow:none;padding:13px}
+.toggle .ticon{color:#16845b;font-size:22px;animation:premiumFloat 4.8s ease-in-out infinite}
+.toggle b{color:#294b37;font-size:12px}
+.toggle small{color:#819387}
+.switch{background:#d8e4dc;box-shadow:inset 0 1px 2px #c7d8cc}
+.switch.on{background:#16845b}
+.footer{color:#8a9a90}
+.journalbox{margin-top:18px}
+.jform{gap:13px}
+.field{gap:7px}
+.field label{font-size:11px;letter-spacing:.02em;color:#6f8377}
+.field input,.field select,.line input,.line select,.field textarea{border:1px solid #dce8df;border-radius:10px;background:#fbfdfb;color:#183329;padding:11px 12px;transition:border-color .18s ease,box-shadow .18s ease}
+.field input:focus,.field select:focus,.line input:focus,.line select:focus,.field textarea:focus{border-color:#52b783;box-shadow:0 0 0 3px rgba(22,132,91,.1);outline:none}
+.tablewrap{border:1px solid #e1ebe4;border-radius:12px;background:#fff}
+table{border-collapse:separate;border-spacing:0;min-width:650px}
+th{background:#f4f9f5;color:#71867a;font-size:10px;letter-spacing:.7px;padding:12px}
+td{padding:12px 10px;border-bottom:1px solid #edf2ee;color:#365342;font-size:12px}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:#f8fcf9}
+.statusmsg{border-radius:11px;padding:12px 14px;font-size:12px}
+.statusmsg.neutral{background:#f0f5f1;color:#50695a}
+.statusmsg.good{background:#e8f7ed;color:#1b7047;border:1px solid #d4efde}
+.statusmsg.bad{background:#fff0ef;color:#a33d3d;border:1px solid #f5d8d6}
+.total{border:1px solid #e1ebe4;border-radius:12px;background:#f8fbf9;box-shadow:none;padding:14px}
+.total small{color:#7b8e82;font-size:11px}
+.total b{font-size:18px;color:#1b5236}
+.localdata-bar{border:1px solid #dcebe0;border-radius:14px;background:#fff;box-shadow:var(--shadow);padding:15px}
+.localdata-bar strong{color:#214633}
+.localdata-bar button,.localdata-bar label{border:1px solid #dcebe0;background:#f2f8f4;color:#27563c;border-radius:9px}
+.localdata-bar .primary{background:#16845b;color:#fff;border-color:#16845b}
+.localdata-msg{color:#26734c}
+@keyframes premiumFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@media(max-width:1100px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){
+ .app{grid-template-columns:1fr}
+ .side{padding:15px 13px;border-right:0;border-bottom:1px solid #e0ebe3}
+ .brand{margin:3px 6px 16px}
+ .nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+ .nav button{min-width:0;padding:9px 7px;gap:5px;font-size:11px;line-height:1.3}
+ .nav button .ni{flex-basis:23px;width:23px;height:23px;font-size:16px}
+ .main{padding:19px 13px}
+ .top{align-items:flex-start;flex-direction:column;gap:12px}
+ .top h1{font-size:27px}
+ .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .tile{min-height:137px;padding:14px 8px}
+ .tile .bigico{width:47px;height:47px;font-size:28px}
+ .lower{grid-template-columns:1fr}
+ .togglegrid{grid-template-columns:1fr}
+ .jform{grid-template-columns:1fr}
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .card,.tile,.panel{padding:14px;border-radius:14px}
+ .card strong{font-size:21px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+@media print{body{background:#fff}.side,.top button,.togglegrid,.localdata-bar{display:none!important}.app{display:block}.main{padding:0}.card,.tile,.panel{box-shadow:none;border:1px solid #ddd;background:#fff}}
+
+</style>
+</head>
 <body><div class="app"><aside class="side"><div class="brand">▦ SBP Accounting<small>V3 Theme • Local Browser Edition</small></div><div class="nav" id="nav">
 <button class="active" data-page="Dashboard">▦ Dashboard</button><button data-page="Input Jurnal">＋ Input Jurnal</button><button data-page="Daftar Jurnal">☷ Daftar Jurnal</button><button data-page="Input Massal">⇧ Input Massal / Import</button><button data-page="Buku Besar">▤ Buku Besar</button><button data-page="Saldo & Akun">◎ Saldo & Akun</button><button data-page="Laporan">▧ Laporan</button><button data-page="Jurnal Koreksi">↶ Jurnal Koreksi</button><button data-page="Pencarian">⌕ Pencarian Global</button><button data-page="Backup">⤓ Backup & Restore</button><button data-page="Audit Trail">◷ Audit Trail</button><button data-page="Pengaturan">⚙ Pengaturan</button></div></aside>
 <main class="main"><div class="top"><div><div class="muted small">SBP ACCOUNTING / TANPA SQL</div><h1 id="pageTitle">Dashboard</h1></div><div class="actions"><button class="btn" onclick="window.print()">⎙ Cetak</button><button class="btn primary" onclick="go('Input Jurnal')">＋ Jurnal Baru</button></div></div>
