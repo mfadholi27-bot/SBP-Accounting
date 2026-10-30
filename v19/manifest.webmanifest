@@ -1,1 +1,17 @@
-{"name":"SBP Accounting V19","short_name":"SBP V19","start_url":"./index.html","display":"standalone","background_color":"#f3f7f4","theme_color":"#116b49","description":"Aplikasi akuntansi offline dengan kompatibilitas DBF NPTRANS","icons":[]}
+{
+  "name": "SBP Accounting V19",
+  "short_name": "SBP Accounting",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f7f4",
+  "theme_color": "#087a43",
+  "description": "Aplikasi akuntansi offline SBP",
+  "icons": [
+    {
+      "src": "assets/sbp-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
