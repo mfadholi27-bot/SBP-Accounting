@@ -55,18 +55,34 @@
 </section>
 <section class="page" id="page-journal-list"><div class="panel"><div class="panel-head"><div><h3>Daftar jurnal</h3><p>Draft dari NPTRANS otomatis muncul di sini. Lengkapi debit/kredit untuk menjadikannya jurnal terposting.</p></div><div class="button-row"><input class="search" id="journal-search" placeholder="Cari nomor / keterangan..."><button class="btn" id="export-journals-xlsx">Ekspor Excel</button></div></div><div id="journal-table" class="empty">Belum ada jurnal.</div></div></section>
 <section class="page" id="page-accounts">
-  <div class="panel"><div class="panel-head"><div><h3>Master akun / NPSALDO</h3><p>Daftar kode akun yang digunakan untuk validasi transaksi.</p></div><span class="tag" id="account-count">0 AKUN</span></div>
-    <div class="account-importbar">
-      <div class="account-import-copy"><b>Import Master Akun</b><span>Masukkan data akun dari DBF, Excel, atau CSV.</span></div>
+  <div class="accounts-page-head">
+    <div><div class="eyebrow">SBP ACCOUNTING / V19</div><h2>Master Akun</h2><p>Kelola daftar akun, saldo awal, dan mutasi akun perusahaan.</p></div>
+    <div class="accounts-head-actions"><button class="btn" id="export-accounts">Ekspor CSV</button><button class="btn" id="export-accounts-xlsx">Ekspor Excel</button><span class="tag" id="account-count">0 AKUN</span></div>
+  </div>
+  <div class="accounts-card accounts-import-card">
+    <div class="accounts-card-title"><div class="accounts-icon">⇧</div><div><h3>Import Master Akun</h3><p>Impor data akun dari Excel (.xlsx/.xls), CSV (.csv), atau DBF (.dbf).</p></div></div>
+    <div class="accounts-import-controls">
       <label class="file-btn">Pilih File<input type="file" id="account-file" accept=".csv,.txt,.dbf,.xlsx,.xls"></label>
-      <button class="btn btn-primary" id="import-account-button" type="button" disabled>Import Akun</button>
-      <div class="account-template-actions"><button class="btn" id="download-account-template-csv" type="button">Format CSV</button><button class="btn" id="download-account-template-xlsx" type="button">Format Excel</button></div>
-      <div id="account-import-status" class="file-status">Belum ada file dipilih.</div>
+      <span id="account-import-status" class="file-status">Belum ada file dipilih.</span>
+      <button class="btn btn-primary" id="import-account-button" type="button" disabled>Import Master Akun</button>
+      <div class="accounts-template-actions"><button class="btn" id="download-account-template-csv" type="button">Unduh Format CSV</button><button class="btn" id="download-account-template-xlsx" type="button">Unduh Format Excel</button></div>
     </div>
-    <div class="account-form-heading"><b>Tambah / Edit Akun</b><span>Isi saldo dan mutasi jika tersedia.</span></div><div class="form-grid account-form account-form-balance"><label>Kode / SANDI<input id="a-code" placeholder="Contoh: 114.130.2"></label><label>Nama akun<input id="a-name" placeholder="Nama akun"></label><label>Saldo awal / PTDACOST<input id="a-ptdacost" type="number" step="0.01" value="0"></label><label>Mutasi Debit<input id="a-mutasi-debit" type="number" step="0.01" value="0"></label><label>Mutasi Kredit<input id="a-mutasi-kredit" type="number" step="0.01" value="0"></label><label>Sisa saldo aktual (otomatis)<input id="a-actual-balance" type="text" value="Rp 0" disabled></label></div>
-    <p class="footnote account-balance-note">Sisa saldo aktual dihitung dari PTDACOST + MUTASIDB − MUTASIKR. Nilai sumber NPSALDO tetap dapat diedit.</p><div class="form-actions end"><button class="btn btn-primary" id="save-account">＋ Tambah akun</button><button class="btn" id="cancel-account-edit" hidden>Batal edit</button></div>
-    <div class="panel-head account-tools"><input class="search" id="account-search" placeholder="Cari kode atau nama akun..."><div class="button-row"><button class="btn" id="export-accounts">Ekspor CSV</button><button class="btn" id="export-accounts-xlsx">Ekspor Excel</button></div></div>
-    <div class="table-wrap"><table class="account-table"><thead><tr><th>Kode / SANDI</th><th>Nama akun</th><th>Saldo awal</th><th>Mutasi Debit</th><th>Mutasi Kredit</th><th>Sisa Saldo Aktual</th><th>Aksi</th></tr></thead><tbody id="account-rows"></tbody></table></div>
+  </div>
+  <div class="accounts-card accounts-entry-card">
+    <div class="accounts-entry-head"><div class="accounts-card-title"><div class="accounts-icon">＋</div><div><h3>Tambah / Edit Akun</h3><p>Isi informasi akun dan saldo yang diperlukan.</p></div></div><div class="form-actions"><button class="btn" id="cancel-account-edit" hidden>Bersihkan</button><button class="btn btn-primary" id="save-account">Simpan Akun</button></div></div>
+    <div class="accounts-form-grid">
+      <label>Kode / SANDI<input id="a-code" placeholder="Contoh: 114.130.2"></label>
+      <label class="account-name-field">Nama akun<input id="a-name" placeholder="Nama akun"></label>
+      <label>Saldo awal / PTDACOST<input id="a-ptdacost" type="number" step="0.01" value="0"></label>
+      <label>Mutasi Debit<input id="a-mutasi-debit" type="number" step="0.01" value="0"></label>
+      <label>Mutasi Kredit<input id="a-mutasi-kredit" type="number" step="0.01" value="0"></label>
+      <label>Sisa saldo aktual<input id="a-actual-balance" type="text" value="Rp 0" disabled></label>
+    </div>
+    <p class="accounts-form-note">Sisa saldo aktual = PTDACOST + MUTASIDB − MUTASIKR.</p>
+  </div>
+  <div class="accounts-card accounts-list-card">
+    <div class="accounts-list-head"><div class="accounts-card-title"><div class="accounts-icon">▤</div><div><h3>Daftar Master Akun</h3><p>Daftar kode dan saldo akun yang tersimpan.</p></div></div><input class="search" id="account-search" placeholder="Cari kode atau nama akun..."></div>
+    <div class="table-wrap"><table class="account-table"><thead><tr><th>No</th><th>Kode / SANDI</th><th>Nama akun</th><th>Saldo Awal</th><th>Mutasi Debit</th><th>Mutasi Kredit</th><th>Saldo Aktual</th><th>Aksi</th></tr></thead><tbody id="account-rows"></tbody></table></div>
   </div>
 </section>
 <section class="page" id="page-nptrans">
