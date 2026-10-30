@@ -2,3 +2,27 @@
 @media(max-width:1000px){.shell{grid-template-columns:215px minmax(0,1fr)}.stats,.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.import-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:720px){.shell{display:block}.sidebar{position:relative;height:auto;padding:12px;border-right:0;border-bottom:1px solid var(--line)}.brand{padding:2px 5px 12px}.side-label,.sidebar-foot{display:none}nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.nav-item{padding:8px 5px;font-size:10px;justify-content:center;gap:5px;flex-direction:column}.nav-item span{width:22px;height:22px;font-size:15px}.main{padding:16px 12px}.topbar{align-items:flex-start;flex-direction:column}.topbar h1{font-size:26px}.top-actions{width:100%;justify-content:space-between}.welcome{padding:20px}.welcome h2{font-size:23px}.welcome-icon{font-size:48px;padding:0 5px}.stats{gap:8px}.stat{padding:13px}.stat strong{font-size:18px}.quick-grid{gap:8px}.quick-card{padding:13px}.form-grid{grid-template-columns:1fr}.import-grid,.backup-grid{grid-template-columns:1fr}.panel{padding:14px}.panel-head{align-items:flex-start;flex-direction:column}.search{width:100%}.section-heading.compact{align-items:flex-start;flex-direction:column}.totals{margin-left:0;width:100%;justify-content:space-between}.form-actions.end{justify-content:stretch}.form-actions.end .btn{flex:1}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+/* Desktop-first layout: iPhone is only the editing device, not the target UI. */
+html,body{min-width:1180px;overflow-x:auto}
+.shell{min-width:1180px;grid-template-columns:270px minmax(910px,1fr)}
+.sidebar{width:270px;padding:28px 18px}
+.main{min-width:910px;max-width:none;padding:30px 38px}
+.brand-mark{width:52px;height:52px;font-size:18px;border-radius:16px}
+.brand b{font-size:18px}.brand small{font-size:11px}
+.nav-item{font-size:14px;padding:13px 14px;gap:13px}
+.nav-item span{width:34px;height:34px;border-radius:10px;font-size:23px}
+.side-label{font-size:11px}.topbar h1{font-size:34px}
+.btn{font-size:13px;padding:12px 17px}
+.local-pill,.tag{font-size:11px;padding:9px 13px}
+.welcome{padding:32px 36px}.welcome h2{font-size:31px}.welcome p{font-size:13px}.welcome-icon{font-size:100px}
+.stat{padding:20px}.stat span{font-size:13px}.stat strong{font-size:26px}.stat small{font-size:11px}
+.section-heading h3,.panel h3{font-size:19px}.section-heading p,.panel-head p{font-size:12px}
+.quick-card{padding:20px;gap:8px}.quick-icon{width:54px;height:54px;border-radius:15px;font-size:30px}
+.quick-card b{font-size:15px}.quick-card small{font-size:11px}
+.panel{padding:23px}.import-box,.backup-card{padding:19px}
+.import-icon{width:48px;height:48px;border-radius:13px;font-size:28px}
+.import-box h4,.backup-card h4{font-size:15px}.import-box p,.backup-card p{font-size:11px}
+.form-grid label{font-size:12px}.form-grid input,.form-grid select,.search{font-size:13px;padding:12px}
+th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
+.icon-btn{font-size:15px;padding:8px 11px}.file-btn{font-size:12px;padding:11px 14px}
+.inline-message,.footnote,footer{font-size:11px}
