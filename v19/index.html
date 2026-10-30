@@ -43,7 +43,7 @@
   <div class="panel"><div class="panel-head"><div><h3>Jurnal terbaru</h3><p>Aktivitas pembukuan terakhir.</p></div><button class="btn" data-go="journal-list">Lihat semua</button></div><div id="recent-journals" class="empty">Belum ada jurnal tersimpan.</div></div>
 </section>
 <section class="page" id="page-journal">
-  <div class="panel"><div class="panel-head"><div><h3>Input jurnal umum</h3><p>Setiap nomor bukti harus memiliki total debit dan kredit yang seimbang.</p></div><span class="tag">MANUAL ENTRY</span></div>
+  <div class="panel"><div class="panel-head"><div><h3>Input jurnal umum</h3><p>Jurnal dari NPTRANS dapat dilengkapi di sini. Tentukan debit/kredit secara manual, lalu simpan setelah seimbang.</p></div><span class="tag">MANUAL ENTRY</span></div>
     <div class="form-grid">
       <label>Tanggal<input type="date" id="j-date"></label><label>Nomor bukti<input id="j-number" placeholder="Contoh: JU/001/2026"></label><label>Keterangan<input id="j-description" placeholder="Uraian transaksi"></label>
     </div>
@@ -53,7 +53,7 @@
     <div id="journal-message" class="inline-message">Jurnal hanya dapat disimpan jika debit dan kredit seimbang.</div>
   </div>
 </section>
-<section class="page" id="page-journal-list"><div class="panel"><div class="panel-head"><div><h3>Daftar jurnal</h3><p>Telusuri jurnal yang tersimpan pada perangkat ini.</p></div><input class="search" id="journal-search" placeholder="Cari nomor / keterangan..."></div><div id="journal-table" class="empty">Belum ada jurnal.</div></div></section>
+<section class="page" id="page-journal-list"><div class="panel"><div class="panel-head"><div><h3>Daftar jurnal</h3><p>Draft dari NPTRANS otomatis muncul di sini. Lengkapi debit/kredit untuk menjadikannya jurnal terposting.</p></div><input class="search" id="journal-search" placeholder="Cari nomor / keterangan..."></div><div id="journal-table" class="empty">Belum ada jurnal.</div></div></section>
 <section class="page" id="page-accounts">
   <div class="panel"><div class="panel-head"><div><h3>Master akun / NPSALDO</h3><p>Daftar kode akun yang digunakan untuk validasi transaksi.</p></div><span class="tag" id="account-count">0 AKUN</span></div>
     <div class="form-grid account-form account-form-balance"><label>Kode / SANDI<input id="a-code" placeholder="Contoh: 114.130.2"></label><label>Nama akun<input id="a-name" placeholder="Nama akun"></label><label>Saldo awal / PTDACOST<input id="a-ptdacost" type="number" step="0.01" value="0"></label><label>Mutasi Debit<input id="a-mutasi-debit" type="number" step="0.01" value="0"></label><label>Mutasi Kredit<input id="a-mutasi-kredit" type="number" step="0.01" value="0"></label><label>Sisa saldo aktual (otomatis)<input id="a-actual-balance" type="text" value="Rp 0" disabled></label></div>
@@ -63,7 +63,7 @@
   </div>
 </section>
 <section class="page" id="page-nptrans">
-  <div class="panel"><div class="panel-head"><div><h3>Pusat kompatibilitas NPTRANS</h3><p>Impor data lama, pertahankan struktur aslinya, dan siapkan ekspor DBF.</p></div><span class="tag">LEGACY BRIDGE</span></div>
+  <div class="panel"><div class="panel-head"><div><h3>Pusat kompatibilitas NPTRANS</h3><p>Impor NPTRANS akan membuat draft jurnal otomatis berdasarkan tanggal dan nomor bukti sumber.</p></div><span class="tag">LEGACY BRIDGE</span></div>
     <div class="callout"><b>Alur yang aman</b><p>Impor file NPTRANS / NPSALDO → periksa kolom dan akun → simpan sebagai data legacy → ekspor kembali menggunakan struktur DBF sumber. File asli tidak diubah.</p></div>
     <div class="import-grid">
       <div class="import-box"><div class="import-icon">⇧</div><h4>Import transaksi NPTRANS</h4><p>Terima CSV atau DBF enam kolom. Pilih cara memasukkan data agar transaksi lama tidak tertimpa.</p><label class="file-btn">Pilih CSV / DBF<input type="file" id="np-file" accept=".csv,.txt,.dbf"></label><label class="import-mode-label">Cara memasukkan<select id="np-import-mode"><option value="merge">Gabungkan tanpa duplikat</option><option value="append">Tambah semua baris</option><option value="replace">Ganti seluruh data NPTRANS</option></select></label><div class="file-status">Setelah memilih file, periksa ringkasan lalu tekan tombol persetujuan untuk menyimpan.</div></div>
