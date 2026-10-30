@@ -275,3 +275,43 @@ input,select,textarea{max-width:100%}
 /* Opening balances module */
 .opening-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}.opening-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}.opening-form input,.opening-form select{min-height:40px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff}.opening-note{grid-column:span 2}.opening-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 18px}.opening-summary>div{display:flex;flex-direction:column;gap:5px;padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}.opening-summary span{font-size:11px;color:var(--muted)}.opening-summary b{font-size:14px;font-variant-numeric:tabular-nums}@media(max-width:760px){.opening-form{grid-template-columns:1fr}.opening-note{grid-column:auto}.opening-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media print{body:has(#page-opening-balances.active) #page-opening-balances{display:block!important}}
+
+
+/* SBP Accounting V19 — isolated professional print engine */
+#sbp-print-root{display:none}
+@media print{
+ @page{size:215mm 330mm;margin:13mm 12mm 16mm}
+ @page :landscape{size:330mm 215mm;margin:10mm}
+ @page{@bottom-right{content:"Halaman " counter(page);font:9pt Arial,sans-serif;color:#64748b}}
+ html,body{background:#fff!important;margin:0!important;padding:0!important}
+ body.sbp-printing>*:not(#sbp-print-root){display:none!important}
+ body.sbp-printing #sbp-print-root{display:block!important;position:static!important;width:100%!important;color:#17212b!important;background:#fff!important;font:9pt Arial,Helvetica,sans-serif}
+ body.sbp-printing #sbp-print-root *{box-sizing:border-box}
+ .sbp-print-sheet{width:100%;background:#fff}
+ .sbp-print-header{border-bottom:2px solid #176b4a;padding:0 0 7mm;margin-bottom:4mm}
+ .sbp-print-brand{font-size:15pt;font-weight:800;letter-spacing:.5px;color:#145c40}
+ .sbp-print-brand small{display:block;font-size:7.5pt;font-weight:500;letter-spacing:1px;color:#64748b;margin-top:1mm}
+ .sbp-print-heading{text-align:center;margin-top:5mm}
+ .sbp-print-heading h1{font-size:14pt;margin:0 0 2mm;letter-spacing:.3px}
+ .sbp-print-heading p{font-size:9pt;margin:0;color:#475569}
+ .sbp-print-meta{display:flex;justify-content:space-between;color:#64748b;font-size:8pt;margin:0 0 4mm;padding-bottom:2mm;border-bottom:1px solid #cbd5e1}
+ .sbp-print-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2mm;margin:0 0 4mm}
+ .sbp-print-summary>div{border:1px solid #cbd5e1;border-radius:2mm;padding:2.5mm}
+ .sbp-print-summary span{display:block;color:#64748b;font-size:7.5pt;margin-bottom:1mm}
+ .sbp-print-summary b{font-size:9pt;font-weight:700}
+ .sbp-print-table{width:100%;border-collapse:collapse;table-layout:auto;font-size:7.5pt}
+ .sbp-print-table th{background:#eaf2ed!important;color:#173c2d!important;font-weight:700;text-align:center}
+ .sbp-print-table th,.sbp-print-table td{border:1px solid #aebbb4;padding:2mm 1.5mm;vertical-align:top}
+ .sbp-print-table td.num,.sbp-print-table th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+ .sbp-print-table tbody tr{break-inside:avoid;page-break-inside:avoid}
+ .sbp-print-table thead{display:table-header-group}
+ .sbp-print-table tfoot{display:table-row-group;font-weight:700}
+ .sbp-print-table tfoot th{background:#f1f5f2!important}
+ .sbp-print-signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm;margin:13mm 0 0;text-align:center;break-inside:avoid;page-break-inside:avoid}
+ .sbp-print-signatures span,.sbp-print-signatures small{display:block;font-size:8pt}
+ .sbp-print-signatures b{display:block;height:20mm}
+ .sbp-print-footer{border-top:1px solid #cbd5e1;margin-top:7mm;padding-top:2mm;color:#64748b;font-size:7pt;text-align:center}
+}
+@media print{
+ html[data-print-orientation="landscape"] @page{size:330mm 215mm}
+}
