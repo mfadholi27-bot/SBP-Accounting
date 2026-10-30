@@ -252,3 +252,22 @@ input,select,textarea{max-width:100%}
 @media(max-width:900px){.sidebar{margin:0;border-radius:0;height:100vh;top:0}.main{padding:16px}}
 @media(max-width:650px){body{background-attachment:scroll}.topbar{padding:12px}.welcome{padding:20px}.welcome-icon{display:none}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.quick-card{transition:none}}
+
+/* Shared print engine: consistent A4 reports */
+@media print{
+ @page{size:A4 landscape;margin:12mm}
+ html,body{background:#fff!important;color:#111!important;font-size:10pt!important}
+ .sidebar,.topbar,.toast,.btn,.button-row,.journal-toolbar,.bulk-post-actions,.bulk-import-controls,.accounts-import-controls,.accounts-entry-card,.list-disclosure,.sidebar-foot,.nav-group-label{display:none!important}
+ .shell,.main,.page,.panel,.accounts-card{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
+ .page{display:none!important}.page.active{display:block!important}
+ .panel,.accounts-card{break-inside:avoid;margin-bottom:10mm!important}
+ .table-wrap{overflow:visible!important;border:0!important}
+ table{width:100%!important;border-collapse:collapse!important;font-size:8.5pt!important}
+ th,td{border:1px solid #bfc9c1!important;padding:5px 6px!important;color:#111!important}
+ thead{display:table-header-group!important}tr{break-inside:avoid}
+ .journal-detail-row[hidden]{display:none!important}
+ .journal-totals,.bulk-post-stats{break-inside:avoid}
+ .welcome{background:#fff!important;color:#111!important;box-shadow:none!important}
+}
+.nav-group-label{margin:15px 12px 5px!important;font-size:9px!important;letter-spacing:1.2px!important;color:#829087!important}
+@media(max-width:780px){.nav-group-label{display:none}}
