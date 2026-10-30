@@ -442,9 +442,47 @@ $('clear-np-data').onclick=async()=>{
 };
 $('np-search').addEventListener('input',()=>{npPage=1;renderNptrans()});$('np-prev').onclick=()=>{npPage=Math.max(1,npPage-1);renderNptrans()};$('np-next').onclick=()=>{npPage++;renderNptrans()};$('export-np-csv').onclick=exportNpCsv;$('export-np-xlsx').onclick=exportNpXlsx;$('export-np-dbf').onclick=exportDbf;
 
-function exportTrialBalanceXlsx(){const map=new Map();state.journals.filter(j=>j.status==='posted'||(!j.status&&j.status!=='draft')).forEach(j=>(j.lines||[]).forEach(l=>{const v=map.get(l.code)||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);map.set(l.code,v)}));const rows=[['SANDI','NAMA AKUN','TOTAL DEBIT','TOTAL KREDIT','SALDO BERSIH D/(K)'],...[...map].map(([code,v])=>[code,state.accounts.find(a=>a.code===code)?.name||'(Akun tidak ditemukan)',v.debit,v.credit,v.debit-v.credit])];exportXlsxSheet('Neraca-Saldo.xlsx','Neraca Saldo',rows)}
-function renderTrialBalance(){const postedJournals=state.journals.filter(j=>j.status==='posted'||(!j.status&&j.status!=='draft'));if(!postedJournals.length){$('trial-balance').innerHTML='<div class="empty">Belum ada data jurnal.</div>';return}const map=new Map();postedJournals.forEach(j=>j.lines.forEach(l=>{const a=map.get(l.code)||{debit:0,credit:0};a.debit+=Number(l.debit||0);a.credit+=Number(l.credit||0);map.set(l.code,a)}));const rows=[...map.entries()].map(([code,v])=>({code,name:state.accounts.find(a=>a.code===code)?.name||'(Akun tidak ditemukan)',debit:v.debit,credit:v.credit,balance:v.debit-v.credit}));const td=rows.reduce((s,r)=>s+r.debit,0),tc=rows.reduce((s,r)=>s+r.credit,0);$('trial-balance').innerHTML='<div class="table-wrap"><table><thead><tr><th>Kode</th><th>Nama akun</th><th>Total debit</th><th>Total kredit</th><th>Saldo bersih D/(K)</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+money(r.debit)+'</td><td>'+money(r.credit)+'</td><td>'+money(r.balance)+'</td></tr>').join('')+'<tr><th colspan="2">TOTAL</th><th>'+money(td)+'</th><th>'+money(tc)+'</th><th>'+money(td-tc)+'</th></tr></tbody></table></div>'}
+function getTrialBalanceRows(period){
+ const openingMap=new Map((state.openingBalances||[]).filter(x=>x.period===period).map(x=>[String(x.accountCode),{debit:Number(x.debit||0),credit:Number(x.credit||0)}]));
+ const movement=new Map();
+ state.journals.filter(j=>(j.status==='posted'||(!j.status&&j.status!=='draft'))&&String(j.date||'').slice(0,7)===period).forEach(j=>(j.lines||[]).forEach(l=>{const v=movement.get(String(l.code))||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(String(l.code),v)}));
+ const codes=new Set([...state.accounts.map(a=>String(a.code)),...openingMap.keys(),...movement.keys()]);
+ return [...codes].sort((a,b)=>a.localeCompare(b)).map(code=>{
+  const account=state.accounts.find(a=>String(a.code)===code),explicit=openingMap.get(code);
+  // Prioritas: saldo awal periode yang diinput pada modul; jika belum ada, gunakan saldo legacy Master Akun.
+  const legacy=account?accountActual(account):0,netOpening=explicit?(explicit.debit-explicit.credit):legacy;
+  const openingDebit=Math.max(netOpening,0),openingCredit=Math.max(-netOpening,0),move=movement.get(code)||{debit:0,credit:0};
+  const net=netOpening+move.debit-move.credit;
+  return {code,name:account?.name||'(Akun tidak ditemukan)',openingDebit,openingCredit,debit:move.debit,credit:move.credit,endingDebit:Math.max(net,0),endingCredit:Math.max(-net,0),balance:net};
+ });
+}
+function exportTrialBalanceXlsx(){const period=$('report-period').value,rows=getTrialBalanceRows(period);const data=[['PERIODE',period],[],['SANDI','NAMA AKUN','SALDO AWAL DEBIT','SALDO AWAL KREDIT','MUTASI DEBIT','MUTASI KREDIT','SALDO AKHIR DEBIT','SALDO AKHIR KREDIT','SALDO BERSIH D/(K)'],...rows.map(r=>[r.code,r.name,r.openingDebit,r.openingCredit,r.debit,r.credit,r.endingDebit,r.endingCredit,r.balance])];exportXlsxSheet('Neraca-Percobaan-'+period+'.xlsx','Neraca Percobaan',data)}
+function renderTrialBalance(){const period=$('report-period').value,rows=getTrialBalanceRows(period);const td=rows.reduce((n,r)=>n+r.openingDebit+r.debit,0),tc=rows.reduce((n,r)=>n+r.openingCredit+r.credit,0),ed=rows.reduce((n,r)=>n+r.endingDebit,0),ec=rows.reduce((n,r)=>n+r.endingCredit,0);$('trial-balance').innerHTML=rows.length?'<div class="trial-period-note">Periode '+esc(period)+' · Saldo awal dari Saldo Awal ACC & Program; jika belum tersedia, menggunakan saldo legacy Master Akun. Mutasi hanya dari jurnal terposting pada periode ini.</div><div class="table-wrap"><table><thead><tr><th>SANDI</th><th>Nama akun</th><th>Saldo awal D</th><th>Saldo awal K</th><th>Mutasi D</th><th>Mutasi K</th><th>Saldo akhir D</th><th>Saldo akhir K</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+money(r.openingDebit)+'</td><td>'+money(r.openingCredit)+'</td><td>'+money(r.debit)+'</td><td>'+money(r.credit)+'</td><td>'+money(r.endingDebit)+'</td><td>'+money(r.endingCredit)+'</td></tr>').join('')+'<tr><th colspan="2">TOTAL</th><th>'+money(rows.reduce((n,r)=>n+r.openingDebit,0))+'</th><th>'+money(rows.reduce((n,r)=>n+r.openingCredit,0))+'</th><th>'+money(rows.reduce((n,r)=>n+r.debit,0))+'</th><th>'+money(rows.reduce((n,r)=>n+r.credit,0))+'</th><th>'+money(ed)+'</th><th>'+money(ec)+'</th></tr></tbody></table></div><p class="trial-balance-check">Selisih saldo akhir: <b class="'+(Math.abs(ed-ec)<.005?'balance-ok':'balance-warn')+'">'+money(ed-ec)+'</b></p>':'<div class="empty">Belum ada saldo awal atau jurnal untuk periode ini.</div>'}
+$('report-period').value=new Date().toISOString().slice(0,7);
+$('report-period').addEventListener('change',renderTrialBalance);
 
+function journalDeleteMatches(mode,value){
+ return state.journals.filter(j=>{const d=String(j.date||'');if(mode==='date')return d===value;if(mode==='month')return d.slice(0,7)===value;return d.slice(0,4)===value});
+}
+$('force-delete-period').onclick=async()=>{
+ const mode=$('force-delete-mode').value,value=$('force-delete-value').value;
+ if(!value){toast('Pilih tanggal, bulan, atau tahun yang akan dihapus.');return}
+ if(mode==='date'&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)){toast('Format tanggal tidak valid.');return}
+ if(mode==='month'&&!/^\\d{4}-\\d{2}$/.test(value)){toast('Format bulan tidak valid.');return}
+ if(mode==='year'&&!/^\\d{4}$/.test(value)){toast('Format tahun tidak valid.');return}
+ const matches=journalDeleteMatches(mode,value);
+ if(!matches.length){toast('Tidak ada jurnal pada periode tersebut.');return}
+ const lines=matches.flatMap(j=>j.lines||[]),debit=lines.reduce((n,l)=>n+Number(l.debit||0),0),credit=lines.reduce((n,l)=>n+Number(l.credit||0),0);
+ const password=prompt('Masukkan password untuk menghapus jurnal secara paksa:');
+ if(password===null)return;
+ if(password!=='PKS123'){toast('Password salah. Jurnal tidak dihapus.');return}
+ const detail='HAPUS PAKSA JURNAL\\nRentang: '+value+' ('+mode+')\\nJumlah jurnal: '+matches.length+'\\nBaris transaksi: '+lines.length+'\\nTotal debit: '+money(debit)+'\\nTotal kredit: '+money(credit)+'\\n\\nTindakan ini permanen dan tidak dapat dibatalkan dari aplikasi. Lanjutkan?';
+ if(!confirm(detail))return;
+ const ids=new Set(matches.map(j=>j.id));state.journals=state.journals.filter(j=>!ids.has(j.id));
+ await persist();renderDashboard();renderJournals();renderTrialBalance();
+ $('force-delete-result').textContent=matches.length+' jurnal berhasil dihapus untuk '+value+'. Total debit '+money(debit)+'; kredit '+money(credit)+'.';
+ toast(matches.length+' jurnal dihapus.');
+};
 
 function renderOpeningBalances(){
  const period=$('opening-period').value;const items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode)));
