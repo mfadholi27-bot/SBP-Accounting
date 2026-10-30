@@ -137,3 +137,45 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:900px){.main{padding:18px!important}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:680px){.shell{grid-template-columns:1fr!important}.sidebar{position:relative!important;width:100%!important;min-width:0!important;height:auto!important;padding:14px 16px!important}.sidebar nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sidebar .brand{padding-bottom:12px!important}.sidebar-foot{display:none}.main{padding:14px!important}.topbar{align-items:flex-start!important;flex-wrap:wrap}.stats,.quick-grid{grid-template-columns:1fr!important;gap:14px!important}.stat,.quick-card,.panel{padding:20px!important}.welcome{min-height:150px!important}.table-wrap{max-width:100%}th,td{padding:10px 12px!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+
+/* V54 outline icon and dashboard finish */
+svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.nav-icon{width:20px!important;height:20px!important;min-width:20px!important;display:grid!important;place-items:center!important;background:transparent!important;color:#2e7d32!important}
+.nav-icon svg{width:20px;height:20px}
+.nav-item:hover .nav-icon{color:#4caf50!important;transform:scale(1.1) translateX(2px)!important}
+.quick-icon{width:56px!important;height:56px!important;min-width:56px!important;padding:10px!important;color:#2e7d32!important}
+.quick-icon svg{width:36px;height:36px}
+.quick-card:hover .quick-icon{color:#4caf50!important;transform:scale(1.1)!important}
+.welcome-icon svg{width:58px;height:58px;stroke-width:1.8}
+.btn svg{width:16px;height:16px;flex:0 0 16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.inline-icon{display:inline-grid;place-items:center;vertical-align:middle;margin-right:5px;color:#2e7d32}
+.inline-icon svg{width:16px;height:16px}
+.accounts-icon svg,.import-icon svg{width:28px;height:28px}
+.page-brand{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;line-height:1.2}
+.page-brand strong{font-size:17px;font-weight:800;letter-spacing:.6px;color:#1b5e20}
+.page-brand span{font-size:11px;font-weight:600;color:#757575}
+.topbar{align-items:center!important}
+.topbar h1{margin-top:3px!important}
+.top-actions .local-pill{font-size:11px}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2e7d32;margin-right:6px}
+.build-stamp{display:block;margin-top:5px;text-align:right;font-size:10px;color:#888;font-weight:400}
+.empty-state{min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:26px 16px;text-align:center;color:#757575}
+.empty-state-icon{width:56px;height:56px;display:grid;place-items:center;border-radius:50%;background:#f1f8e9;color:#2e7d32;margin-bottom:4px}
+.empty-state-icon svg{width:30px;height:30px}
+.empty-state strong{font-size:15px;font-weight:600;color:#616161}
+.empty-state p{font-size:13px;color:#757575;margin:0;line-height:1.5}
+#page-dashboard .welcome,#page-dashboard .stats,#page-dashboard .section-heading,#page-dashboard .quick-grid{animation:sbpFadeUp .4s ease-out both}
+#page-dashboard .stats .stat:nth-child(1){animation:sbpFadeUp .4s ease-out .05s both}
+#page-dashboard .stats .stat:nth-child(2){animation:sbpFadeUp .4s ease-out .15s both}
+#page-dashboard .stats .stat:nth-child(3){animation:sbpFadeUp .4s ease-out .25s both}
+#page-dashboard .quick-card:nth-child(1){animation:sbpFadeUp .4s ease-out .32s both}
+#page-dashboard .quick-card:nth-child(2){animation:sbpFadeUp .4s ease-out .42s both}
+#page-dashboard .quick-card:nth-child(3){animation:sbpFadeUp .4s ease-out .52s both}
+#page-dashboard .panel{animation:sbpFadeOnly .45s ease-out .62s both}
+#page-dashboard .panel-head button:hover{text-decoration:underline;text-underline-offset:4px;font-weight:700}
+button:active,.btn:active{transform:scale(.98)!important}
+@keyframes sbpFadeOnly{from{opacity:0}to{opacity:1}}
+@media(max-width:680px){.page-brand strong{font-size:15px}.top-actions{width:100%}.top-actions .btn{flex:1}.quick-icon{width:50px!important;height:50px!important}.quick-icon svg{width:34px;height:34px}}
+@media(prefers-reduced-motion:reduce){#page-dashboard *{animation:none!important}}
