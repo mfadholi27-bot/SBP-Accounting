@@ -319,3 +319,6 @@ input,select,textarea{max-width:100%}
 
 /* V19 Five-year archive manager */
 .archive-form{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.archive-form label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;font-weight:700}.archive-form input{min-width:150px;min-height:42px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}#archive-result{overflow-wrap:anywhere}
+
+/* V19 read-only archive reader */
+.archive-reader-load{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 16px}.archive-reader-controls{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:12px 0}.archive-reader-controls label{display:flex;flex-direction:column;gap:6px;min-width:160px;color:var(--muted);font-size:12px;font-weight:700}.archive-reader-controls input,.archive-reader-controls select{min-height:40px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px 10px;color:var(--ink)}.archive-reader-search{flex:1 1 260px}.archive-reader-table{margin-top:14px;max-height:650px}.archive-reader-table details{padding:5px}.archive-reader-table summary{cursor:pointer;color:var(--green);font-weight:700}
