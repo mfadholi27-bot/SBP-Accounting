@@ -174,20 +174,45 @@ $('np-import-confirm').onclick=async()=>{
 };
 $('np-template').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const p=parseDBF(await f.arrayBuffer());state.npTemplate={fields:p.fields,version:p.version};await persist();renderNptrans();setMessage('np-message','Struktur template DBF berhasil dibaca: '+p.fields.map(x=>x.name+'('+x.type+','+x.length+')').join(' · '),'good')}catch(err){setMessage('np-message','Template gagal dibaca: '+err.message,'bad')}e.target.value=''};
 $('account-file').onchange=async e=>{
- const f=e.target.files[0];if(!f)return;
+ const f=e.target.files?.[0];if(!f)return;
+ const status=$('account-import-status');
+ if(status)status.textContent='Membaca '+f.name+'...';
  try{
-  let accounts;
-  if(f.name.toLowerCase().endsWith('.dbf')){const p=parseDBF(await f.arrayBuffer());accounts=p.records.map(r=>{const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);return {code:String(o.SANDI??o.KODE??''),name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??''),ptdacost:Number(o.PTDACOST||0),mutasiDebit:Number(o.MUTASIDB||0),mutasiKredit:Number(o.MUTASIKR||0)}}).filter(a=>a.code)}
-  else accounts=csvToAccounts(await f.text());
-  if(!state.nptrans.length)throw Error('Impor NPTRANS AGT terlebih dahulu. Master akun akan disaring berdasarkan SANDI yang benar-benar dipakai pada transaksi.');
+  let accounts=[];
+  if(f.name.toLowerCase().endsWith('.dbf')){
+   const p=parseDBF(await f.arrayBuffer());
+   const fields=p.fields.map(x=>norm(x.name));
+   if(!fields.includes('SANDI'))throw Error('Kolom SANDI tidak ditemukan pada DBF. Kolom terbaca: '+fields.join(', '));
+   accounts=p.records.map((r,index)=>{
+    const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);
+    const code=String(o.SANDI??o.KODE??'').trim();
+    return {code,name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??'').trim(),ptdacost:parseAmount(o.PTDACOST??0),mutasiDebit:parseAmount(o.MUTASIDB??0),mutasiKredit:parseAmount(o.MUTASIKR??0),_row:index+1};
+   }).filter(a=>a.code);
+  }else{
+   accounts=csvToAccounts(await f.text());
+  }
+  if(!accounts.length)throw Error('File terbaca tetapi tidak ditemukan akun dengan SANDI yang terisi.');
+  if(!state.nptrans.length)throw Error('Data NPTRANS belum tersedia. Impor dan setujui NPTRANS terlebih dahulu.');
   const used=new Set(state.nptrans.map(r=>String(r.sandi||'').trim()).filter(Boolean));
   const selected=accounts.filter(a=>used.has(a.code));
-  const map=new Map(state.accounts.map(a=>[a.code,a]));let added=0,updated=0,ignored=0;
-  selected.forEach(a=>{if(map.has(a.code)){const current=map.get(a.code);Object.assign(current,a);updated++}else{map.set(a.code,a);added++}});
-  ignored=accounts.length-selected.length;state.accounts=[...map.values()];const missingAdded=syncNptransSandis();added+=missingAdded;
+  const map=new Map(state.accounts.map(a=>[String(a.code),a]));let added=0,updated=0;
+  selected.forEach(a=>{
+   if(map.has(a.code)){const current=map.get(a.code);Object.assign(current,a);updated++}
+   else{delete a._row;map.set(a.code,a);added++}
+  });
+  const ignored=accounts.length-selected.length;
+  state.accounts=[...map.values()];
+  const missingAdded=syncNptransSandis();added+=missingAdded;
   await persist();renderAccounts();renderNptrans();
-  setMessage('np-message','Master akun diproses: '+added+' akun baru, '+updated+' nama diperbarui, '+ignored+' akun diabaikan karena tidak dipakai NPTRANS. '+missingAdded+' SANDI dari NPTRANS belum ada di NPSALDO ditambahkan dengan nama kosong.','good')
- }catch(err){setMessage('np-message','Import master akun gagal: '+err.message,'bad')}finally{e.target.value=''}
+  const msg='Master akun berhasil diimpor: '+accounts.length+' record terbaca, '+added+' akun baru, '+updated+' akun diperbarui, '+ignored+' akun tidak dipakai NPTRANS.';
+  if(status)status.textContent=msg;
+  setMessage('np-message',msg,'good');
+  toast('Import master akun berhasil.');
+ }catch(err){
+  const msg='Import master akun gagal: '+err.message;
+  if(status)status.textContent=msg;
+  setMessage('np-message',msg,'bad');
+ }finally{e.target.value=''}
 };
 $('np-search').addEventListener('input',()=>{npPage=1;renderNptrans()});$('np-prev').onclick=()=>{npPage=Math.max(1,npPage-1);renderNptrans()};$('np-next').onclick=()=>{npPage++;renderNptrans()};$('export-np-csv').onclick=exportNpCsv;$('export-np-dbf').onclick=exportDbf;
 
