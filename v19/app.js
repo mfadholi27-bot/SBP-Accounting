@@ -215,9 +215,16 @@ function exportAccountTemplateCsv(){const rows=accountTemplateRows();downloadBlo
 function exportAccountTemplateXlsx(){exportXlsxSheet('Format-Import-Master-Akun-SBP.xlsx','Master Akun',accountTemplateRows())}
 $('download-account-template-csv').onclick=exportAccountTemplateCsv;
 $('download-account-template-xlsx').onclick=exportAccountTemplateXlsx;
-$('account-file').onchange=async e=>{
- const f=e.target.files?.[0];if(!f)return;
+let selectedAccountFile=null;
+$('account-file').onchange=e=>{
+ selectedAccountFile=e.target.files?.[0]||null;
+ $('import-account-button').disabled=!selectedAccountFile;
+ $('account-import-status').textContent=selectedAccountFile?'File dipilih: '+selectedAccountFile.name+'. Tekan tombol Import Master Akun untuk memproses.':'Belum ada file master akun dipilih.';
+};
+$('import-account-button').onclick=async()=>{
+ const f=selectedAccountFile;if(!f)return;
  const status=$('account-import-status');
+ $('import-account-button').disabled=true;
  if(status)status.textContent='Membaca '+f.name+'...';
  try{
   let accounts=[];
@@ -249,7 +256,7 @@ $('account-file').onchange=async e=>{
   const msg='Import master akun gagal: '+err.message;
   if(status)status.textContent=msg;
   toast(msg);
- }finally{e.target.value=''}
+ }finally{$('account-file').value='';selectedAccountFile=null;$('import-account-button').disabled=true}
 };
 $('clear-np-data').onclick=async()=>{
  const count=state.nptrans.length;
