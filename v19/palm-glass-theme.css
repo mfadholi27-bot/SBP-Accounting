@@ -190,3 +190,10 @@ html,body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif!important}
  #page-ledger .ledger-submit{width:100%!important}
  #page-ledger .ledger-actions{justify-content:stretch!important}
 }
+
+/* V60 — visible build identity */
+.app-footer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;flex-wrap:wrap!important}
+.build-stamp{display:inline-flex!important;align-items:center!important;gap:10px!important;flex-wrap:wrap!important;padding:7px 11px!important;border:1px solid #dbe7df!important;border-radius:9px!important;background:#fff!important;color:#475569!important;font-size:11px!important;line-height:1.4!important}
+.build-stamp b{color:#14532d!important;font-size:11px!important;letter-spacing:.35px!important}
+.build-stamp .build-loaded{padding:2px 7px!important;border-radius:999px!important;background:#ecfdf3!important;color:#166534!important;font-weight:650!important}
+@media(max-width:650px){.app-footer{align-items:flex-start!important;flex-direction:column!important}.build-stamp{gap:6px!important}}
