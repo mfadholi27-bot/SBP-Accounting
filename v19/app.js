@@ -602,7 +602,8 @@ function printDocument(title,subtitle,body,orientation='portrait'){
  const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4, pageSize=pageOrientation==='landscape'?paper.split(' ').reverse().join(' '):paper;
  const margin=Math.max(5,Math.min(25,Number(PRINT_CONFIG.margin)||10))+'mm';
  const printed=new Date().toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
- const style='@page{size:'+pageSize+';margin:'+margin+'}'+ '@page{@bottom-right{content:"Halaman "+counter(page);font:8pt Arial;color:#64748b}}'+
+ const style='@page{size:'+pageSize+';margin:'+margin+'}'+
+ '.journal-line-notes{min-width:38mm;white-space:normal;line-height:1.35}.journal-line-note{margin:0 0 1mm;break-inside:avoid}.journal-line-note b{white-space:nowrap}.muted{color:#64748b;font-style:italic}'+ '@page{@bottom-right{content:"Halaman "+counter(page);font:8pt Arial;color:#64748b}}'+
  '*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#17212b;font:'+Number(PRINT_CONFIG.fontSize||8)+'pt Arial,Helvetica,sans-serif}'+
  '.sheet{width:100%}.header{border-bottom:2px solid #176b4a;padding:0 0 5mm;margin-bottom:3mm}'+
  '.brand{font-size:15pt;font-weight:800;letter-spacing:.5px;color:#145c40}.brand small{display:block;font-size:7.5pt;font-weight:500;letter-spacing:1px;color:#64748b;margin-top:1mm}'+
@@ -641,10 +642,14 @@ function printOpeningBalances(){
 }
 function printAccounts(){const q=($('account-search')?.value||'').trim().toLowerCase(),items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));const body=printSummary([['Jumlah akun',String(items.length)]])+printTable(['NO','KODE / SANDI','NAMA AKUN'],items.map((a,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(a.code)+'</td><td>'+esc(a.name)+'</td></tr>'));printDocument('DAFTAR MASTER AKUN','Daftar kode dan nama akun sesuai filter pencarian aktif',body,'portrait')}
 function printJournalList(){
- const q=($('journal-search')?.value||'').toLowerCase().trim(),status=$('journal-status-filter')?.value||'all',items=state.journals.filter(j=>(j.number+' '+j.description+' '+(j.date||'')).toLowerCase().includes(q)&&(status==='all'||(status==='draft'?j.status==='draft':j.status!=='draft'))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ const q=($('journal-search')?.value||'').toLowerCase().trim(),status=$('journal-status-filter')?.value||'all',items=state.journals.filter(j=>(j.number+' '+j.description+' '+(j.date||'')+' '+(j.lines||[]).map(l=>l.note||'').join(' ')).toLowerCase().includes(q)&&(status==='all'||(status==='draft'?j.status==='draft':j.status!=='draft'))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
  const d=items.reduce((n,j)=>n+(j.lines||[]).reduce((s,l)=>s+Number(l.debit||0),0),0),c=items.reduce((n,j)=>n+(j.lines||[]).reduce((s,l)=>s+Number(l.credit||0),0),0);
- const body=printSummary([['Jumlah jurnal',String(items.length)],['Status',status==='all'?'Semua':status==='draft'?'Draft':'Terposting'],['Total debit',printMoney(d)],['Total kredit',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['TANGGAL','NO. BUKTI','KETERANGAN','STATUS','JUMLAH BARIS','DEBIT','KREDIT'],items.map(j=>{const jd=(j.lines||[]).reduce((n,l)=>n+Number(l.debit||0),0),jc=(j.lines||[]).reduce((n,l)=>n+Number(l.credit||0),0);return '<tr><td>'+esc(fmtDate(j.date))+'</td><td>'+esc(j.number)+'</td><td>'+esc(j.description)+'</td><td>'+(j.status==='draft'?'DRAFT':'TERPOSTING')+'</td><td class="num">'+(j.lines||[]).length+'</td><td class="num">'+printMoney(jd)+'</td><td class="num">'+printMoney(jc)+'</td></tr>'}));
- printDocument('DAFTAR JURNAL','Daftar sesuai filter pencarian dan status aktif',body,'landscape');
+ const body=printSummary([['Jumlah jurnal',String(items.length)],['Status',status==='all'?'Semua':status==='draft'?'Draft':'Terposting'],['Total debit',printMoney(d)],['Total kredit',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['TANGGAL','NO. BUKTI','KETERANGAN','KETERANGAN BARIS','STATUS','JUMLAH BARIS','DEBIT','KREDIT'],items.map(j=>{
+  const lines=j.lines||[],jd=lines.reduce((n,l)=>n+Number(l.debit||0),0),jc=lines.reduce((n,l)=>n+Number(l.credit||0),0);
+  const lineNotes=lines.map((l,i)=>'<div class="journal-line-note"><b>'+String(i+1)+'. '+esc(l.code||'')+'</b> — '+(String(l.note||'').trim()?esc(l.note):'<span class="muted">Tidak ada keterangan</span>')+'</div>').join('');
+  return '<tr><td>'+esc(fmtDate(j.date))+'</td><td>'+esc(j.number)+'</td><td>'+esc(j.description)+'</td><td class="journal-line-notes">'+(lineNotes||'—')+'</td><td>'+(j.status==='draft'?'DRAFT':'TERPOSTING')+'</td><td class="num">'+lines.length+'</td><td class="num">'+printMoney(jd)+'</td><td class="num">'+printMoney(jc)+'</td></tr>';
+ }));
+ printDocument('DAFTAR JURNAL','Daftar sesuai filter pencarian dan status aktif; keterangan baris ditampilkan per akun',body,'landscape');
 }
 function printCurrentPage(){
  const active=document.querySelector('.page.active');if(!active){toast('Tidak ada halaman aktif untuk dicetak.');return}
