@@ -558,8 +558,8 @@ function printDocument(title,subtitle,body,orientation='portrait'){
  let root=document.getElementById('sbp-print-root');if(!root){root=document.createElement('div');root.id='sbp-print-root';document.body.appendChild(root)}
  const now=new Date(),printed=now.toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
  root.innerHTML='<div class="sbp-print-sheet"><header class="sbp-print-header"><div class="sbp-print-brand">SBP ACCOUNTING <small>SISTEM INFORMASI AKUNTANSI · V19</small></div><div class="sbp-print-heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header><div class="sbp-print-meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>'+body+printSignatures()+'<footer class="sbp-print-footer">SBP Accounting V19 · Dokumen hasil cetak sistem</footer></div>';
- document.body.classList.add('sbp-printing');document.documentElement.dataset.printOrientation=orientation;document.title='SBP Accounting - '+title;
- const cleanup=()=>{document.body.classList.remove('sbp-printing');delete document.documentElement.dataset.printOrientation;document.title='SBP Accounting V19';root.innerHTML='';window.removeEventListener('afterprint',cleanup)};
+ document.body.classList.add('sbp-printing');document.documentElement.dataset.printOrientation=orientation;let pageRule=document.getElementById('sbp-print-page-rule');if(!pageRule){pageRule=document.createElement('style');pageRule.id='sbp-print-page-rule';document.head.appendChild(pageRule)}pageRule.textContent='@page{size: '+(orientation==='landscape'?'330mm 215mm':'215mm 330mm')+';margin: '+(orientation==='landscape'?'10mm':'13mm 12mm 16mm')+'}';document.title='SBP Accounting - '+title;
+ const cleanup=()=>{document.body.classList.remove('sbp-printing');delete document.documentElement.dataset.printOrientation;document.title='SBP Accounting V19';root.innerHTML='';pageRule.remove();window.removeEventListener('afterprint',cleanup)};
  window.addEventListener('afterprint',cleanup,{once:true});
  requestAnimationFrame(()=>requestAnimationFrame(()=>window.print()));
 }
