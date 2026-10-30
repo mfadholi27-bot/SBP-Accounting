@@ -15,7 +15,7 @@
     <button class="nav-item active" data-page="dashboard"><span>▦</span>Dashboard</button>
     <div class="side-label nav-group-label">TRANSAKSI</div><button class="nav-item" data-page="journal"><span>＋</span>Input Jurnal</button>
     <button class="nav-item" data-page="journal-list"><span>☷</span>Daftar Jurnal</button>
-    <div class="side-label nav-group-label">MASTER DATA</div><button class="nav-item" data-page="accounts"><span>◎</span>Master Akun</button>
+    <div class="side-label nav-group-label">MASTER DATA</div><button class="nav-item" data-page="accounts"><span>◎</span>Master Akun</button><button class="nav-item" data-page="opening-balances"><span>▧</span>Saldo Awal ACC & Program</button>
     <div class="side-label nav-group-label">LAPORAN & ANALISIS</div><button class="nav-item" data-page="reports"><span>▤</span>Neraca Percobaan / Laporan</button>
     <div class="side-label nav-group-label">SISTEM</div><button class="nav-item" data-page="backup"><span>⤓</span>Backup & Restore</button>
   </nav>
@@ -110,7 +110,25 @@
     <p class="footnote">Catatan: ekspor DBF dikunci sampai struktur file DBF asli tersedia. Format enam kolom saja belum cukup untuk memastikan panjang field, tipe data, encoding, dan kompatibilitas penuh dengan program NPTRANS.</p>
   </div>
 </section>
-<section class="page" id="page-reports"><div class="panel"><div class="panel-head"><div><h3>Neraca saldo</h3><p>Ringkasan mutasi dari seluruh jurnal yang sudah terposting, termasuk jurnal pembalik.</p></div><div class="button-row"><button class="btn" id="export-trial-xlsx">Ekspor Excel</button><button class="btn" id="print-report">Cetak / PDF</button></div></div><div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="trial-balance-content" aria-expanded="false">＋ Tampilkan neraca saldo</button></div><div id="trial-balance-content" hidden><div id="trial-balance" class="empty">Belum ada data jurnal.</div></div></div></section>
+<section class="page" id="page-opening-balances">
+ <div class="panel">
+  <div class="panel-head"><div><h3>Saldo Awal ACC & Program</h3><p>Catat saldo awal per akun untuk periode pembukuan. Data disimpan lokal dan tidak mengubah jurnal historis.</p></div><span class="tag">MASTER SALDO</span></div>
+  <div class="opening-summary" id="opening-summary"></div>
+  <div class="opening-form">
+   <label>Periode<input type="month" id="opening-period"></label>
+   <label>Kode / SANDI akun<select id="opening-account"><option value="">Pilih akun</option></select></label>
+   <label>Saldo normal<select id="opening-side"><option value="debit">Debit</option><option value="credit">Kredit</option></select></label>
+   <label>Nominal saldo<input type="number" min="0" step="0.01" id="opening-amount" placeholder="0"></label>
+   <label class="opening-note">Keterangan<input id="opening-note" placeholder="Contoh: Saldo awal periode"></label>
+   <button class="btn btn-primary" id="opening-save" type="button">Simpan Saldo Awal</button>
+  </div>
+  <div id="opening-message" class="inline-message">Pilih periode, akun, sisi saldo normal, dan nominal. Satu akun hanya boleh memiliki satu saldo awal per periode.</div>
+ </div>
+ <div class="panel">
+  <div class="panel-head"><div><h3>Daftar Saldo Awal</h3><p>Saldo awal berdasarkan periode yang dipilih.</p></div><div class="button-row"><button class="btn" id="opening-print" type="button">Cetak / PDF</button><button class="btn" id="opening-export" type="button">Ekspor Excel</button></div></div>
+  <div class="table-wrap"><table><thead><tr><th>No</th><th>SANDI</th><th>Nama Akun</th><th>Keterangan</th><th>Debit Awal</th><th>Kredit Awal</th><th>Aksi</th></tr></thead><tbody id="opening-rows"></tbody><tfoot id="opening-foot"></tfoot></table></div>
+ </div>
+</section><section class="page" id="page-reports"><div class="panel"><div class="panel-head"><div><h3>Neraca saldo</h3><p>Ringkasan mutasi dari seluruh jurnal yang sudah terposting, termasuk jurnal pembalik.</p></div><div class="button-row"><button class="btn" id="export-trial-xlsx">Ekspor Excel</button><button class="btn" id="print-report">Cetak / PDF</button></div></div><div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="trial-balance-content" aria-expanded="false">＋ Tampilkan neraca saldo</button></div><div id="trial-balance-content" hidden><div id="trial-balance" class="empty">Belum ada data jurnal.</div></div></div></section>
 <section class="page" id="page-backup"><div class="panel"><div class="panel-head"><div><h3>Backup & pemulihan data</h3><p>Data disimpan lokal di browser/perangkat ini. Backup secara rutin; data legacy tetap ikut tersimpan dalam backup lama.</p></div><span class="tag">LOCAL DATA</span></div><div class="backup-grid"><div class="backup-card"><h4>Unduh backup</h4><p>Simpan akun, jurnal, dan data NPTRANS dalam satu file JSON.</p><button class="btn btn-primary" id="backup-download">Unduh backup JSON</button></div><div class="backup-card"><h4>Pulihkan backup</h4><p>Memuat kembali data dari backup JSON. Data lokal saat ini akan digantikan.</p><label class="file-btn">Pilih backup JSON<input type="file" id="backup-file" accept=".json,application/json"></label></div></div><div id="backup-message" class="inline-message">Lakukan backup sebelum berpindah browser atau perangkat.</div></div></section>
 <footer>SBP Accounting V19 · HTML / CSS / JavaScript · Offline-first · DBF compatibility in progress</footer>
 </main></div>
