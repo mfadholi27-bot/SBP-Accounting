@@ -99,3 +99,55 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:1000px){.shell{grid-template-columns:220px minmax(0,1fr)!important}.sidebar{padding:18px 12px!important}.stats,.quick-grid{gap:12px!important}}
 @media(max-width:760px){.shell{grid-template-columns:1fr!important}.sidebar{position:relative;height:auto;width:auto;padding:12px!important}.sidebar nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sidebar .brand{padding-bottom:12px!important}.sidebar-foot{display:none}.main{padding:16px!important}.topbar{align-items:flex-start!important;flex-wrap:wrap}.top-actions{width:100%}.stats,.quick-grid{grid-template-columns:1fr!important}.stat,.quick-card,.panel{padding:16px!important}.welcome{padding:20px!important}.welcome h2{font-size:20px!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* V56 — Ledger page alignment and typography correction */
+:root{font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+html,body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif!important}
+.topbar h1{font-size:22px!important;font-weight:650!important;letter-spacing:-.35px!important;line-height:1.3!important;color:#14532d!important}
+.page .panel-head h3{font-size:17px!important;font-weight:650!important;letter-spacing:-.25px!important;line-height:1.4!important}
+.page .panel-head p{font-size:13px!important;line-height:1.55!important;color:#64748b!important}
+#page-ledger .panel{padding:24px!important}
+#page-ledger .panel-head{align-items:flex-start!important;margin-bottom:20px!important}
+#page-ledger .panel-head .tag{flex:0 0 auto;margin-top:2px}
+#page-ledger .ledger-filters{
+ display:grid!important;
+ grid-template-columns:minmax(170px,210px) minmax(260px,1fr) auto!important;
+ align-items:end!important;gap:14px!important;
+ margin:0 0 16px!important;padding:0!important;
+}
+#page-ledger .ledger-field{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;min-width:0!important;color:#334155!important;font-size:12px!important;font-weight:600!important;line-height:1.4!important}
+#page-ledger .ledger-field input,#page-ledger .ledger-field select{
+ display:block!important;width:100%!important;min-width:0!important;height:42px!important;min-height:42px!important;
+ padding:0 12px!important;border:1px solid #cbd5e1!important;border-radius:8px!important;
+ background:#fff!important;color:#0f172a!important;font-size:13px!important;font-weight:450!important;
+ line-height:normal!important;box-shadow:0 1px 2px rgba(15,23,42,.035)!important;
+}
+#page-ledger .ledger-submit{height:42px!important;min-height:42px!important;white-space:nowrap!important;gap:8px!important;padding:0 16px!important;font-size:12px!important}
+#page-ledger .ledger-submit svg,#page-ledger .ledger-actions svg{width:16px;height:16px}
+#page-ledger .ledger-actions{grid-column:1/-1!important;display:flex!important;justify-content:flex-end!important;gap:8px!important;margin-top:0!important}
+#page-ledger .ledger-actions .btn{height:38px!important;min-height:38px!important;display:inline-flex!important;align-items:center!important;gap:8px!important;padding:0 13px!important}
+#page-ledger .opening-summary{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;margin:18px 0!important}
+#page-ledger .opening-summary>div{min-width:0!important;padding:14px 15px!important;border:1px solid #e2e8f0!important;border-radius:10px!important;background:#f8fafc!important}
+#page-ledger .opening-summary span{font-size:11px!important;color:#64748b!important}
+#page-ledger .opening-summary b{font-size:14px!important;font-weight:650!important;color:#0f172a!important;font-variant-numeric:tabular-nums lining-nums;overflow-wrap:anywhere}
+#page-ledger #ledger-content{margin-top:14px!important}
+#page-ledger #ledger-content table{min-width:760px!important}
+#page-ledger #ledger-content th{font-size:11px!important;white-space:nowrap!important}
+#page-ledger #ledger-content td{font-size:12px!important}
+#page-ledger .empty{min-height:110px!important;display:grid!important;place-items:center!important;padding:24px!important;color:#64748b!important;font-size:13px!important;text-align:center!important}
+@media(max-width:900px){
+ #page-ledger .ledger-filters{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)!important}
+ #page-ledger .ledger-submit{grid-column:1/-1!important;justify-self:start!important}
+ #page-ledger .ledger-actions{grid-column:1/-1!important;justify-content:flex-start!important}
+ #page-ledger .opening-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:600px){
+ #page-ledger .panel{padding:16px!important}
+ #page-ledger .panel-head{gap:10px!important;flex-wrap:wrap!important}
+ #page-ledger .ledger-filters{grid-template-columns:1fr!important;gap:12px!important}
+ #page-ledger .ledger-submit{grid-column:auto!important;width:100%!important;justify-content:center!important}
+ #page-ledger .ledger-actions{grid-column:auto!important;width:100%!important}
+ #page-ledger .ledger-actions .btn{flex:1!important;justify-content:center!important}
+ #page-ledger .opening-summary{grid-template-columns:1fr 1fr!important}
+ .topbar h1{font-size:20px!important}
+}
