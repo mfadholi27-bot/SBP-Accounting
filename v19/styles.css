@@ -229,3 +229,6 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 
 /* Bulk journal posting */
 .bulk-post-panel{margin:0 0 16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fff}.bulk-post-controls{display:flex;align-items:end;flex-wrap:wrap;gap:10px}.bulk-post-controls label{display:flex;flex-direction:column;gap:5px;min-width:150px;font-size:12px;color:var(--muted)}.bulk-post-controls input,.bulk-post-controls select{min-height:38px}.bulk-post-result{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}.bulk-post-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.bulk-post-stats>div{display:flex;flex-direction:column;gap:3px}.bulk-post-stats span{font-size:11px;color:var(--muted)}.bulk-post-stats b{font-size:13px;overflow-wrap:anywhere}.bulk-post-invalid{margin-top:12px;color:#a16207}.bulk-post-invalid ul{margin:6px 0 0;padding-left:20px}.bulk-post-actions{display:flex;justify-content:flex-end;margin-top:12px}@media(max-width:700px){.bulk-post-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.bulk-post-controls label{flex:1 1 100%}.bulk-post-actions .btn{width:100%}}
+
+/* SBP branded application icon */
+.brand-logo{display:block;width:46px;height:46px;object-fit:contain;border-radius:12px;flex:0 0 46px;box-shadow:0 3px 10px rgba(0,70,40,.18)}
