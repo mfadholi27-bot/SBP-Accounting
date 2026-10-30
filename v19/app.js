@@ -548,11 +548,66 @@ $('opening-save').addEventListener('click',async()=>{
 $('opening-print').onclick=()=>window.print();
 $('opening-export').onclick=()=>{const p=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===p);if(!window.XLSX){toast('Modul Excel belum tersedia.');return}const rows=[['Periode',p],[],['SANDI','NAMA AKUN','KETERANGAN','DEBIT AWAL','KREDIT AWAL'],...items.map(x=>[x.accountCode,state.accounts.find(a=>a.code===x.accountCode)?.name||'',x.note||'',Number(x.debit||0),Number(x.credit||0)])];const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Saldo Awal');XLSX.writeFile(wb,'Saldo-Awal-'+p+'.xlsx')};
 
-function printCurrentPage(){const active=document.querySelector('.page.active');if(!active){window.print();return}const title=$('page-title')?.textContent||'Laporan';document.title='SBP Accounting - '+title;window.print();setTimeout(()=>{document.title='SBP Accounting V19'},800)}
+/* PRINT ENGINE V1 — independent report renderer; does not mutate accounting records. */
+const PRINT_CONFIG={paper:'F4',orientation:'auto',header:'simple',signatures:true,summary:true,pageNumbers:true};
+function printMoney(v){return money(Number(v||0))}
+function printTable(headers,rows,foot=''){return '<table class="sbp-print-table"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody>'+(foot?'<tfoot>'+foot+'</tfoot>':'')+'</table>'}
+function printSummary(items){return PRINT_CONFIG.summary?'<section class="sbp-print-summary">'+items.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>').join('')+'</section>':''}
+function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-print-signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':''}
+function printDocument(title,subtitle,body,orientation='portrait'){
+ let root=document.getElementById('sbp-print-root');if(!root){root=document.createElement('div');root.id='sbp-print-root';document.body.appendChild(root)}
+ const now=new Date(),printed=now.toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
+ root.innerHTML='<div class="sbp-print-sheet"><header class="sbp-print-header"><div class="sbp-print-brand">SBP ACCOUNTING <small>SISTEM INFORMASI AKUNTANSI · V19</small></div><div class="sbp-print-heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header><div class="sbp-print-meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>'+body+printSignatures()+'<footer class="sbp-print-footer">SBP Accounting V19 · Dokumen hasil cetak sistem</footer></div>';
+ document.body.classList.add('sbp-printing');document.documentElement.dataset.printOrientation=orientation;document.title='SBP Accounting - '+title;
+ const cleanup=()=>{document.body.classList.remove('sbp-printing');delete document.documentElement.dataset.printOrientation;document.title='SBP Accounting V19';root.innerHTML='';window.removeEventListener('afterprint',cleanup)};
+ window.addEventListener('afterprint',cleanup,{once:true});
+ requestAnimationFrame(()=>requestAnimationFrame(()=>window.print()));
+}
+function printTrialBalance(){
+ const period=$('report-period').value,rows=getTrialBalanceRows(period),d=rows.reduce((n,r)=>n+r.endingDebit,0),c=rows.reduce((n,r)=>n+r.endingCredit,0);
+ const body=printSummary([['Periode',period],['Jumlah akun',String(rows.length)],['Total saldo akhir debit',printMoney(d)],['Total saldo akhir kredit',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['SANDI','NAMA AKUN','SALDO AWAL D','SALDO AWAL K','MUTASI D','MUTASI K','SALDO AKHIR D','SALDO AKHIR K'],rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+printMoney(r.openingDebit)+'</td><td class="num">'+printMoney(r.openingCredit)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+printMoney(r.endingDebit)+'</td><td class="num">'+printMoney(r.endingCredit)+'</td></tr>'),'<tr><th colspan="2">TOTAL</th><th class="num">'+printMoney(rows.reduce((n,r)=>n+r.openingDebit,0))+'</th><th class="num">'+printMoney(rows.reduce((n,r)=>n+r.openingCredit,0))+'</th><th class="num">'+printMoney(rows.reduce((n,r)=>n+r.debit,0))+'</th><th class="num">'+printMoney(rows.reduce((n,r)=>n+r.credit,0))+'</th><th class="num">'+printMoney(d)+'</th><th class="num">'+printMoney(c)+'</th></tr>');
+ printDocument('NERACA PERCOBAAN','Periode '+period,body,'landscape');
+}
+function printLedger(){
+ const period=$('ledger-period').value,code=$('ledger-account').value,result=getLedgerTransactions(period,code);if(!result){toast('Pilih periode dan akun terlebih dahulu.');return}
+ const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),c=moves.reduce((n,r)=>n+r.credit,0);
+ const body=printSummary([['Periode',period],['Akun',result.account.code+' · '+result.account.name],['Saldo awal',printMoney(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',printMoney(result.endingNet)]])+printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal periode':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+printMoney(r.balanceDebit)+'</td><td class="num">'+printMoney(r.balanceCredit)+'</td></tr>'));
+ printDocument('BUKU BESAR PER AKUN','Periode '+period,body,'portrait');
+}
+function printOpeningBalances(){
+ const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
+ const body=printSummary([['Periode',period],['Jumlah akun',String(items.length)],['Total debit awal',printMoney(d)],['Total kredit awal',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['NO','SANDI','NAMA AKUN','KETERANGAN','DEBIT AWAL','KREDIT AWAL'],items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.accountCode)+'</td><td>'+esc(state.accounts.find(a=>a.code===x.accountCode)?.name||'(Akun tidak ditemukan)')+'</td><td>'+esc(x.note||'')+'</td><td class="num">'+printMoney(x.debit)+'</td><td class="num">'+printMoney(x.credit)+'</td></tr>'),'<tr><th colspan="4">TOTAL</th><th class="num">'+printMoney(d)+'</th><th class="num">'+printMoney(c)+'</th></tr>');
+ printDocument('DAFTAR SALDO AWAL ACC & PROGRAM','Periode '+period,body,'landscape');
+}
+function printAccounts(){
+ const q=($('account-search')?.value||'').trim().toLowerCase(),items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));
+ const d=items.reduce((n,a)=>n+Math.max(accountActual(a),0),0),c=items.reduce((n,a)=>n+Math.max(-accountActual(a),0),0);
+ const body=printSummary([['Jumlah akun',String(items.length)],['Total saldo debit',printMoney(d)],['Total saldo kredit',printMoney(c)]])+printTable(['NO','KODE / SANDI','NAMA AKUN','SALDO AWAL','MUTASI DEBIT','MUTASI KREDIT','SALDO AKTUAL'],items.map((a,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(a.code)+'</td><td>'+esc(a.name)+'</td><td class="num">'+printMoney(a.ptdacost)+'</td><td class="num">'+printMoney(a.mutasiDebit)+'</td><td class="num">'+printMoney(a.mutasiKredit)+'</td><td class="num">'+printMoney(accountActual(a))+'</td></tr>'));
+ printDocument('DAFTAR MASTER AKUN','Seluruh akun sesuai filter pencarian aktif',body,'landscape');
+}
+function printJournalList(){
+ const q=($('journal-search')?.value||'').toLowerCase().trim(),status=$('journal-status-filter')?.value||'all',items=state.journals.filter(j=>(j.number+' '+j.description+' '+(j.date||'')).toLowerCase().includes(q)&&(status==='all'||(status==='draft'?j.status==='draft':j.status!=='draft'))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ const d=items.reduce((n,j)=>n+(j.lines||[]).reduce((s,l)=>s+Number(l.debit||0),0),0),c=items.reduce((n,j)=>n+(j.lines||[]).reduce((s,l)=>s+Number(l.credit||0),0),0);
+ const body=printSummary([['Jumlah jurnal',String(items.length)],['Status',status==='all'?'Semua':status==='draft'?'Draft':'Terposting'],['Total debit',printMoney(d)],['Total kredit',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['TANGGAL','NO. BUKTI','KETERANGAN','STATUS','JUMLAH BARIS','DEBIT','KREDIT'],items.map(j=>{const jd=(j.lines||[]).reduce((n,l)=>n+Number(l.debit||0),0),jc=(j.lines||[]).reduce((n,l)=>n+Number(l.credit||0),0);return '<tr><td>'+esc(fmtDate(j.date))+'</td><td>'+esc(j.number)+'</td><td>'+esc(j.description)+'</td><td>'+(j.status==='draft'?'DRAFT':'TERPOSTING')+'</td><td class="num">'+(j.lines||[]).length+'</td><td class="num">'+printMoney(jd)+'</td><td class="num">'+printMoney(jc)+'</td></tr>'}));
+ printDocument('DAFTAR JURNAL','Daftar sesuai filter pencarian dan status aktif',body,'landscape');
+}
+function printCurrentPage(){
+ const active=document.querySelector('.page.active');if(!active){toast('Tidak ada halaman aktif untuk dicetak.');return}
+ const id=active.id;
+ if(id==='page-reports')return printTrialBalance();
+ if(id==='page-ledger')return printLedger();
+ if(id==='page-opening-balances')return printOpeningBalances();
+ if(id==='page-accounts')return printAccounts();
+ if(id==='page-journal-list')return printJournalList();
+ toast('Cetak profesional tersedia untuk Daftar Jurnal, Master Akun, Saldo Awal, Buku Besar, dan Neraca Percobaan.');
+}
 $('print-current-page').onclick=printCurrentPage;
-$('print-journal-list').onclick=()=>{go('journal-list');setTimeout(()=>window.print(),50)};
-$('print-accounts').onclick=()=>{const box=$('account-list-content');const wasHidden=box.hidden;box.hidden=false;renderAccounts();setTimeout(()=>{window.print();box.hidden=wasHidden},100)};
-$('print-report').onclick=()=>window.print();$('export-trial-xlsx').onclick=exportTrialBalanceXlsx;
+$('print-journal-list').onclick=printJournalList;
+$('print-accounts').onclick=printAccounts;
+$('print-report').onclick=printTrialBalance;
+$('opening-print').onclick=printOpeningBalances;
+$('ledger-print').onclick=printLedger;
+$('export-trial-xlsx').onclick=exportTrialBalanceXlsx;
 
 $('backup-download').onclick=()=>{const safeState=JSON.parse(JSON.stringify(state));if(safeState.npTemplate?.fields)safeState.npTemplate.fields.forEach(f=>{if(f.raw&&typeof f.raw==='object')f.raw=Array.from(f.raw)});const payload={app:'SBP Accounting',version:19,exportedAt:new Date().toISOString(),state:safeState};downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),'SBP-Accounting-V19-backup.json');setMessage('backup-message','Backup JSON berhasil disiapkan. Simpan di lokasi aman.','good')};
 $('backup-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!requireImportPassword('Pemulihan / Import Backup')){e.target.value='';return}try{const parsed=JSON.parse(await f.text()),candidate=parsed.state||parsed;if(!Array.isArray(candidate.accounts)||!Array.isArray(candidate.journals)||!Array.isArray(candidate.nptrans))throw Error('Struktur backup tidak dikenali.');if(!confirm('Pulihkan backup? Data lokal saat ini akan digantikan.'))return;state={...emptyState(),...candidate};if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();renderDashboard();setMessage('backup-message','Backup berhasil dipulihkan.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}e.target.value=''};
