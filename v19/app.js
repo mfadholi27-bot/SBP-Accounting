@@ -30,6 +30,12 @@ function editJournal(id){const j=state.journals.find(x=>x.id===id);if(!j)return;
 $('journal-search').addEventListener('input',renderJournals);
 
 function accountActual(a){return Number(a.ptdacost||0)+Number(a.mutasiDebit||0)-Number(a.mutasiKredit||0)}
+function syncNptransSandis(){
+ const map=new Map(state.accounts.map(a=>[String(a.code),a]));let added=0;
+ for(const row of state.nptrans){const code=String(row.sandi||'').trim();if(!code||map.has(code))continue;const blank={code,name:'',ptdacost:0,mutasiDebit:0,mutasiKredit:0};map.set(code,blank);added++}
+ if(added)state.accounts=[...map.values()];
+ return added;
+}
 function accountAmountInput(id,value){$(id).value=Number(value||0)}
 function updateAccountActualPreview(){const v=Number($('a-ptdacost').value||0)+Number($('a-mutasi-debit').value||0)-Number($('a-mutasi-kredit').value||0);$('a-actual-balance').value=money(v)}
 function renderAccounts(){
@@ -161,8 +167,8 @@ $('np-import-confirm').onclick=async()=>{
    for(const row of batch.rows){const k=npKey(row);if(seen.has(k)){skipped++;continue}seen.add(k);state.nptrans.push(row);added++}
   }
   if(batch.parsed)state.npTemplate={fields:batch.parsed.fields,version:batch.parsed.version};
-  await persist();pendingNpImport=null;$('np-import-review').hidden=true;npPage=1;renderNptrans();
-  setMessage('np-message','Persetujuan berhasil. File '+batch.fileName+' · dibaca '+batch.totalRead+' · ditambahkan '+added+' · duplikat dilewati '+skipped+' · ditolak '+batch.rejected+' · total tersimpan '+state.nptrans.length+'. Data belum otomatis diposting menjadi jurnal.','good');
+  const missingAccounts=syncNptransSandis();await persist();pendingNpImport=null;$('np-import-review').hidden=true;npPage=1;renderAccounts();renderNptrans();
+  setMessage('np-message','Persetujuan berhasil. File '+batch.fileName+' · dibaca '+batch.totalRead+' · ditambahkan '+added+' · duplikat dilewati '+skipped+' · ditolak '+batch.rejected+' · total tersimpan '+state.nptrans.length+' · SANDI baru ditambahkan ke master akun dengan nama kosong: '+missingAccounts+'. Data belum otomatis diposting menjadi jurnal.','good');
   toast('Impor massal disetujui: '+added+' baris ditambahkan.')
  }catch(err){setMessage('np-message','Penyimpanan impor gagal: '+err.message,'bad')}
 };
@@ -171,7 +177,7 @@ $('account-file').onchange=async e=>{
  const f=e.target.files[0];if(!f)return;
  try{
   let accounts;
-  if(f.name.toLowerCase().endsWith('.dbf')){const p=parseDBF(await f.arrayBuffer());accounts=p.records.map(r=>{const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);return {code:String(o.SANDI??o.KODE??''),name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??''),ptdacost:Number(o.PTDACOST||0),mutasiDebit:Number(o.MUTASIDB||0),mutasiKredit:Number(o.MUTASIKR||0)}}).filter(a=>a.code&&a.name)}
+  if(f.name.toLowerCase().endsWith('.dbf')){const p=parseDBF(await f.arrayBuffer());accounts=p.records.map(r=>{const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);return {code:String(o.SANDI??o.KODE??''),name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??''),ptdacost:Number(o.PTDACOST||0),mutasiDebit:Number(o.MUTASIDB||0),mutasiKredit:Number(o.MUTASIKR||0)}}).filter(a=>a.code)}
   else accounts=csvToAccounts(await f.text());
   if(!state.nptrans.length)throw Error('Impor NPTRANS AGT terlebih dahulu. Master akun akan disaring berdasarkan SANDI yang benar-benar dipakai pada transaksi.');
   const used=new Set(state.nptrans.map(r=>r.sandi));
@@ -180,7 +186,7 @@ $('account-file').onchange=async e=>{
   selected.forEach(a=>{if(map.has(a.code)){const current=map.get(a.code);Object.assign(current,a);updated++}else{map.set(a.code,a);added++}});
   ignored=accounts.length-selected.length;state.accounts=[...map.values()];
   await persist();renderAccounts();renderNptrans();
-  setMessage('np-message','Master akun diproses: '+added+' akun baru, '+updated+' nama diperbarui, '+ignored+' akun diabaikan karena tidak dipakai NPTRANS.','good')
+  setMessage('np-message','Master akun diproses: '+added+' akun baru, '+updated+' nama diperbarui, '+ignored+' akun diabaikan karena tidak dipakai NPTRANS. '+missingAdded+' SANDI dari NPTRANS belum ada di NPSALDO ditambahkan dengan nama kosong.','good')
  }catch(err){setMessage('np-message','Import master akun gagal: '+err.message,'bad')}finally{e.target.value=''}
 };
 $('np-search').addEventListener('input',()=>{npPage=1;renderNptrans()});$('np-prev').onclick=()=>{npPage=Math.max(1,npPage-1);renderNptrans()};$('np-next').onclick=()=>{npPage++;renderNptrans()};$('export-np-csv').onclick=exportNpCsv;$('export-np-dbf').onclick=exportDbf;
@@ -191,5 +197,5 @@ $('print-report').onclick=()=>window.print();
 $('backup-download').onclick=()=>{const safeState=JSON.parse(JSON.stringify(state));if(safeState.npTemplate?.fields)safeState.npTemplate.fields.forEach(f=>{if(f.raw&&typeof f.raw==='object')f.raw=Array.from(f.raw)});const payload={app:'SBP Accounting',version:19,exportedAt:new Date().toISOString(),state:safeState};downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),'SBP-Accounting-V19-backup.json');setMessage('backup-message','Backup JSON berhasil disiapkan. Simpan di lokasi aman.','good')};
 $('backup-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const parsed=JSON.parse(await f.text()),candidate=parsed.state||parsed;if(!Array.isArray(candidate.accounts)||!Array.isArray(candidate.journals)||!Array.isArray(candidate.nptrans))throw Error('Struktur backup tidak dikenali.');if(!confirm('Pulihkan backup? Data lokal saat ini akan digantikan.'))return;state={...emptyState(),...candidate};if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();renderDashboard();setMessage('backup-message','Backup berhasil dipulihkan.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}e.target.value=''};
 
-async function init(){await loadState();state.accounts=state.accounts.map(a=>({...a,ptdacost:Number(a.ptdacost||0),mutasiDebit:Number(a.mutasiDebit||0),mutasiKredit:Number(a.mutasiKredit||0)}));resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();renderNptrans();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn)}
+async function init(){await loadState();state.accounts=state.accounts.map(a=>({...a,ptdacost:Number(a.ptdacost||0),mutasiDebit:Number(a.mutasiDebit||0),mutasiKredit:Number(a.mutasiKredit||0)}));syncNptransSandis();await persist();resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();renderNptrans();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn)}
 init();
