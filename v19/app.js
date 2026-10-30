@@ -172,14 +172,16 @@ async function saveJournal(targetStatus){
  const date=$('j-date').value,number=$('j-number').value.trim(),description=$('j-description').value.trim();
  const rows=[...document.querySelectorAll('.entry-row')].map(r=>({code:r.querySelector('.line-code').value,note:r.querySelector('.line-note').value.trim(),debit:Number(r.querySelector('.line-debit').value||0),credit:Number(r.querySelector('.line-credit').value||0)}));
  if(!date||!number||!description){setMessage('journal-message','Tanggal, nomor bukti, dan keterangan wajib diisi.','bad');return}
- if(!periodGuard(date.slice(0,7),'menyimpan atau memposting jurnal'))return;\n if(state.journals.some(j=>j.number===number&&j.id!==editingId)){setMessage('journal-message','Nomor bukti sudah digunakan.','bad');return}
+ if(!periodGuard(date.slice(0,7),'menyimpan atau memposting jurnal'))return;
+ if(state.journals.some(j=>j.number===number&&j.id!==editingId)){setMessage('journal-message','Nomor bukti sudah digunakan.','bad');return}
  if(targetStatus==='posted'){
   if(rows.length<2||rows.some(x=>!x.code||!Number.isFinite(x.debit)||!Number.isFinite(x.credit)||(!x.debit&&!x.credit)||(x.debit&&x.credit)||x.debit<0||x.credit<0)){setMessage('journal-message','Untuk posting, setiap baris wajib memiliki akun dan hanya satu nilai debit/kredit yang valid.','bad');return}
   const debit=rows.reduce((s,x)=>s+x.debit,0),credit=rows.reduce((s,x)=>s+x.credit,0);
   if(Math.abs(debit-credit)>.005){setMessage('journal-message','Jurnal belum seimbang. Selisih: '+money(Math.abs(debit-credit)),'bad');return}
  }else if(rows.some(x=>x.debit<0||x.credit<0||!Number.isFinite(x.debit)||!Number.isFinite(x.credit))){setMessage('journal-message','Nilai debit/kredit tidak boleh negatif atau tidak valid.','bad');return}
  const old=state.journals.find(j=>j.id===editingId);
- if(old&&!periodGuard(String(old.date||'').slice(0,7),'mengubah jurnal lama'))return;\n  if(old&&old.status!=='draft'){setMessage('journal-message','Jurnal terposting tidak dapat diedit. Buat jurnal koreksi/pembalik.','bad');return}
+ if(old&&!periodGuard(String(old.date||'').slice(0,7),'mengubah jurnal lama'))return;
+  if(old&&old.status!=='draft'){setMessage('journal-message','Jurnal terposting tidak dapat diedit. Buat jurnal koreksi/pembalik.','bad');return}
  const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:rows,status:targetStatus,updatedAt:now};
  if(!old)item.createdAt=now;
  if(old)state.journals=state.journals.map(j=>j.id===editingId?item:j);else state.journals.push(item);
@@ -570,6 +572,7 @@ $('opening-period').value=new Date().toISOString().slice(0,7);
 $('opening-period').addEventListener('change',()=>{delete $('opening-save').dataset.edit;$('opening-save').textContent='Simpan Saldo Awal';renderOpeningBalances()});
 $('opening-save').addEventListener('click',async()=>{
  const period=$('opening-period').value,code=$('opening-account').value,amount=Number($('opening-amount').value),side=$('opening-side').value,note=$('opening-note').value.trim(),editing=$('opening-save').dataset.edit;
+  if(!periodGuard(period,'menambah atau mengubah saldo awal'))return;
  if(!/^\d{4}-\d{2}$/.test(period)||!code||!state.accounts.some(a=>a.code===code)||!Number.isFinite(amount)||amount<0||(!amount)){toast('Periksa periode, akun, dan nominal saldo awal.');return}
  const existing=(state.openingBalances||[]).find(x=>x.period===period&&x.accountCode===code);
  if(existing&&!editing){toast('Saldo awal akun ini sudah ada pada periode tersebut. Gunakan Edit.');return}
