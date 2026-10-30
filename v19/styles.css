@@ -181,3 +181,5 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 /* Collapsible data lists: keep long tables hidden until requested. */
 .list-disclosure{display:flex;align-items:center;gap:12px;margin:12px 0}.list-disclosure .list-toggle{font-weight:800}.list-hint{font-size:12px;color:var(--muted)}
 [hidden]{display:none!important}
+
+.bulk-journal-panel{margin-bottom:18px}.bulk-import-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}.bulk-review{margin-top:16px}.bulk-review-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}.bulk-review-head p{margin:5px 0 0;color:var(--muted,#64748b);font-size:13px}.bulk-errors{border:1px solid #efc2c2;background:#fff7f7;color:#923b3b;border-radius:10px;padding:12px 16px;margin:12px 0;font-size:13px}.bulk-errors ul{margin:8px 0 0;padding-left:20px}.bulk-errors li{margin:4px 0}
