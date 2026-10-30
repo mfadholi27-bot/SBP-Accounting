@@ -78,3 +78,6 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 .account-balance{font-weight:800;color:#155f40}
 #account-rows td:last-child{min-width:170px}
 @media(max-width:720px){.np-import-review{align-items:flex-start;flex-direction:column}.np-import-review .button-row{width:100%}.np-import-review .button-row button{flex:1}.account-form-balance{grid-template-columns:repeat(2,minmax(180px,1fr))}}
+
+/* NPTRANS-generated journal drafts */
+.journal-status{white-space:nowrap}
