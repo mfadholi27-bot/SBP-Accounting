@@ -223,3 +223,6 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 #page-journal .form-actions.end{gap:9px;flex-wrap:wrap}
 .journal-icon-btn.reverse-journal{color:#8a5a12;border-color:#ead7b5}
 .journal-icon-btn.reverse-journal:hover{background:#fff7e8}
+
+/* Journal list totals and balance */
+.journal-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0;padding:12px;background:var(--soft);border:1px solid var(--line);border-radius:12px}.journal-totals>div{display:flex;flex-direction:column;gap:3px;min-width:0}.journal-totals span{font-size:11px;color:var(--muted)}.journal-totals b{font-size:14px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.balance-ok{color:var(--green)!important}.balance-warn{color:#b45309!important}@media(max-width:700px){.journal-totals{grid-template-columns:1fr;gap:8px}.journal-totals>div{flex-direction:row;justify-content:space-between;gap:12px}}
