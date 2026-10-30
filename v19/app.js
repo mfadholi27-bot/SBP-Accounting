@@ -163,7 +163,7 @@ function showBulkPreview(rows){
 }
 $('bulk-journal-file').onchange=e=>{const f=e.target.files?.[0];$('bulk-journal-file-name').textContent=f?f.name:'Belum ada file dipilih.';$('bulk-journal-preview').disabled=!f;pendingBulkJournals=[];$('bulk-journal-review').hidden=true};
 $('bulk-journal-preview').onclick=async()=>{const f=$('bulk-journal-file').files?.[0];if(!f)return;try{let rows;if(/\.xlsx?$/i.test(f.name)){if(!window.XLSX)throw Error('Mesin Excel lokal belum siap.');const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:false});let found=null;for(const name of wb.SheetNames){const data=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:true});try{parseBulkJournalRows(data);found=data;break}catch{}}if(!found)throw Error('Format kolom jurnal tidak ditemukan pada sheet Excel.');rows=parseBulkJournalRows(found)}else rows=parseBulkJournalRows(parseCSV(await f.text()));showBulkPreview(rows)}catch(err){pendingBulkJournals=[];$('bulk-journal-review').hidden=true;setMessage('bulk-journal-message','Gagal membaca file: '+err.message,'bad')}};
-$('bulk-journal-save').onclick=async()=>{if(!pendingBulkJournals.length)return;if(!requireImportPassword('Import Jurnal Massal'))return;const existing=new Set(state.journals.map(j=>j.number));if(pendingBulkJournals.some(j=>existing.has(j.number))){setMessage('bulk-journal-message','Ada nomor bukti yang sudah tersimpan. Periksa kembali file.','bad');return}try{state.journals.push(...pendingBulkJournals);await persist();const count=pendingBulkJournals.length;pendingBulkJournals=[];$('bulk-journal-review').hidden=true;$('bulk-journal-file').value='';$('bulk-journal-file-name').textContent='Belum ada file dipilih.';$('bulk-journal-preview').disabled=true;renderDashboard();renderJournals();setMessage('bulk-journal-message',count+' jurnal berhasil disimpan dan siap dilihat di Daftar Jurnal.','good');toast(count+' jurnal massal berhasil disimpan.');go('journal-list');const toggle=document.querySelector('[data-target="journal-list-content"]');if(toggle&&$('journal-list-content').hidden)toggle.click()}catch(err){setMessage('bulk-journal-message','Penyimpanan gagal: '+err.message,'bad')}};
+$('bulk-journal-save').onclick=async()=>{if(!pendingBulkJournals.length)return;if(pendingBulkJournals.some(j=>isPeriodLocked(String(j.date||'').slice(0,7)))){setMessage('bulk-journal-message','Import diblokir: file berisi tanggal pada periode yang sudah ditutup.','bad');return}if(!requireImportPassword('Import Jurnal Massal'))return;const existing=new Set(state.journals.map(j=>j.number));if(pendingBulkJournals.some(j=>existing.has(j.number))){setMessage('bulk-journal-message','Ada nomor bukti yang sudah tersimpan. Periksa kembali file.','bad');return}try{state.journals.push(...pendingBulkJournals);await persist();const count=pendingBulkJournals.length;pendingBulkJournals=[];$('bulk-journal-review').hidden=true;$('bulk-journal-file').value='';$('bulk-journal-file-name').textContent='Belum ada file dipilih.';$('bulk-journal-preview').disabled=true;renderDashboard();renderJournals();setMessage('bulk-journal-message',count+' jurnal berhasil disimpan dan siap dilihat di Daftar Jurnal.','good');toast(count+' jurnal massal berhasil disimpan.');go('journal-list');const toggle=document.querySelector('[data-target="journal-list-content"]');if(toggle&&$('journal-list-content').hidden)toggle.click()}catch(err){setMessage('bulk-journal-message','Penyimpanan gagal: '+err.message,'bad')}};
 $('bulk-journal-cancel').onclick=()=>{$('bulk-journal-review').hidden=true;pendingBulkJournals=[]};
 $('bulk-journal-template').onclick=()=>exportXlsxSheet('Format-Import-Jurnal-Massal-SBP.xlsx','Input Jurnal',[['TANGGAL','NOBUKTI','KETERANGAN','STATUS','SANDI','KETERANGAN BARIS','DEBIT','KREDIT'],['2026-10-01','JU/001/2026','Contoh transaksi','POSTED','111.100','Kas bertambah',100000,0],['2026-10-01','JU/001/2026','Contoh transaksi','POSTED','311.100','Modal disetor',0,100000]]);
 
@@ -172,14 +172,14 @@ async function saveJournal(targetStatus){
  const date=$('j-date').value,number=$('j-number').value.trim(),description=$('j-description').value.trim();
  const rows=[...document.querySelectorAll('.entry-row')].map(r=>({code:r.querySelector('.line-code').value,note:r.querySelector('.line-note').value.trim(),debit:Number(r.querySelector('.line-debit').value||0),credit:Number(r.querySelector('.line-credit').value||0)}));
  if(!date||!number||!description){setMessage('journal-message','Tanggal, nomor bukti, dan keterangan wajib diisi.','bad');return}
- if(state.journals.some(j=>j.number===number&&j.id!==editingId)){setMessage('journal-message','Nomor bukti sudah digunakan.','bad');return}
+ if(!periodGuard(date.slice(0,7),'menyimpan atau memposting jurnal'))return;\n if(state.journals.some(j=>j.number===number&&j.id!==editingId)){setMessage('journal-message','Nomor bukti sudah digunakan.','bad');return}
  if(targetStatus==='posted'){
   if(rows.length<2||rows.some(x=>!x.code||!Number.isFinite(x.debit)||!Number.isFinite(x.credit)||(!x.debit&&!x.credit)||(x.debit&&x.credit)||x.debit<0||x.credit<0)){setMessage('journal-message','Untuk posting, setiap baris wajib memiliki akun dan hanya satu nilai debit/kredit yang valid.','bad');return}
   const debit=rows.reduce((s,x)=>s+x.debit,0),credit=rows.reduce((s,x)=>s+x.credit,0);
   if(Math.abs(debit-credit)>.005){setMessage('journal-message','Jurnal belum seimbang. Selisih: '+money(Math.abs(debit-credit)),'bad');return}
  }else if(rows.some(x=>x.debit<0||x.credit<0||!Number.isFinite(x.debit)||!Number.isFinite(x.credit))){setMessage('journal-message','Nilai debit/kredit tidak boleh negatif atau tidak valid.','bad');return}
  const old=state.journals.find(j=>j.id===editingId);
- if(old&&old.status!=='draft'){setMessage('journal-message','Jurnal terposting tidak dapat diedit. Buat jurnal koreksi/pembalik.','bad');return}
+ if(old&&!periodGuard(String(old.date||'').slice(0,7),'mengubah jurnal lama'))return;\n  if(old&&old.status!=='draft'){setMessage('journal-message','Jurnal terposting tidak dapat diedit. Buat jurnal koreksi/pembalik.','bad');return}
  const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:rows,status:targetStatus,updatedAt:now};
  if(!old)item.createdAt=now;
  if(old)state.journals=state.journals.map(j=>j.id===editingId?item:j);else state.journals.push(item);
@@ -210,7 +210,7 @@ function renderJournals(){
  $('journal-prev').disabled=journalPage===0;$('journal-next').disabled=journalPage>=pages-1;
  document.querySelectorAll('.edit-journal').forEach(b=>b.onclick=()=>editJournal(b.dataset.id));
  document.querySelectorAll('.detail-journal').forEach(b=>b.onclick=()=>{const row=document.querySelector('[data-detail="'+CSS.escape(b.dataset.id)+'"]');if(row){row.hidden=!row.hidden;b.textContent=row.hidden?'⌄':'⌃'}});
- document.querySelectorAll('.delete-journal').forEach(b=>b.onclick=async()=>{const j=state.journals.find(x=>x.id===b.dataset.id);if(!j||j.status!=='draft')return;if(confirm('Hapus Draft '+j.number+'?')){state.journals=state.journals.filter(x=>x.id!==b.dataset.id);await persist();renderJournals();renderDashboard();toast('Draft dihapus.')}});
+ document.querySelectorAll('.delete-journal').forEach(b=>b.onclick=async()=>{const j=state.journals.find(x=>x.id===b.dataset.id);if(!j||j.status!=='draft')return;if(!periodGuard(String(j.date||'').slice(0,7),'menghapus Draft'))return;if(confirm('Hapus Draft '+j.number+'?')){state.journals=state.journals.filter(x=>x.id!==b.dataset.id);await persist();renderJournals();renderDashboard();toast('Draft dihapus.')}});
  document.querySelectorAll('.reverse-journal').forEach(b=>b.onclick=async()=>{const j=state.journals.find(x=>x.id===b.dataset.id);if(!j||j.status!=='posted'||j.reversedBy)return;const number=prompt('Nomor bukti jurnal pembalik:',j.number+'-K');if(!number)return;if(state.journals.some(x=>x.number===number)){alert('Nomor bukti sudah digunakan.');return}const date=prompt('Tanggal jurnal pembalik (YYYY-MM-DD):',new Date().toISOString().slice(0,10));if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date))return;const reversal={id:crypto.randomUUID(),date,number,description:'Pembalikan atas '+j.number+' — '+j.description,lines:(j.lines||[]).map(l=>({...l,debit:Number(l.credit||0),credit:Number(l.debit||0)})),status:'posted',reversalOf:j.id,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};j.reversedBy=reversal.id;state.journals.push(reversal);await persist();renderJournals();renderDashboard();toast('Jurnal pembalik berhasil diposting.');});
 }
 let journalPage=0;
@@ -257,7 +257,7 @@ function previewBulkPosting(){
 $('bulk-post-mode').addEventListener('change',updateBulkPostMode);
 $('bulk-post-preview').addEventListener('click',previewBulkPosting);
 $('bulk-post-confirm').addEventListener('click',async()=>{
- const ids=new Set(bulkPostCandidates.map(j=>j.id));if(!ids.size)return;
+ const ids=new Set(bulkPostCandidates.map(j=>j.id));if(!ids.size)return;if(bulkPostCandidates.some(j=>isPeriodLocked(String(j.date||'').slice(0,7)))){toast('Posting diblokir: ada Draft dari periode yang sudah ditutup.');return}
  const count=ids.size;
  if(!confirm('Konfirmasi posting '+count+' jurnal Draft yang sudah lolos validasi? Jurnal yang tidak valid tetap menjadi Draft.'))return;
  const now=new Date().toISOString();
@@ -362,7 +362,7 @@ function createNpDraftJournals(rows){
  }
  let created=0,linked=0;
  for(const [key,items] of groups){
-  const date=key.split('|')[0],sourceNo=key.slice(date.length+1);
+  const date=key.split('|')[0],sourceNo=key.slice(date.length+1);if(!periodGuard(date.slice(0,7),'membentuk Draft dari NPTRANS'))continue;
   // If an earlier import already created this source draft, link legacy rows to it instead of duplicating it.
   let journal=state.journals.find(j=>j.status==='draft'&&j.source==='NPTRANS'&&j.date===date&&String(j.sourceVoucher||'')===sourceNo);
   if(journal){
@@ -403,7 +403,7 @@ $('np-file').onchange=async e=>{
 $('np-import-confirm').onclick=async()=>{
  if(!pendingNpImport){setMessage('np-message','Tidak ada file yang menunggu persetujuan.','bad');return}
  if(!requireImportPassword('Import Data NPTRANS'))return;
- const batch=pendingNpImport;
+ const batch=pendingNpImport;if(batch.rows.some(r=>isPeriodLocked(String(isoNpDate(r.tanggal)).slice(0,7)))){setMessage('np-message','Import diblokir: data berisi tanggal pada periode yang sudah ditutup.','bad');return}
  try{
   let added=0,skipped=0,importedRows=[];
   if(batch.mode==='replace'){
@@ -543,7 +543,7 @@ $('force-delete-period').onclick=async()=>{
  if(mode==='month'&&!/^\d{4}-\d{2}$/.test(value)){toast('Format bulan tidak valid.');return}
  if(mode==='year'&&!/^\d{4}$/.test(value)){toast('Format tahun tidak valid.');return}
  const matches=journalDeleteMatches(mode,value);
- if(!matches.length){toast('Tidak ada jurnal pada periode tersebut.');return}
+ if(!matches.length){toast('Tidak ada jurnal pada periode tersebut.');return}if(matches.some(j=>isPeriodLocked(String(j.date||'').slice(0,7)))){toast('Hapus paksa diblokir: rentang ini mencakup periode yang sudah ditutup. Buka kembali periode dengan otorisasi terlebih dahulu.');return}
  const lines=matches.flatMap(j=>j.lines||[]),debit=lines.reduce((n,l)=>n+Number(l.debit||0),0),credit=lines.reduce((n,l)=>n+Number(l.credit||0),0);
  const password=prompt('Masukkan password untuk menghapus jurnal secara paksa:');
  if(password===null)return;
@@ -564,7 +564,7 @@ function renderOpeningBalances(){
  $('opening-rows').innerHTML=items.length?items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><b>'+esc(x.accountCode)+'</b></td><td>'+esc(state.accounts.find(a=>a.code===x.accountCode)?.name||'(Akun tidak ditemukan)')+'</td><td>'+esc(x.note||'')+'</td><td class="num">'+money(x.debit)+'</td><td class="num">'+money(x.credit)+'</td><td><button class="btn opening-edit" data-code="'+esc(x.accountCode)+'">Edit</button> <button class="btn opening-delete" data-code="'+esc(x.accountCode)+'">Hapus</button></td></tr>').join(''):'<tr><td colspan="7" class="empty">Belum ada saldo awal pada periode ini.</td></tr>';
  $('opening-foot').innerHTML='<tr><th colspan="4">TOTAL</th><th>'+money(debit)+'</th><th>'+money(credit)+'</th><th></th></tr>';
  document.querySelectorAll('.opening-edit').forEach(b=>b.onclick=()=>{const x=items.find(v=>v.accountCode===b.dataset.code);if(!x)return;select.value=x.accountCode;$('opening-side').value=Number(x.debit)>0?'debit':'credit';$('opening-amount').value=Number(x.debit)||Number(x.credit)||0;$('opening-note').value=x.note||'';$('opening-save').dataset.edit=b.dataset.code;$('opening-save').textContent='Perbarui Saldo Awal'});
- document.querySelectorAll('.opening-delete').forEach(b=>b.onclick=async()=>{if(!confirm('Hapus saldo awal akun '+b.dataset.code+' untuk periode '+period+'?'))return;state.openingBalances=state.openingBalances.filter(x=>!(x.period===period&&x.accountCode===b.dataset.code));await persist();renderOpeningBalances();toast('Saldo awal dihapus.')});
+ document.querySelectorAll('.opening-delete').forEach(b=>b.onclick=async()=>{if(!periodGuard(period,'menghapus saldo awal'))return;if(!confirm('Hapus saldo awal akun '+b.dataset.code+' untuk periode '+period+'?'))return;state.openingBalances=state.openingBalances.filter(x=>!(x.period===period&&x.accountCode===b.dataset.code));await persist();renderOpeningBalances();toast('Saldo awal dihapus.')});
 }
 $('opening-period').value=new Date().toISOString().slice(0,7);
 $('opening-period').addEventListener('change',()=>{delete $('opening-save').dataset.edit;$('opening-save').textContent='Simpan Saldo Awal';renderOpeningBalances()});
@@ -581,6 +581,97 @@ $('opening-save').addEventListener('click',async()=>{
 });
 $('opening-print').onclick=()=>window.print();
 $('opening-export').onclick=()=>{const p=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===p);if(!window.XLSX){toast('Modul Excel belum tersedia.');return}const rows=[['Periode',p],[],['SANDI','NAMA AKUN','KETERANGAN','DEBIT AWAL','KREDIT AWAL'],...items.map(x=>[x.accountCode,state.accounts.find(a=>a.code===x.accountCode)?.name||'',x.note||'',Number(x.debit||0),Number(x.credit||0)])];const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Saldo Awal');XLSX.writeFile(wb,'Saldo-Awal-'+p+'.xlsx')};
+
+
+/* ACCOUNTING PERIOD CONTROL V1 — synchronized with the existing IndexedDB state. */
+function currentMonthKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function ensurePeriodControl(){
+ if(!state.periodControl||typeof state.periodControl!=='object')state.periodControl={activePeriod:currentMonthKey(),periods:{}};
+ if(!state.periodControl.periods||typeof state.periodControl.periods!=='object')state.periodControl.periods={};
+ if(!/^\\d{4}-\\d{2}$/.test(String(state.periodControl.activePeriod||'')))state.periodControl.activePeriod=currentMonthKey();
+}
+function periodRecord(period){ensurePeriodControl();return state.periodControl.periods[period]||{status:'open'}}
+function isPeriodLocked(period){return periodRecord(period).status==='closed'}
+function periodGuard(period,action='mengubah data'){
+ if(!/^\\d{4}-\\d{2}$/.test(String(period||''))){toast('Tanggal/periode tidak valid.');return false}
+ if(isPeriodLocked(period)){toast('Periode '+period+' sudah ditutup. Tidak dapat '+action+'. Buka kembali periode dengan otorisasi administrator jika memang diperlukan.');return false}
+ return true
+}
+function periodTotals(period){
+ const rows=getTrialBalanceRows(period);
+ const debit=rows.reduce((n,r)=>n+Number(r.endingDebit||0),0);
+ const credit=rows.reduce((n,r)=>n+Number(r.endingCredit||0),0);
+ const drafts=state.journals.filter(j=>String(j.date||'').slice(0,7)===period&&j.status==='draft').length;
+ const posted=state.journals.filter(j=>String(j.date||'').slice(0,7)===period&&(j.status==='posted'||(!j.status&&j.status!=='draft'))).length;
+ const openings=(state.openingBalances||[]).filter(x=>x.period===period).length;
+ return {rows,debit,credit,difference:debit-credit,drafts,posted,openings};
+}
+function periodLabel(p){const [y,m]=p.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'})}
+function renderPeriodControl(){
+ ensurePeriodControl();
+ const active=state.periodControl.activePeriod,rec=periodRecord(active),closed=rec.status==='closed';
+ $('period-active').value=active;$('period-close-month').value=active;
+ $('period-active-badge').textContent=closed?'DITUTUP':'TERBUKA';
+ $('period-active-badge').className=closed?'period-closed':'period-open';
+ $('period-active-help').textContent=closed?'Periode ini terkunci. Pilih bulan terbuka untuk melanjutkan pembukuan.':'Jurnal dan saldo awal dapat dicatat selama periode belum ditutup.';
+ const t=periodTotals(active);
+ const checks=[
+  ['Saldo akhir debit dan kredit seimbang',Math.abs(t.difference)<0.005,money(t.difference)],
+  ['Tidak ada jurnal Draft tersisa',t.drafts===0,t.drafts+' Draft'],
+  ['Jurnal terposting',true,t.posted+' jurnal'],
+  ['Saldo awal terdaftar',true,t.openings+' saldo awal']
+ ];
+ $('period-close-checklist').innerHTML='<h4>Pemeriksaan periode '+esc(periodLabel(active))+'</h4><div class="period-check-items">'+checks.map(x=>'<div class="period-check '+(x[1]?'ok':'warn')+'"><span>'+(x[1]?'✓':'!')+'</span><b>'+esc(x[0])+'</b><small>'+esc(x[2])+'</small></div>').join('')+'</div><p class="footnote">Penutupan diblokir jika neraca percobaan tidak seimbang atau masih ada jurnal Draft. Pemeriksaan ini tidak membuat jurnal penutup laba/rugi.</p>';
+ const periods=Object.entries(state.periodControl.periods).sort((a,b)=>b[0].localeCompare(a[0]));
+ $('period-history-rows').innerHTML=periods.length?periods.map(([p,r])=>'<tr><td><b>'+esc(periodLabel(p))+'</b></td><td><span class="tag '+(r.status==='closed'?'np-warn':'np-ok')+'">'+(r.status==='closed'?'DITUTUP':'TERBUKA')+'</span></td><td>'+esc(r.closedAt?new Date(r.closedAt).toLocaleString('id-ID'):(r.reopenedAt?new Date(r.reopenedAt).toLocaleString('id-ID'):'—'))+'</td><td>'+esc(r.note||r.reopenReason||'—')+'</td><td>'+(r.status==='closed'?'<button class="btn period-reopen" data-period="'+esc(p)+'" type="button">Buka Kembali</button>':'<button class="btn period-activate" data-period="'+esc(p)+'" type="button">Jadikan Aktif</button>')+'</td></tr>').join(''):'<tr><td colspan="5" class="empty">Belum ada periode yang ditutup. Semua periode historis tetap terbuka sampai ditutup secara manual.</td></tr>';
+ document.querySelectorAll('.period-activate').forEach(b=>b.onclick=()=>{$('period-active').value=b.dataset.period;setActivePeriod()});
+ document.querySelectorAll('.period-reopen').forEach(b=>b.onclick=()=>reopenAccountingPeriod(b.dataset.period));
+}
+async function setActivePeriod(){
+ const p=$('period-active').value;
+ if(!/^\\d{4}-\\d{2}$/.test(p)){toast('Pilih periode kerja yang benar.');return}
+ if(isPeriodLocked(p)){toast('Periode '+p+' sudah ditutup. Buka kembali terlebih dahulu.');return}
+ state.periodControl.activePeriod=p;
+ await persist();
+ for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=p;
+ renderPeriodControl();
+ toast('Periode aktif disinkronkan ke Buku Besar, Neraca Percobaan, dan Saldo Awal: '+periodLabel(p)+'.');
+}
+async function closeAccountingPeriod(){
+ ensurePeriodControl();
+ const p=$('period-close-month').value,note=$('period-close-note').value.trim();
+ if(!/^\\d{4}-\\d{2}$/.test(p)){toast('Pilih bulan yang akan ditutup.');return}
+ if(isPeriodLocked(p)){toast('Periode tersebut sudah ditutup.');return}
+ const t=periodTotals(p);
+ if(t.drafts){setMessage('period-message','Penutupan diblokir: masih ada '+t.drafts+' jurnal Draft pada periode '+p+'. Posting atau selesaikan Draft terlebih dahulu.','bad');return}
+ if(Math.abs(t.difference)>=0.005){setMessage('period-message','Penutupan diblokir: Neraca Percobaan belum seimbang. Selisih '+money(t.difference)+'. Periksa saldo awal dan jurnal terposting.','bad');return}
+ if(!confirm('TUTUP BUKU '+periodLabel(p)+'? Data periode akan dikunci dari input, edit, posting, import, dan penghapusan. Laporan tetap dapat dibaca. Pastikan backup sudah diunduh/tersimpan.'))return;
+ const password=prompt('Masukkan password administrator untuk menutup buku:');
+ if(password===null)return;
+ if(password!=='PKS123'){setMessage('period-message','Password salah. Periode tidak ditutup.','bad');return}
+ const backup=makeBackupPayload();backup.backupType='pre-period-close';backup.periodBeingClosed=p;
+ downloadBlob(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),'SBP-V19-PRE-CLOSE-'+p+'.json');
+ const now=new Date().toISOString();
+ state.periodControl.periods[p]={status:'closed',closedAt:now,closedBy:'Administrator lokal',note:note||'Tutup buku bulanan',totals:{debit:t.debit,credit:t.credit,difference:t.difference,journals:t.posted,openingRecords:t.openings}};
+ state.auditLogs.unshift({id:crypto.randomUUID(),at:now,action:'TUTUP PERIODE',entity:'Periode Akuntansi',entityId:p,summary:'Tutup buku '+p+'; jurnal posted '+t.posted+'; debit '+money(t.debit)+'; kredit '+money(t.credit),before:{status:'open'},after:auditClone(state.periodControl.periods[p])});
+ if(state.periodControl.activePeriod===p){const next=new Date(Number(p.slice(0,4)),Number(p.slice(5,7)),1);state.periodControl.activePeriod=next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0')}
+ await persist();renderPeriodControl();setMessage('period-message','Periode '+periodLabel(p)+' berhasil ditutup dan dikunci. Backup sebelum penutupan diunduh; simpan file tersebut di folder backup perusahaan.','good');
+}
+async function reopenAccountingPeriod(p){
+ const reason=prompt('Alasan pembukaan kembali periode '+p+':');
+ if(reason===null)return;
+ if(!reason.trim()){toast('Alasan wajib diisi.');return}
+ const password=prompt('Masukkan password administrator untuk membuka kembali periode:');
+ if(password===null)return;
+ if(password!=='PKS123'){toast('Password salah. Periode tetap terkunci.');return}
+ const old=periodRecord(p),now=new Date().toISOString();
+ state.periodControl.periods[p]={...old,status:'open',reopenedAt:now,reopenReason:reason.trim()};
+ state.auditLogs.unshift({id:crypto.randomUUID(),at:now,action:'BUKA KEMBALI PERIODE',entity:'Periode Akuntansi',entityId:p,summary:'Periode '+p+' dibuka kembali. Alasan: '+reason.trim(),before:auditClone(old),after:auditClone(state.periodControl.periods[p])});
+ await persist();renderPeriodControl();setMessage('period-message','Periode '+periodLabel(p)+' dibuka kembali. Aktivitas ini tercatat di Riwayat Aktivitas.','good');
+}
+$('period-set-active').addEventListener('click',setActivePeriod);
+$('period-close-button').addEventListener('click',closeAccountingPeriod);
+$('period-active').addEventListener('change',()=>{const p=$('period-active').value;if(isPeriodLocked(p))toast('Periode tersebut telah ditutup.')});
 
 /* PRINT ENGINE V1 — independent report renderer; does not mutate accounting records. */
 const PRINT_SETTINGS_KEY='sbp-print-settings-v1';
@@ -678,5 +769,5 @@ $('archive-create').onclick=createFiveYearArchive;$('archive-verify').onclick=ve
 $('backup-connect-folder').onclick=connectBackupFolder;$('backup-reconnect-folder').onclick=reconnectBackupFolder;$('backup-now').onclick=()=>runAutomaticBackup('backup manual');$('backup-download').onclick=()=>{const payload=makeBackupPayload();downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),'SBP-Accounting-V19-backup.json');setMessage('backup-message','Backup JSON berhasil diunduh. Simpan juga salinannya di media lain.','good')};
 $('backup-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!requireImportPassword('Pemulihan / Import Backup')){e.target.value='';return}try{const parsed=JSON.parse(await f.text()),candidate=parsed.state||parsed;if(!Array.isArray(candidate.accounts)||!Array.isArray(candidate.journals)||!Array.isArray(candidate.nptrans))throw Error('Struktur backup tidak dikenali.');if(!confirm('Pulihkan backup? Data lokal saat ini akan digantikan.'))return;const priorAudit=Array.isArray(state.auditLogs)?state.auditLogs:[];state={...emptyState(),...candidate};state.auditLogs=[...new Map([...priorAudit,...(Array.isArray(candidate.auditLogs)?candidate.auditLogs:[])].map(x=>[x.id||JSON.stringify(x),x])).values()].sort((x,y)=>String(y.at).localeCompare(String(x.at)));if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();renderDashboard();setMessage('backup-message','Backup berhasil dipulihkan.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}e.target.value=''};
 
-async function init(){await loadState();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances});await persist();resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
+async function init(){await loadState();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];ensurePeriodControl();await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances});await persist();resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();renderPeriodControl();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
 init();
