@@ -81,3 +81,34 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 
 /* NPTRANS-generated journal drafts */
 .journal-status{white-space:nowrap}
+
+/* V19 Master Akun — compact, balanced layout */
+#page-accounts .panel{padding:22px}
+#page-accounts .panel-head{margin-bottom:14px}
+.account-importbar{display:grid;grid-template-columns:minmax(180px,1.3fr) auto auto auto;align-items:center;gap:10px;padding:13px 15px;margin:0 0 18px;border:1px solid var(--line);border-radius:12px;background:#f8fbf9}
+.account-import-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.account-import-copy b{font-size:12px;color:var(--ink)}
+.account-import-copy span,.account-importbar .file-status{font-size:10px;color:var(--muted)}
+.account-importbar .file-btn{white-space:nowrap}
+.account-importbar .file-status{grid-column:1/-1;margin:0;min-height:14px}
+.account-template-actions{display:flex;gap:6px;flex-wrap:wrap}
+.account-template-actions .btn{padding:9px 11px}
+.account-form-heading{display:flex;align-items:baseline;gap:9px;margin:5px 0 0}
+.account-form-heading b{font-size:12px}
+.account-form-heading span{font-size:10px;color:var(--muted)}
+.account-form-balance{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 13px;margin:12px 0}
+.account-form-balance label{min-width:0}
+.account-form-balance input{width:100%;min-width:0;padding:9px 10px}
+.account-balance-note{margin:0 0 8px}
+#page-accounts .form-actions{margin:10px 0 20px}
+#page-accounts .account-tools{padding-top:14px;border-top:1px solid var(--line)}
+#page-accounts .account-tools .button-row{flex-wrap:nowrap}
+#page-accounts .account-table{min-width:900px;table-layout:auto}
+#page-accounts .account-table th,#page-accounts .account-table td{padding:10px 9px}
+#page-accounts .account-table th:nth-child(1){min-width:110px}
+#page-accounts .account-table th:nth-child(2){min-width:210px}
+#page-accounts .account-table td:nth-child(2){min-width:210px}
+#page-accounts .account-table th:nth-child(3),#page-accounts .account-table th:nth-child(4),#page-accounts .account-table th:nth-child(5),#page-accounts .account-table th:nth-child(6){min-width:125px}
+#page-accounts #account-rows td:last-child{min-width:125px}
+@media(max-width:900px){.account-importbar{grid-template-columns:1fr 1fr}.account-import-copy{grid-column:1/-1}.account-importbar .file-status{grid-column:1/-1}}
+@media(max-width:720px){#page-accounts .panel{padding:14px}.account-importbar{grid-template-columns:1fr 1fr}.account-importbar .file-btn,.account-importbar #import-account-button{width:100%}.account-template-actions{grid-column:1/-1}.account-template-actions .btn{flex:1}.account-form-balance{grid-template-columns:1fr 1fr}.account-form-heading{align-items:flex-start;flex-direction:column;gap:1px}#page-accounts .account-tools .button-row{width:100%}#page-accounts .account-tools .button-row .btn{flex:1}}
