@@ -141,7 +141,33 @@ function renderNptrans(){
 }
 function isoNpDate(value){const s=String(value||'').trim();let m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m)return m[3]+'-'+m[2]+'-'+m[1];if(/^\d{4}-\d\d-\d\d$/.test(s))return s;return new Date().toISOString().slice(0,10)}
 function nextNpJournalNumber(date){const stamp=String(date||'').replace(/-/g,'');let n=1;while(state.journals.some(j=>j.number==='NP-'+stamp+'-'+String(n).padStart(3,'0')))n++;return 'NP-'+stamp+'-'+String(n).padStart(3,'0')}
-function createNpDraftJournals(rows){const groups=new Map();for(const row of rows){if(row._journalId)continue;const key=isoNpDate(row.tanggal)+'|'+String(row.nobukti||'').trim();if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row)}let created=0;for(const [key,items] of groups){const date=key.split('|')[0],sourceNo=key.slice(date.length+1),id=crypto.randomUUID();const journal={id,date,number:nextNpJournalNumber(date),description:'Import NPTRANS · '+(sourceNo||'Tanpa nomor bukti'),status:'draft',source:'NPTRANS',sourceVoucher:sourceNo,lines:items.map(r=>({code:String(r.sandi||'').trim(),note:String(r.ket||'')+' | JUMLAH sumber: '+money(r.jumlah)+' | Urut: '+String(r.nourut||''),debit:0,credit:0})),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};state.journals.push(journal);items.forEach(r=>r._journalId=id);created++}return created}
+function createNpDraftJournals(rows){
+ const groups=new Map();
+ for(const row of rows){
+  if(row._journalId)continue;
+  const date=isoNpDate(row.tanggal),sourceNo=String(row.nobukti||'').trim();
+  const key=date+'|'+sourceNo;
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push(row);
+ }
+ let created=0,linked=0;
+ for(const [key,items] of groups){
+  const date=key.split('|')[0],sourceNo=key.slice(date.length+1);
+  // If an earlier import already created this source draft, link legacy rows to it instead of duplicating it.
+  let journal=state.journals.find(j=>j.status==='draft'&&j.source==='NPTRANS'&&j.date===date&&String(j.sourceVoucher||'')===sourceNo);
+  if(journal){
+   items.forEach(r=>r._journalId=journal.id);
+   linked+=items.length;
+   continue;
+  }
+  const id=crypto.randomUUID();
+  journal={id,date,number:nextNpJournalNumber(date),description:'Import NPTRANS · '+(sourceNo||'Tanpa nomor bukti'),status:'draft',source:'NPTRANS',sourceVoucher:sourceNo,lines:items.map(r=>({code:String(r.sandi||'').trim(),note:String(r.ket||'')+' | JUMLAH sumber: '+money(r.jumlah)+' | Urut: '+String(r.nourut||''),debit:0,credit:0})),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  state.journals.push(journal);
+  items.forEach(r=>r._journalId=id);
+  created++;
+ }
+ return {created,linked};
+}
 function npKey(r){return [r.sandi,r.tanggal,r.nobukti,r.nourut,r.ket,Number(r.jumlah).toFixed(2)].map(v=>String(v??'').trim().toUpperCase()).join('|')}
 function cancelNpImport(){pendingNpImport=null;$('np-import-review').hidden=true;$('np-file').value='';setMessage('np-message','Pratinjau impor dibatalkan. Data yang sudah tersimpan tidak berubah.')}
 $('np-import-cancel').onclick=cancelNpImport;
@@ -178,7 +204,7 @@ $('np-import-confirm').onclick=async()=>{
    for(const row of batch.rows){const k=npKey(row);if(seen.has(k)){skipped++;continue}seen.add(k);state.nptrans.push(row);importedRows.push(row);added++}
   }
   if(batch.parsed)state.npTemplate={fields:batch.parsed.fields,version:batch.parsed.version};
-  const missingAccounts=syncNptransSandis();const draftCreated=createNpDraftJournals(importedRows);await persist();pendingNpImport=null;$('np-import-review').hidden=true;npPage=1;renderAccounts();renderNptrans();renderJournals();
+  const missingAccounts=syncNptransSandis();const draftResult=createNpDraftJournals(importedRows);const draftCreated=draftResult.created;await persist();pendingNpImport=null;$('np-import-review').hidden=true;npPage=1;renderAccounts();renderNptrans();renderJournals();
   setMessage('np-message','Persetujuan berhasil. File '+batch.fileName+' · dibaca '+batch.totalRead+' · ditambahkan '+added+' · duplikat dilewati '+skipped+' · ditolak '+batch.rejected+' · total tersimpan '+state.nptrans.length+' · SANDI baru ditambahkan ke master akun dengan nama kosong: '+missingAccounts+' · draft jurnal otomatis dibuat: '+draftCreated+'. Buka Daftar Jurnal, pilih Edit, lalu tentukan debit/kredit sebelum posting.','good');
   toast('Impor massal disetujui: '+added+' baris ditambahkan.');if(draftCreated>0){go('journal-list');toast(draftCreated+' draft jurnal siap dilengkapi debit/kredit.')}
  }catch(err){setMessage('np-message','Penyimpanan impor gagal: '+err.message,'bad')}
@@ -234,5 +260,5 @@ $('print-report').onclick=()=>window.print();$('export-trial-xlsx').onclick=expo
 $('backup-download').onclick=()=>{const safeState=JSON.parse(JSON.stringify(state));if(safeState.npTemplate?.fields)safeState.npTemplate.fields.forEach(f=>{if(f.raw&&typeof f.raw==='object')f.raw=Array.from(f.raw)});const payload={app:'SBP Accounting',version:19,exportedAt:new Date().toISOString(),state:safeState};downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),'SBP-Accounting-V19-backup.json');setMessage('backup-message','Backup JSON berhasil disiapkan. Simpan di lokasi aman.','good')};
 $('backup-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const parsed=JSON.parse(await f.text()),candidate=parsed.state||parsed;if(!Array.isArray(candidate.accounts)||!Array.isArray(candidate.journals)||!Array.isArray(candidate.nptrans))throw Error('Struktur backup tidak dikenali.');if(!confirm('Pulihkan backup? Data lokal saat ini akan digantikan.'))return;state={...emptyState(),...candidate};if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();renderDashboard();setMessage('backup-message','Backup berhasil dipulihkan.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}e.target.value=''};
 
-async function init(){await loadState();state.accounts=state.accounts.map(a=>({...a,ptdacost:Number(a.ptdacost||0),mutasiDebit:Number(a.mutasiDebit||0),mutasiKredit:Number(a.mutasiKredit||0)}));syncNptransSandis();await persist();resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();renderNptrans();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn)}
+async function init(){await loadState();state.accounts=state.accounts.map(a=>({...a,ptdacost:Number(a.ptdacost||0),mutasiDebit:Number(a.mutasiDebit||0),mutasiKredit:Number(a.mutasiKredit||0)}));syncNptransSandis();const migratedDrafts=createNpDraftJournals(state.nptrans);await persist();if(migratedDrafts.created)console.info('Migrasi NPTRANS lama: '+migratedDrafts.created+' draft jurnal dibuat.');resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();renderNptrans();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn)}
 init();
