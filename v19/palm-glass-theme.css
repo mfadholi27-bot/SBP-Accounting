@@ -197,3 +197,47 @@ html,body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif!important}
 .build-stamp b{color:#14532d!important;font-size:11px!important;letter-spacing:.35px!important}
 .build-stamp .build-loaded{padding:2px 7px!important;border-radius:999px!important;background:#ecfdf3!important;color:#166534!important;font-weight:650!important}
 @media(max-width:650px){.app-footer{align-items:flex-start!important;flex-direction:column!important}.build-stamp{gap:6px!important}}
+
+/* V61 — Reports page layout: trial balance and protected journal deletion */
+#page-reports{display:flex!important;flex-direction:column!important;gap:18px!important}
+#page-reports>.panel{padding:22px!important}
+#page-reports .panel-head{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:20px!important;margin-bottom:16px!important}
+#page-reports .panel-head>div:first-child{min-width:0!important;flex:1 1 auto!important}
+#page-reports .panel-head h3{margin:0 0 5px!important;font-size:17px!important;line-height:1.35!important}
+#page-reports .panel-head p{margin:0!important;max-width:760px!important;font-size:13px!important;line-height:1.5!important}
+#page-reports .panel-head .button-row{display:flex!important;align-items:flex-end!important;justify-content:flex-end!important;gap:9px!important;flex:0 0 auto!important;flex-wrap:wrap!important}
+#page-reports .report-period-label{display:flex!important;flex-direction:column!important;gap:5px!important;min-width:185px!important;font-size:12px!important;font-weight:600!important;color:#475569!important;line-height:1.35!important}
+#page-reports .report-period-label input{width:100%!important;height:39px!important;min-height:39px!important;padding:0 10px!important;border:1px solid #cbd5e1!important;border-radius:8px!important;background:#fff!important;font:13px Inter,"Segoe UI",Arial,sans-serif!important;color:#0f172a!important}
+#page-reports .panel-head .button-row>.btn{height:39px!important;min-height:39px!important;padding:0 13px!important;font-size:12px!important;white-space:nowrap!important}
+#page-reports .list-disclosure{margin-top:2px!important}
+#page-reports .list-toggle{height:38px!important;min-height:38px!important;padding:0 13px!important;font-size:12px!important}
+#page-reports #trial-balance-content{margin-top:14px!important;overflow-x:auto!important}
+#page-reports #trial-balance{min-width:700px!important}
+#page-reports .force-delete-panel .panel-head{align-items:center!important}
+#page-reports .force-delete-controls{
+ display:grid!important;grid-template-columns:minmax(190px,230px) minmax(190px,230px) auto!important;
+ align-items:end!important;gap:12px!important;margin:18px 0 12px!important
+}
+#page-reports .force-delete-controls label{display:flex!important;flex-direction:column!important;gap:6px!important;min-width:0!important;font-size:12px!important;font-weight:600!important;color:#475569!important}
+#page-reports .force-delete-controls select,#page-reports .force-delete-controls input{
+ width:100%!important;height:39px!important;min-height:39px!important;padding:0 10px!important;
+ border:1px solid #cbd5e1!important;border-radius:8px!important;background:#fff!important;
+ font:13px Inter,"Segoe UI",Arial,sans-serif!important;color:#0f172a!important
+}
+#page-reports #force-delete-period{height:39px!important;min-height:39px!important;padding:0 14px!important;white-space:nowrap!important;font-size:12px!important}
+#page-reports .force-delete-panel .footnote{margin:12px 0!important;font-size:12px!important;line-height:1.6!important;color:#64748b!important}
+#page-reports #force-delete-result{min-height:34px!important;margin-top:12px!important;padding:8px 12px!important;border-radius:9px!important}
+@media(max-width:1050px){
+ #page-reports .panel-head{flex-wrap:wrap!important}
+ #page-reports .panel-head .button-row{width:100%!important;justify-content:flex-start!important}
+ #page-reports .force-delete-controls{grid-template-columns:1fr 1fr!important}
+ #page-reports #force-delete-period{grid-column:1/-1!important;justify-self:start!important}
+}
+@media(max-width:600px){
+ #page-reports>.panel{padding:16px!important}
+ #page-reports .panel-head .button-row{display:grid!important;grid-template-columns:1fr 1fr!important}
+ #page-reports .report-period-label{grid-column:1/-1!important}
+ #page-reports .panel-head .button-row>.btn{width:100%!important}
+ #page-reports .force-delete-controls{grid-template-columns:1fr!important}
+ #page-reports #force-delete-period{grid-column:auto!important;width:100%!important}
+}
