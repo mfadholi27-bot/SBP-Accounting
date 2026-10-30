@@ -160,17 +160,17 @@ $('np-import-confirm').onclick=async()=>{
  if(!pendingNpImport){setMessage('np-message','Tidak ada file yang menunggu persetujuan.','bad');return}
  const batch=pendingNpImport;
  try{
-  let added=0,skipped=0;
+  let added=0,skipped=0,importedRows=[];
   if(batch.mode==='replace'){
    if(!confirm('PERINGATAN: Ganti seluruh '+state.nptrans.length+' baris NPTRANS yang tersimpan dengan '+batch.rows.length+' baris dari '+batch.fileName+'?'))return;
-   state.nptrans=batch.rows.slice();added=batch.rows.length;
-  }else if(batch.mode==='append'){state.nptrans.push(...batch.rows);added=batch.rows.length}
+   state.nptrans=batch.rows.slice();importedRows=state.nptrans.slice();added=batch.rows.length;
+  }else if(batch.mode==='append'){state.nptrans.push(...batch.rows);importedRows=batch.rows.slice();added=batch.rows.length}
   else{
    const seen=new Set(state.nptrans.map(npKey));
-   for(const row of batch.rows){const k=npKey(row);if(seen.has(k)){skipped++;continue}seen.add(k);state.nptrans.push(row);added++}
+   for(const row of batch.rows){const k=npKey(row);if(seen.has(k)){skipped++;continue}seen.add(k);state.nptrans.push(row);importedRows.push(row);added++}
   }
   if(batch.parsed)state.npTemplate={fields:batch.parsed.fields,version:batch.parsed.version};
-  const missingAccounts=syncNptransSandis();const draftCreated=createNpDraftJournals(state.nptrans.filter(r=>batch.rows.some(x=>npKey(x)===npKey(r))));await persist();pendingNpImport=null;$('np-import-review').hidden=true;npPage=1;renderAccounts();renderNptrans();
+  const missingAccounts=syncNptransSandis();const draftCreated=createNpDraftJournals(importedRows);await persist();pendingNpImport=null;$('np-import-review').hidden=true;npPage=1;renderAccounts();renderNptrans();
   setMessage('np-message','Persetujuan berhasil. File '+batch.fileName+' · dibaca '+batch.totalRead+' · ditambahkan '+added+' · duplikat dilewati '+skipped+' · ditolak '+batch.rejected+' · total tersimpan '+state.nptrans.length+' · SANDI baru ditambahkan ke master akun dengan nama kosong: '+missingAccounts+' · draft jurnal otomatis dibuat: '+draftCreated+'. Buka Daftar Jurnal, pilih Edit, lalu tentukan debit/kredit sebelum posting.','good');
   toast('Impor massal disetujui: '+added+' baris ditambahkan.')
  }catch(err){setMessage('np-message','Penyimpanan impor gagal: '+err.message,'bad')}
