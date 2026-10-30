@@ -62,3 +62,19 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 #account-rows td:last-child{white-space:nowrap;min-width:150px}
 #account-rows td:nth-child(2){min-width:340px}
 @media(max-width:720px){.account-tools{align-items:flex-start;flex-direction:column}.account-tools .search{width:100%}}
+
+/* Explicit import approval + NPSALDO balance ledger */
+.np-import-review{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:12px;padding:16px 18px;border:1px solid #b8dfc7;border-radius:12px;background:#eff9f2}
+.np-import-review[hidden]{display:none!important}
+.np-import-review b{display:block;color:#155f40;font-size:14px}
+.np-import-review p{margin:5px 0 0;color:#526e5d;font-size:12px;line-height:1.6}
+.np-import-review .button-row{flex-shrink:0}
+.account-form-balance{grid-template-columns:repeat(3,minmax(180px,1fr))}
+.account-balance-note{margin:4px 0 10px}
+.account-table{min-width:1250px}
+.account-table th,.account-table td{white-space:nowrap}
+.account-table td:nth-child(2){white-space:normal;min-width:320px}
+.account-number{text-align:right;font-variant-numeric:tabular-nums}
+.account-balance{font-weight:800;color:#155f40}
+#account-rows td:last-child{min-width:170px}
+@media(max-width:720px){.np-import-review{align-items:flex-start;flex-direction:column}.np-import-review .button-row{width:100%}.np-import-review .button-row button{flex:1}.account-form-balance{grid-template-columns:repeat(2,minmax(180px,1fr))}}
