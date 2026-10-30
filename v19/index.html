@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#116b49"><meta name="description" content="SBP Accounting V19 — akuntansi offline dan kompatibilitas DBF NPTRANS">
-<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="palm-glass-theme.css?v=10"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
+<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="palm-glass-theme.css?v=11"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
 <title>SBP Accounting V19</title>
 </head>
 <body>
@@ -16,6 +16,7 @@
     <div class="side-label nav-group-label">TRANSAKSI</div><button class="nav-item" data-page="journal"><span class="nav-icon"><i data-lucide="plus"></i></span>Input Jurnal</button>
     <button class="nav-item" data-page="journal-list"><span class="nav-icon"><i data-lucide="list"></i></span>Daftar Jurnal</button>
     <div class="side-label nav-group-label">MASTER DATA</div><button class="nav-item" data-page="accounts"><span class="nav-icon"><i data-lucide="users"></i></span>Master Akun</button><button class="nav-item" data-page="opening-balances"><span class="nav-icon"><i data-lucide="wallet"></i></span>Saldo Awal ACC & Program</button>
+    <div class="side-label nav-group-label">PENGENDALIAN</div><button class="nav-item" data-page="periods"><span class="nav-icon"><i data-lucide="calendar-check"></i></span>Periode Akuntansi</button>
     <div class="side-label nav-group-label">BUKU BESAR</div><button class="nav-item" data-page="ledger"><span class="nav-icon"><i data-lucide="book-open"></i></span>Buku Besar per Akun</button><div class="side-label nav-group-label">LAPORAN & ANALISIS</div><button class="nav-item" data-page="reports"><span class="nav-icon"><i data-lucide="chart-no-axes-combined"></i></span>Neraca Percobaan / Laporan</button>
     <div class="side-label nav-group-label">PENGATURAN</div><button class="nav-item" data-page="print-settings"><span class="nav-icon"><i data-lucide="settings"></i></span>Template Cetak</button><div class="side-label nav-group-label">SISTEM</div><button class="nav-item" data-page="audit"><span class="nav-icon"><i data-lucide="history"></i></span>Riwayat Aktivitas</button><button class="nav-item" data-page="archive"><span class="nav-icon"><i data-lucide="archive"></i></span>Arsip 5 Tahunan</button><button class="nav-item" data-page="archive-reader"><span class="nav-icon"><i data-lucide="search"></i></span>Pembaca Arsip</button><button class="nav-item" data-page="backup"><span class="nav-icon"><i data-lucide="download"></i></span>Backup & Restore</button>
   </nav>
@@ -120,7 +121,31 @@
   <div class="panel-head"><div><h3>Daftar Saldo Awal</h3><p>Saldo awal berdasarkan periode yang dipilih.</p></div><div class="button-row"><button class="btn" id="opening-print" type="button">Cetak / PDF</button><button class="btn" id="opening-export" type="button">Ekspor Excel</button></div></div>
   <div class="table-wrap"><table><thead><tr><th>No</th><th>SANDI</th><th>Nama Akun</th><th>Keterangan</th><th>Debit Awal</th><th>Kredit Awal</th><th>Aksi</th></tr></thead><tbody id="opening-rows"></tbody><tfoot id="opening-foot"></tfoot></table></div>
  </div>
-</section><section class="page" id="page-ledger">
+</section><section class="page" id="page-periods">
+ <div class="panel">
+  <div class="panel-head"><div><h3>Pengendalian Periode Akuntansi</h3><p>Atur periode kerja, pantau status pembukuan, dan tutup bulan setelah pemeriksaan selesai.</p></div><span class="tag">PERIODE AKUNTANSI</span></div>
+  <div class="period-control-grid">
+   <label>Periode kerja aktif<input type="month" id="period-active"></label>
+   <div class="period-active-status"><span>Status periode aktif</span><b id="period-active-badge">TERBUKA</b><small id="period-active-help">Transaksi baru dapat dicatat pada periode terbuka.</small></div>
+   <button class="btn btn-primary" id="period-set-active" type="button">Tetapkan Periode Aktif</button>
+  </div>
+  <div class="period-checklist" id="period-close-checklist"></div>
+ </div>
+ <div class="panel">
+  <div class="panel-head"><div><h3>Tutup Buku Bulanan</h3><p>Penutupan mengunci perubahan jurnal dan saldo awal untuk bulan yang dipilih. Laporan tetap dapat dilihat dan dicetak.</p></div><span class="tag np-warn">PERLU OTORISASI</span></div>
+  <div class="period-close-grid">
+   <label>Bulan yang akan ditutup<input type="month" id="period-close-month"></label>
+   <label>Catatan penutupan<input type="text" id="period-close-note" maxlength="180" placeholder="Contoh: Rekonsiliasi dan laporan Oktober selesai"></label>
+   <button class="btn btn-danger" id="period-close-button" type="button">Tutup Buku Bulanan</button>
+  </div>
+  <div class="inline-message" id="period-message">Periode lama tidak otomatis dikunci. Periksa saldo dan backup sebelum melakukan penutupan.</div>
+ </div>
+ <div class="panel">
+  <div class="panel-head"><div><h3>Riwayat Status Periode</h3><p>Daftar bulan yang pernah ditutup atau dibuka kembali.</p></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Periode</th><th>Status</th><th>Waktu tindakan</th><th>Catatan</th><th>Aksi</th></tr></thead><tbody id="period-history-rows"></tbody></table></div>
+ </div>
+</section>
+<section class="page" id="page-ledger">
  <div class="panel">
   <div class="panel-head"><div><h3>Buku Besar per Akun</h3><p>Rincian saldo awal, mutasi debit/kredit, dan saldo berjalan untuk satu akun pada periode terpilih.</p></div><span class="tag">BUKU BESAR</span></div>
   <div class="ledger-filters"><label class="ledger-field">Periode<input type="month" id="ledger-period"></label><label class="ledger-field ledger-account-field">Akun / SANDI<select id="ledger-account"><option value="">Pilih akun</option></select></label><button class="btn btn-primary ledger-submit" id="ledger-refresh" type="button"><i data-lucide="search"></i><span>Tampilkan Buku Besar</span></button><div class="ledger-actions"><button class="btn" id="ledger-print" type="button"><i data-lucide="printer"></i><span>Cetak / PDF</span></button><button class="btn" id="ledger-export" type="button"><i data-lucide="file-spreadsheet"></i><span>Ekspor Excel</span></button></div></div>
@@ -145,7 +170,7 @@
 <div class="print-settings-options"><label><input type="checkbox" id="print-brand"> Tampilkan identitas SBP Accounting</label><label><input type="checkbox" id="print-date"> Tampilkan tanggal dan waktu cetak</label><label><input type="checkbox" id="print-footer"> Tampilkan footer dokumen</label><label><input type="checkbox" id="print-summary"> Tampilkan ringkasan laporan</label><label><input type="checkbox" id="print-signatures"> Tampilkan kolom tanda tangan</label><label><input type="checkbox" id="print-lines"> Tampilkan garis tabel</label></div>
 <div class="inline-message">Pengaturan disimpan di browser pada perangkat ini. Tidak mengubah jurnal, saldo, NPTRANS, maupun database aktif. Orientasi otomatis mengikuti kebutuhan masing-masing laporan.</div>
 <div class="button-row print-settings-actions"><button class="btn btn-primary" id="print-settings-save" type="button">Simpan Pengaturan</button><button class="btn" id="print-settings-reset" type="button">Kembalikan Standar</button><button class="btn" id="print-settings-preview" type="button">Cetak Contoh / Preview</button></div></div></section>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="62"><b>BUILD V62</b><span>SBP-V19-BUILD-0062</span><span>31-10-2026 · 01:19 WIB</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="63"><b>BUILD V63</b><span>SBP-V19-BUILD-0063</span><span>31-10-2026 · 06:41 WIB</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
 <script src="app.js?v=55"></script>
 </body></html>
