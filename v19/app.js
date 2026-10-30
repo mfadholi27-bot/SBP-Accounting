@@ -147,7 +147,7 @@ function validateBulkPostJournal(j){
 function previewBulkPosting(){
  const mode=$('bulk-post-mode').value;let from='',to='';
  if(mode==='date'){from=to=$('bulk-post-date').value}
- else if(mode==='month'){const m=$('bulk-post-month').value;if(m){from=m+'-01';const [y,mm]=m.split('-').map(Number);to=new Date(y,mm,0).toISOString().slice(0,10)}}
+ else if(mode==='month'){const m=$('bulk-post-month').value;if(m){from=m+'-01';const [y,mm]=m.split('-').map(Number);const lastDay=new Date(y,mm,0).getDate();to=m+'-'+String(lastDay).padStart(2,'0')}}
  else {from=$('bulk-post-from').value;to=$('bulk-post-to').value}
  if(!from||!to||from>to){toast('Periode tanggal belum benar.');return}
  const drafts=state.journals.filter(j=>j.status==='draft'&&String(j.date||'')>=from&&String(j.date||'')<=to);
