@@ -313,3 +313,6 @@ input,select,textarea{max-width:100%}
 }
 
 .backup-card{display:flex;flex-direction:column;align-items:flex-start;gap:8px}.backup-card .btn{margin-top:3px}.backup-card p{min-height:0;margin:0 0 5px}.backup-card .file-btn{margin-top:4px}
+
+/* V19 Audit Log */
+.audit-json{white-space:pre-wrap;max-width:560px;max-height:280px;overflow:auto;padding:10px;background:#f3f7f4;border-radius:8px;font-size:10px;color:#29483a}#page-audit .journal-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#page-audit .search{min-width:220px}
