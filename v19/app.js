@@ -555,13 +555,28 @@ function printTable(headers,rows,foot=''){return '<table class="sbp-print-table"
 function printSummary(items){return PRINT_CONFIG.summary?'<section class="sbp-print-summary">'+items.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>').join('')+'</section>':''}
 function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-print-signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':''}
 function printDocument(title,subtitle,body,orientation='portrait'){
- let root=document.getElementById('sbp-print-root');if(!root){root=document.createElement('div');root.id='sbp-print-root';document.body.appendChild(root)}
- const now=new Date(),printed=now.toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
- root.innerHTML='<div class="sbp-print-sheet"><header class="sbp-print-header"><div class="sbp-print-brand">SBP ACCOUNTING <small>SISTEM INFORMASI AKUNTANSI · V19</small></div><div class="sbp-print-heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header><div class="sbp-print-meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>'+body+printSignatures()+'<footer class="sbp-print-footer">SBP Accounting V19 · Dokumen hasil cetak sistem</footer></div>';
- document.body.classList.add('sbp-printing');document.documentElement.dataset.printOrientation=orientation;let pageRule=document.getElementById('sbp-print-page-rule');if(!pageRule){pageRule=document.createElement('style');pageRule.id='sbp-print-page-rule';document.head.appendChild(pageRule)}pageRule.textContent='@page{size: '+(orientation==='landscape'?'330mm 215mm':'215mm 330mm')+';margin: '+(orientation==='landscape'?'10mm':'13mm 12mm 16mm')+'}';document.title='SBP Accounting - '+title;
- const cleanup=()=>{document.body.classList.remove('sbp-printing');delete document.documentElement.dataset.printOrientation;document.title='SBP Accounting V19';root.innerHTML='';pageRule.remove();window.removeEventListener('afterprint',cleanup)};
+ const old=document.getElementById('sbp-print-frame');if(old)old.remove();
+ const frame=document.createElement('iframe');frame.id='sbp-print-frame';frame.title='Pratinjau cetak '+title;
+ frame.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+ document.body.appendChild(frame);
+ const pageSize=orientation==='landscape'?'330mm 215mm':'215mm 330mm',pageMargin=orientation==='landscape'?'10mm':'13mm 12mm 16mm';
+ const printed=new Date().toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
+ const style='@page{size:'+pageSize+';margin:'+pageMargin+';@bottom-right{content:"Halaman "+counter(page);font:9pt Arial;color:#64748b}}'+
+ '*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#17212b;font:9pt Arial,Helvetica,sans-serif}'+
+ '.sheet{width:100%}.header{border-bottom:2px solid #176b4a;padding:0 0 7mm;margin-bottom:4mm}'+
+ '.brand{font-size:15pt;font-weight:800;letter-spacing:.5px;color:#145c40}.brand small{display:block;font-size:7.5pt;font-weight:500;letter-spacing:1px;color:#64748b;margin-top:1mm}'+
+ '.heading{text-align:center;margin-top:5mm}.heading h1{font-size:14pt;margin:0 0 2mm}.heading p{font-size:9pt;margin:0;color:#475569}'+
+ '.meta{display:flex;justify-content:space-between;color:#64748b;font-size:8pt;margin:0 0 4mm;padding-bottom:2mm;border-bottom:1px solid #cbd5e1}'+
+ '.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2mm;margin:0 0 4mm}.summary>div{border:1px solid #cbd5e1;border-radius:2mm;padding:2.5mm}'+
+ '.summary span{display:block;color:#64748b;font-size:7.5pt;margin-bottom:1mm}.summary b{font-size:9pt}'+
+ 'table{width:100%;border-collapse:collapse;table-layout:auto;font-size:7.5pt}thead{display:table-header-group}th{background:#eaf2ed!important;color:#173c2d!important;font-weight:700;text-align:center}'+
+ 'th,td{border:1px solid #aebbb4;padding:2mm 1.5mm;vertical-align:top}td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}tbody tr{break-inside:avoid;page-break-inside:avoid}tfoot{display:table-row-group;font-weight:700}'+
+ '.signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm;margin:13mm 0 0;text-align:center;break-inside:avoid;page-break-inside:avoid}.signatures span,.signatures small{display:block;font-size:8pt}.signatures b{display:block;height:20mm}'+
+ '.footer{border-top:1px solid #cbd5e1;margin-top:7mm;padding-top:2mm;color:#64748b;font-size:7pt;text-align:center}';
+ const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body><main class="sheet"><header class="header"><div class="brand">SBP ACCOUNTING <small>SISTEM INFORMASI AKUNTANSI · V19</small></div><div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header><div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>'+body+(PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'')+'<footer class="footer">SBP Accounting V19 · Dokumen hasil cetak sistem</footer></main></body></html>');doc.close();
+ const cleanup=()=>{frame.remove();window.removeEventListener('afterprint',cleanup)};
+ frame.onload=()=>{setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(err){toast('Gagal membuka cetak: '+err.message)}},150)};
  window.addEventListener('afterprint',cleanup,{once:true});
- requestAnimationFrame(()=>requestAnimationFrame(()=>window.print()));
 }
 function printTrialBalance(){
  const period=$('report-period').value,rows=getTrialBalanceRows(period),d=rows.reduce((n,r)=>n+r.endingDebit,0),c=rows.reduce((n,r)=>n+r.endingCredit,0);
