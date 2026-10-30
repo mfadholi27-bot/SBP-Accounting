@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#116b49"><meta name="description" content="SBP Accounting V19 — akuntansi offline dan kompatibilitas DBF NPTRANS">
-<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="palm-glass-theme.css?v=4"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
+<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="palm-glass-theme.css?v=5"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
 <title>SBP Accounting V19</title>
 </head>
 <body>
@@ -123,7 +123,7 @@
 </section><section class="page" id="page-ledger">
  <div class="panel">
   <div class="panel-head"><div><h3>Buku Besar per Akun</h3><p>Rincian saldo awal, mutasi debit/kredit, dan saldo berjalan untuk satu akun pada periode terpilih.</p></div><span class="tag">BUKU BESAR</span></div>
-  <div class="ledger-filters"><label>Periode<input type="month" id="ledger-period"></label><label>Akun / SANDI<select id="ledger-account"><option value="">Pilih akun</option></select></label><button class="btn btn-primary" id="ledger-refresh" type="button">Tampilkan Buku Besar</button><button class="btn" id="ledger-print" type="button">Cetak / PDF</button><button class="btn" id="ledger-export" type="button">Ekspor Excel</button></div>
+  <div class="ledger-filters"><label class="ledger-field">Periode<input type="month" id="ledger-period"></label><label class="ledger-field ledger-account-field">Akun / SANDI<select id="ledger-account"><option value="">Pilih akun</option></select></label><button class="btn btn-primary ledger-submit" id="ledger-refresh" type="button"><i data-lucide="search"></i><span>Tampilkan Buku Besar</span></button><div class="ledger-actions"><button class="btn" id="ledger-print" type="button"><i data-lucide="printer"></i><span>Cetak / PDF</span></button><button class="btn" id="ledger-export" type="button"><i data-lucide="file-spreadsheet"></i><span>Ekspor Excel</span></button></div></div>
   <div id="ledger-summary" class="opening-summary"></div>
   <div id="ledger-content" class="table-wrap"><div class="empty">Pilih periode dan akun untuk menampilkan buku besar.</div></div>
  </div>
