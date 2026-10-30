@@ -71,7 +71,7 @@ function mapHeaders(header){const aliases={SANDI:['SANDI','KODE','KODEAKUN','ACC
 function normalizeDate(v){v=String(v||'').trim();if(/^\d{8}$/.test(v))return v.slice(6,8)+'/'+v.slice(4,6)+'/'+v.slice(0,4);if(/^\d{4}-\d\d-\d\d$/.test(v)){const [y,m,d]=v.split('-');return d+'/'+m+'/'+y}return v}
 function parseAmount(v){const s=String(v??'').trim().replace(/\s/g,'');if(!s)return 0;let x=s;if(x.includes(',')&&x.includes('.'))x=x.lastIndexOf(',')>x.lastIndexOf('.')?x.replace(/\./g,'').replace(',','.'):x.replace(/,/g,'');else if(x.includes(','))x=x.replace(',','.');const n=Number(x);return Number.isFinite(n)?n:NaN}
 function csvToNp(text){const rows=parseCSV(text);if(rows.length<2)throw Error('CSV kosong atau hanya memiliki header.');const h=mapHeaders(rows[0]);const missing=['SANDI','TANGGAL','NOBUKTI','NOURUT','KET','JUMLAH'].filter(k=>h[k]===undefined);if(missing.length)throw Error('Kolom wajib tidak ditemukan: '+missing.join(', '));return rows.slice(1).map((r,i)=>({sandi:(r[h.SANDI]||'').trim(),tanggal:normalizeDate(r[h.TANGGAL]),nobukti:(r[h.NOBUKTI]||'').trim(),nourut:(r[h.NOURUT]||'').trim(),ket:(r[h.KET]||'').trim(),jumlah:parseAmount(r[h.JUMLAH]),_row:i+2}))}
-function csvToAccounts(text){const rows=parseCSV(text);if(rows.length<2)throw Error('CSV master akun kosong.');const h=rows[0].map(norm),find=names=>h.findIndex(x=>names.includes(x)),ci=find(['SANDI','KODE','KODEAKUN']),ni=find(['NAMA','DES','NAMAAKUN','KETERANGAN','URAIAN']),pi=find(['PTDACOST','SALDOAWAL']),di=find(['MUTASIDB','MUTASIDEBIT']),ki=find(['MUTASIKR','MUTASIKREDIT']);if(ci<0||ni<0)throw Error('Kolom SANDI dan nama akun tidak ditemukan.');return rows.slice(1).filter(r=>r[ci]&&r[ni]).map(r=>({code:r[ci].trim(),name:r[ni].trim(),ptdacost:pi>=0?parseAmount(r[pi]):0,mutasiDebit:di>=0?parseAmount(r[di]):0,mutasiKredit:ki>=0?parseAmount(r[ki]):0}))}
+function csvToAccounts(text){const rows=parseCSV(text);if(rows.length<2)throw Error('CSV master akun kosong.');const h=rows[0].map(norm),find=names=>h.findIndex(x=>names.includes(x)),ci=find(['SANDI','KODE','KODEAKUN']),ni=find(['NAMA','DES','NAMAAKUN','KETERANGAN','URAIAN']),pi=find(['PTDACOST','SALDOAWAL']),di=find(['MUTASIDB','MUTASIDEBIT']),ki=find(['MUTASIKR','MUTASIKREDIT']);if(ci<0)throw Error('Kolom SANDI tidak ditemukan.');return rows.slice(1).filter(r=>r[ci]).map(r=>({code:r[ci].trim(),name:ni>=0?String(r[ni]||'').trim():'',ptdacost:pi>=0?parseAmount(r[pi]):0,mutasiDebit:di>=0?parseAmount(r[di]):0,mutasiKredit:ki>=0?parseAmount(r[ki]):0}))}
 
 function parseDBF(buffer){
  const b=new Uint8Array(buffer),v=new DataView(buffer);
@@ -180,11 +180,11 @@ $('account-file').onchange=async e=>{
   if(f.name.toLowerCase().endsWith('.dbf')){const p=parseDBF(await f.arrayBuffer());accounts=p.records.map(r=>{const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);return {code:String(o.SANDI??o.KODE??''),name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??''),ptdacost:Number(o.PTDACOST||0),mutasiDebit:Number(o.MUTASIDB||0),mutasiKredit:Number(o.MUTASIKR||0)}}).filter(a=>a.code)}
   else accounts=csvToAccounts(await f.text());
   if(!state.nptrans.length)throw Error('Impor NPTRANS AGT terlebih dahulu. Master akun akan disaring berdasarkan SANDI yang benar-benar dipakai pada transaksi.');
-  const used=new Set(state.nptrans.map(r=>r.sandi));
+  const used=new Set(state.nptrans.map(r=>String(r.sandi||'').trim()).filter(Boolean));
   const selected=accounts.filter(a=>used.has(a.code));
   const map=new Map(state.accounts.map(a=>[a.code,a]));let added=0,updated=0,ignored=0;
   selected.forEach(a=>{if(map.has(a.code)){const current=map.get(a.code);Object.assign(current,a);updated++}else{map.set(a.code,a);added++}});
-  ignored=accounts.length-selected.length;state.accounts=[...map.values()];
+  ignored=accounts.length-selected.length;state.accounts=[...map.values()];const missingAdded=syncNptransSandis();added+=missingAdded;
   await persist();renderAccounts();renderNptrans();
   setMessage('np-message','Master akun diproses: '+added+' akun baru, '+updated+' nama diperbarui, '+ignored+' akun diabaikan karena tidak dipakai NPTRANS. '+missingAdded+' SANDI dari NPTRANS belum ada di NPSALDO ditambahkan dengan nama kosong.','good')
  }catch(err){setMessage('np-message','Import master akun gagal: '+err.message,'bad')}finally{e.target.value=''}
