@@ -281,7 +281,6 @@ input,select,textarea{max-width:100%}
 #sbp-print-root{display:none}
 @media print{
  @page{size:215mm 330mm;margin:13mm 12mm 16mm}
- @page :landscape{size:330mm 215mm;margin:10mm}
  @page{@bottom-right{content:"Halaman " counter(page);font:9pt Arial,sans-serif;color:#64748b}}
  html,body{background:#fff!important;margin:0!important;padding:0!important}
  body.sbp-printing>*:not(#sbp-print-root){display:none!important}
@@ -311,7 +310,4 @@ input,select,textarea{max-width:100%}
  .sbp-print-signatures span,.sbp-print-signatures small{display:block;font-size:8pt}
  .sbp-print-signatures b{display:block;height:20mm}
  .sbp-print-footer{border-top:1px solid #cbd5e1;margin-top:7mm;padding-top:2mm;color:#64748b;font-size:7pt;text-align:center}
-}
-@media print{
- html[data-print-orientation="landscape"] @page{size:330mm 215mm}
 }
