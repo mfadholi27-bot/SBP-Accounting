@@ -63,12 +63,12 @@ function parseDBF(buffer){
   let q=p+1,obj={};
   for(const f of fields){
    // File NPTRANS lama memakai byte NUL sebagai padding pada field numerik.
-   const raw=decoder.decode(b.slice(q,q+f.length)).replace(/\\u0000/g,'').trim();q+=f.length;
+   const raw=decoder.decode(b.slice(q,q+f.length)).replace(/\u0000/g,'').trim();q+=f.length;
    let val=raw;
    if(f.type==='N'||f.type==='F'){
     if(raw==='')val=0;
     else {const n=Number(raw);val=Number.isFinite(n)?n:NaN}
-   }else if(f.type==='D'&&/^\\d{8}$/.test(raw))val=raw;
+   }else if(f.type==='D'&&/^\d{8}$/.test(raw))val=raw;
    else if(f.type==='L')val=/^(T|Y)$/i.test(raw);
    obj[f.name]=val;
   }
