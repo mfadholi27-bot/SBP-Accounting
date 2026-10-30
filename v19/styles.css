@@ -218,3 +218,8 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 .journal-pagination .btn:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:1100px){#page-journal-list .panel-head{align-items:flex-start;flex-direction:column}#page-journal-list .journal-toolbar{width:100%;justify-content:flex-start}}
 @media(max-width:720px){#page-journal-list .panel{padding:13px}#page-journal-list .journal-toolbar{display:grid;grid-template-columns:1fr 1fr;width:100%}#page-journal-list .journal-toolbar .search{grid-column:1/-1;width:100%}#page-journal-list .journal-toolbar .btn{width:100%}}
+
+/* V19.28 journal lifecycle */
+#page-journal .form-actions.end{gap:9px;flex-wrap:wrap}
+.journal-icon-btn.reverse-journal{color:#8a5a12;border-color:#ead7b5}
+.journal-icon-btn.reverse-journal:hover{background:#fff7e8}
