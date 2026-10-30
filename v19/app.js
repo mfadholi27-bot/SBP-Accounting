@@ -210,6 +210,11 @@ $('np-import-confirm').onclick=async()=>{
  }catch(err){setMessage('np-message','Penyimpanan impor gagal: '+err.message,'bad')}
 };
 $('np-template').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const p=parseDBF(await f.arrayBuffer());state.npTemplate={fields:p.fields,version:p.version};await persist();renderNptrans();setMessage('np-message','Struktur template DBF berhasil dibaca: '+p.fields.map(x=>x.name+'('+x.type+','+x.length+')').join(' · '),'good')}catch(err){setMessage('np-message','Template gagal dibaca: '+err.message,'bad')}e.target.value=''};
+function accountTemplateRows(){return [['SANDI','NAMA','PTDACOST','MUTASIDB','MUTASIKR'],['114.130.2','Persediaan Barang',1000000,250000,50000],['114.140.2','Persediaan Bahan Baku',2000000,500000,100000],['716.100.','Biaya Operasional',0,1500000,250000]]}
+function exportAccountTemplateCsv(){const rows=accountTemplateRows();downloadBlob(new Blob(['\\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\\r\\n')],{type:'text/csv;charset=utf-8'}),'Format-Import-Master-Akun-SBP.csv')}
+function exportAccountTemplateXlsx(){exportXlsxSheet('Format-Import-Master-Akun-SBP.xlsx','Master Akun',accountTemplateRows())}
+$('download-account-template-csv').onclick=exportAccountTemplateCsv;
+$('download-account-template-xlsx').onclick=exportAccountTemplateXlsx;
 $('account-file').onchange=async e=>{
  const f=e.target.files?.[0];if(!f)return;
  const status=$('account-import-status');
@@ -226,29 +231,24 @@ $('account-file').onchange=async e=>{
     return {code,name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??'').trim(),ptdacost:parseAmount(o.PTDACOST??0),mutasiDebit:parseAmount(o.MUTASIDB??0),mutasiKredit:parseAmount(o.MUTASIKR??0),_row:index+1};
    }).filter(a=>a.code);
   }else{
-   accounts=/\.xlsx?$/i.test(f.name)?csvToAccounts(xlsxFirstSheetToCsv(await f.arrayBuffer())):csvToAccounts(await f.text());
+   accounts=/\\.xlsx?$/i.test(f.name)?csvToAccounts(xlsxFirstSheetToCsv(await f.arrayBuffer())):csvToAccounts(await f.text());
   }
   if(!accounts.length)throw Error('File terbaca tetapi tidak ditemukan akun dengan SANDI yang terisi.');
-  if(!state.nptrans.length)throw Error('Data NPTRANS belum tersedia. Impor dan setujui NPTRANS terlebih dahulu.');
-  const used=new Set(state.nptrans.map(r=>String(r.sandi||'').trim()).filter(Boolean));
-  const selected=accounts.filter(a=>used.has(a.code));
   const map=new Map(state.accounts.map(a=>[String(a.code),a]));let added=0,updated=0;
-  selected.forEach(a=>{
+  accounts.forEach(a=>{
+   if(!a.code) return;
    if(map.has(a.code)){const current=map.get(a.code);Object.assign(current,a);updated++}
    else{delete a._row;map.set(a.code,a);added++}
   });
-  const ignored=accounts.length-selected.length;
   state.accounts=[...map.values()];
-  const missingAdded=syncNptransSandis();added+=missingAdded;
   await persist();renderAccounts();renderNptrans();
-  const msg='Master akun berhasil diimpor: '+accounts.length+' record terbaca, '+added+' akun baru, '+updated+' akun diperbarui, '+ignored+' akun tidak dipakai NPTRANS.';
+  const msg='Master akun berhasil diimpor: '+accounts.length+' record terbaca, '+added+' akun baru, '+updated+' akun diperbarui. Semua akun dalam file diproses, tidak harus sudah digunakan NPTRANS.';
   if(status)status.textContent=msg;
-  setMessage('np-message',msg,'good');
   toast('Import master akun berhasil.');
  }catch(err){
   const msg='Import master akun gagal: '+err.message;
   if(status)status.textContent=msg;
-  setMessage('np-message',msg,'bad');
+  toast(msg);
  }finally{e.target.value=''}
 };
 $('clear-np-data').onclick=async()=>{
