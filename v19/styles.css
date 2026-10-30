@@ -49,3 +49,16 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 .np-pagination{display:flex;justify-content:flex-end;gap:9px;padding:13px 2px}
 .np-pagination button:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:720px){.np-table-tools{align-items:flex-start;flex-direction:column}.np-table-tools .search{width:100%}.np-page-info{white-space:normal}.np-heading{align-items:flex-start}}
+
+/* Account master + mass-import controls */
+.account-tools{margin:18px 0 12px;align-items:center}
+.account-tools .search{width:min(430px,60%)}
+.import-mode-label{display:grid;gap:6px;margin-top:12px;color:#667b6e;font-size:11px;font-weight:800}
+.import-mode-label select{width:100%;border:1px solid #dce8df;border-radius:9px;background:#fff;padding:10px;color:#254c37;font:inherit}
+.account-form input:disabled{background:#edf2ee;color:#829187;cursor:not-allowed}
+.edit-account{padding:7px 12px;font-size:11px}
+.delete-account{padding:7px 12px;font-size:11px}
+#cancel-account-edit[hidden]{display:none!important}
+#account-rows td:last-child{white-space:nowrap;min-width:150px}
+#account-rows td:nth-child(2){min-width:340px}
+@media(max-width:720px){.account-tools{align-items:flex-start;flex-direction:column}.account-tools .search{width:100%}}
