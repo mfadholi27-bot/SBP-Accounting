@@ -183,3 +183,38 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 [hidden]{display:none!important}
 
 .bulk-journal-panel{margin-bottom:18px}.bulk-import-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}.bulk-review{margin-top:16px}.bulk-review-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}.bulk-review-head p{margin:5px 0 0;color:var(--muted,#64748b);font-size:13px}.bulk-errors{border:1px solid #efc2c2;background:#fff7f7;color:#923b3b;border-radius:10px;padding:12px 16px;margin:12px 0;font-size:13px}.bulk-errors ul{margin:8px 0 0;padding-left:20px}.bulk-errors li{margin:4px 0}
+
+/* V19 Daftar Jurnal — compact professional table */
+#page-journal-list .panel{padding:20px}
+#page-journal-list .panel-head{align-items:center;gap:18px}
+#page-journal-list .journal-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+#page-journal-list .journal-toolbar .search{width:270px;height:38px;font-size:12px;padding:9px 12px}
+.journal-filter{height:38px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);padding:0 11px;font:inherit;font-size:12px}
+.journal-table-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0;color:var(--muted);font-size:11px}
+.journal-table-controls label{display:flex;align-items:center;gap:8px}
+.journal-list-table{width:100%;min-width:980px;table-layout:fixed;border-collapse:separate;border-spacing:0}
+.journal-list-table th,.journal-list-table td{padding:9px 10px;font-size:11px;line-height:1.35;vertical-align:middle}
+.journal-list-table th{font-size:9px;letter-spacing:.045em;white-space:nowrap}
+.journal-list-table th:nth-child(1){width:95px}.journal-list-table th:nth-child(2){width:112px}.journal-list-table th:nth-child(3){width:auto}.journal-list-table th:nth-child(4){width:105px}.journal-list-table th:nth-child(5){width:55px}.journal-list-table th:nth-child(6),.journal-list-table th:nth-child(7){width:125px}.journal-list-table th:nth-child(8){width:112px}
+.journal-list-table td:nth-child(1),.journal-list-table td:nth-child(2),.journal-list-table td:nth-child(4),.journal-list-table td:nth-child(5){white-space:nowrap}
+.journal-list-table .journal-description{max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.journal-list-table .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.journal-list-table .tag{font-size:9px;padding:5px 8px;white-space:nowrap}
+.journal-list-table tbody tr.journal-main-row{height:48px}
+.journal-list-table tbody tr.journal-main-row:nth-child(4n+1){background:#fbfdfb}
+.journal-actions{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.journal-icon-btn{width:27px;height:27px;padding:0;border:1px solid #dce9df;border-radius:7px;background:#fff;color:#176b49;display:inline-grid;place-items:center;font-size:14px;line-height:1;cursor:pointer}
+.journal-icon-btn:hover{background:#edf7f0;border-color:#acd4ba}
+.journal-icon-btn.danger{color:#bd4545;border-color:#f0dada}
+.journal-icon-btn.danger:hover{background:#fff0f0}
+.journal-detail-row td{padding:0 12px 10px!important;background:#f8fbf9}
+.journal-detail-box{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.journal-detail-box>b{display:block;margin-bottom:8px;font-size:11px;color:var(--green)}
+.journal-lines-table{width:100%;min-width:600px}
+.journal-lines-table th,.journal-lines-table td{padding:6px 9px;font-size:10px}
+.journal-pagination{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px}
+.journal-pagination span{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.journal-pagination .btn{padding:7px 11px;font-size:11px}
+.journal-pagination .btn:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:1100px){#page-journal-list .panel-head{align-items:flex-start;flex-direction:column}#page-journal-list .journal-toolbar{width:100%;justify-content:flex-start}}
+@media(max-width:720px){#page-journal-list .panel{padding:13px}#page-journal-list .journal-toolbar{display:grid;grid-template-columns:1fr 1fr;width:100%}#page-journal-list .journal-toolbar .search{grid-column:1/-1;width:100%}#page-journal-list .journal-toolbar .btn{width:100%}}
