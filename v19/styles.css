@@ -271,3 +271,7 @@ input,select,textarea{max-width:100%}
 }
 .nav-group-label{margin:15px 12px 5px!important;font-size:9px!important;letter-spacing:1.2px!important;color:#829087!important}
 @media(max-width:780px){.nav-group-label{display:none}}
+
+/* Opening balances module */
+.opening-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}.opening-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}.opening-form input,.opening-form select{min-height:40px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff}.opening-note{grid-column:span 2}.opening-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 18px}.opening-summary>div{display:flex;flex-direction:column;gap:5px;padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}.opening-summary span{font-size:11px;color:var(--muted)}.opening-summary b{font-size:14px;font-variant-numeric:tabular-nums}@media(max-width:760px){.opening-form{grid-template-columns:1fr}.opening-note{grid-column:auto}.opening-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{body:has(#page-opening-balances.active) #page-opening-balances{display:block!important}}
