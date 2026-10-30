@@ -602,7 +602,7 @@ function printDocument(title,subtitle,body,orientation='portrait'){
  const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4, pageSize=pageOrientation==='landscape'?paper.split(' ').reverse().join(' '):paper;
  const margin=Math.max(5,Math.min(25,Number(PRINT_CONFIG.margin)||10))+'mm';
  const printed=new Date().toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
- const style='@page{size:'+pageSize+';margin:'+margin+'}'+
+ const style='@page{size:'+pageSize+';margin:'+margin+'}'+ '@page{@bottom-right{content:"Halaman "+counter(page);font:8pt Arial;color:#64748b}}'+
  '*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#17212b;font:'+Number(PRINT_CONFIG.fontSize||8)+'pt Arial,Helvetica,sans-serif}'+
  '.sheet{width:100%}.header{border-bottom:2px solid #176b4a;padding:0 0 5mm;margin-bottom:3mm}'+
  '.brand{font-size:15pt;font-weight:800;letter-spacing:.5px;color:#145c40}.brand small{display:block;font-size:7.5pt;font-weight:500;letter-spacing:1px;color:#64748b;margin-top:1mm}'+
