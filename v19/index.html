@@ -9,14 +9,13 @@
 <body>
 <div class="shell">
 <aside class="sidebar">
-  <a class="brand" href="#dashboard"><span class="brand-mark">SB</span><span><b>SBP Accounting</b><small>V19 · Offline DBF Edition</small></span></a>
+  <a class="brand" href="#dashboard"><span class="brand-mark">SB</span><span><b>SBP Accounting</b><small>V19 · Offline Accounting</small></span></a>
   <div class="side-label">WORKSPACE</div>
   <nav id="nav">
     <button class="nav-item active" data-page="dashboard"><span>▦</span>Dashboard</button>
     <button class="nav-item" data-page="journal"><span>＋</span>Input Jurnal</button>
     <button class="nav-item" data-page="journal-list"><span>☷</span>Daftar Jurnal</button>
     <button class="nav-item" data-page="accounts"><span>◎</span>Master Akun</button>
-    <button class="nav-item" data-page="nptrans"><span>⇄</span>NPTRANS / DBF</button>
     <button class="nav-item" data-page="reports"><span>▤</span>Laporan</button>
     <button class="nav-item" data-page="backup"><span>⤓</span>Backup & Restore</button>
   </nav>
@@ -26,18 +25,16 @@
 <header class="topbar"><div><div class="eyebrow">SBP ACCOUNTING / V19</div><h1 id="page-title">Dashboard</h1></div><div class="top-actions"><span class="local-pill">● Offline ready</span><button class="btn btn-primary" id="quick-journal">＋ Jurnal Baru</button></div></header>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <section class="page active" id="page-dashboard">
-  <div class="welcome"><div><div class="eyebrow light">SISTEM AKUNTANSI TERPADU</div><h2>Pembukuan lebih rapi,<br>kendali tetap di tangan Anda.</h2><p>Kelola jurnal, akun, buku besar, dan pertukaran data DBF NPTRANS dalam satu aplikasi offline.</p></div><div class="welcome-icon">▦</div></div>
+  <div class="welcome"><div><div class="eyebrow light">SISTEM AKUNTANSI TERPADU</div><h2>Pembukuan lebih rapi,<br>kendali tetap di tangan Anda.</h2><p>Kelola jurnal, akun, dan laporan pembukuan dalam satu aplikasi offline.</p></div><div class="welcome-icon">▦</div></div>
   <div class="stats">
     <article class="stat"><span>Total Debit</span><strong id="stat-debit">Rp 0</strong><small>Akumulasi jurnal tersimpan</small></article>
     <article class="stat"><span>Total Kredit</span><strong id="stat-credit">Rp 0</strong><small>Akumulasi jurnal tersimpan</small></article>
     <article class="stat"><span>Transaksi Jurnal</span><strong id="stat-journals">0</strong><small>Nomor bukti tersimpan</small></article>
-    <article class="stat"><span>Data NPTRANS</span><strong id="stat-nptrans">0</strong><small>Baris legacy terimpor</small></article>
   </div>
   <div class="section-heading"><div><h3>Akses cepat</h3><p>Pilih modul untuk melanjutkan pekerjaan.</p></div></div>
   <div class="quick-grid">
     <button class="quick-card" data-go="journal"><span class="quick-icon">＋</span><b>Input Jurnal</b><small>Buat jurnal debit dan kredit</small></button>
     <button class="quick-card" data-go="accounts"><span class="quick-icon">◎</span><b>Master Akun</b><small>Kelola SANDI dan nama akun</small></button>
-    <button class="quick-card" data-go="nptrans"><span class="quick-icon">⇄</span><b>NPTRANS / DBF</b><small>Import, validasi, dan ekspor DBF</small></button>
     <button class="quick-card" data-go="reports"><span class="quick-icon">▤</span><b>Laporan</b><small>Rekap dan neraca saldo</small></button>
   </div>
   <div class="panel"><div class="panel-head"><div><h3>Jurnal terbaru</h3><p>Aktivitas pembukuan terakhir.</p></div><button class="btn" data-go="journal-list">Lihat semua</button></div><div id="recent-journals" class="empty">Belum ada jurnal tersimpan.</div></div>
@@ -49,17 +46,17 @@
     <div id="bulk-journal-message" class="inline-message">Format kolom: TANGGAL, NOBUKTI, KETERANGAN, SANDI, KETERANGAN BARIS, DEBIT, KREDIT.</div>
     <div id="bulk-journal-review" class="bulk-review" hidden><div class="bulk-review-head"><div><b id="bulk-journal-summary">Pratinjau impor</b><p id="bulk-journal-detail">Periksa data sebelum disimpan.</p></div><div class="button-row"><button class="btn" id="bulk-journal-cancel" type="button">Batal</button><button class="btn btn-primary" id="bulk-journal-save" type="button" disabled>Simpan Jurnal Massal</button></div></div><div id="bulk-journal-errors" class="bulk-errors" hidden></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan</th><th>SANDI</th><th>Debit</th><th>Kredit</th></tr></thead><tbody id="bulk-journal-preview-rows"></tbody></table></div></div>
   </div>
-  <div class="panel"><div class="panel-head"><div><h3>Input jurnal umum</h3><p>Jurnal dari NPTRANS dapat dilengkapi di sini. Tentukan debit/kredit secara manual, lalu simpan setelah seimbang.</p></div><span class="tag">MANUAL ENTRY</span></div>
+  <div class="panel"><div class="panel-head"><div><h3>Input jurnal umum</h3><p>Buat jurnal umum, simpan sebagai Draft, periksa, lalu posting setelah debit dan kredit seimbang.</p></div><span class="tag">MANUAL ENTRY</span></div>
     <div class="form-grid">
       <label>Tanggal<input type="date" id="j-date"></label><label>Nomor bukti<input id="j-number" placeholder="Contoh: JU/001/2026"></label><label>Keterangan<input id="j-description" placeholder="Uraian transaksi"></label>
     </div>
     <div class="table-wrap"><table class="entry-table"><thead><tr><th style="width:18%">Kode akun</th><th>Nama akun</th><th>Keterangan baris</th><th>Debit</th><th>Kredit</th><th></th></tr></thead><tbody id="journal-lines"></tbody></table></div>
     <div class="form-actions"><button class="btn" id="add-line">＋ Tambah baris</button><div class="totals"><span>Debit <b id="sum-debit">Rp 0</b></span><span>Kredit <b id="sum-credit">Rp 0</b></span><span>Selisih <b id="sum-diff">Rp 0</b></span></div></div>
-    <div class="form-actions end"><button class="btn" id="clear-journal">Kosongkan</button><button class="btn btn-primary" id="save-journal">Simpan jurnal</button></div>
+    <div class="form-actions end"><button class="btn" id="clear-journal">Kosongkan</button><button class="btn" id="save-journal">Simpan sebagai Draft</button><button class="btn btn-primary" id="post-journal">Posting Jurnal</button></div>
     <div id="journal-message" class="inline-message">Jurnal hanya dapat disimpan jika debit dan kredit seimbang.</div>
   </div>
 </section>
-<section class="page" id="page-journal-list"><div class="panel"><div class="panel-head"><div><h3>Daftar jurnal</h3><p>Draft dari NPTRANS otomatis muncul di sini. Lengkapi debit/kredit untuk menjadikannya jurnal terposting.</p></div><div class="journal-toolbar"><input class="search" id="journal-search" placeholder="Cari nomor, tanggal, atau keterangan..."><select id="journal-status-filter" class="journal-filter"><option value="all">Semua status</option><option value="posted">Terposting</option><option value="draft">Draft</option></select><button class="btn" id="export-journals-xlsx">Ekspor Excel</button></div></div><div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="journal-list-content" aria-expanded="false">＋ Tampilkan daftar jurnal</button></div><div id="journal-list-content" hidden><div class="journal-table-controls"><span id="journal-page-info">0 jurnal</span><label>Baris per halaman <select id="journal-page-size" class="journal-filter"><option>10</option><option>20</option><option>50</option><option>100</option></select></label></div><div id="journal-table" class="empty">Belum ada jurnal.</div><div class="journal-pagination"><button class="btn" id="journal-prev" disabled>‹ Sebelumnya</button><span id="journal-page-current">1 / 1</span><button class="btn" id="journal-next" disabled>Berikutnya ›</button></div></div></div></section>
+<section class="page" id="page-journal-list"><div class="panel"><div class="panel-head"><div><h3>Daftar jurnal</h3><p>Kelola Draft dan jurnal terposting. Draft dapat diedit atau dihapus; jurnal terposting dikunci dan hanya dapat dikoreksi melalui jurnal pembalik.</p></div><div class="journal-toolbar"><input class="search" id="journal-search" placeholder="Cari nomor, tanggal, atau keterangan..."><select id="journal-status-filter" class="journal-filter"><option value="all">Semua status</option><option value="posted">Terposting</option><option value="draft">Draft</option></select><button class="btn" id="export-journals-xlsx">Ekspor Excel</button></div></div><div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="journal-list-content" aria-expanded="false">＋ Tampilkan daftar jurnal</button></div><div id="journal-list-content" hidden><div class="journal-table-controls"><span id="journal-page-info">0 jurnal</span><label>Baris per halaman <select id="journal-page-size" class="journal-filter"><option>10</option><option>20</option><option>50</option><option>100</option></select></label></div><div id="journal-table" class="empty">Belum ada jurnal.</div><div class="journal-pagination"><button class="btn" id="journal-prev" disabled>‹ Sebelumnya</button><span id="journal-page-current">1 / 1</span><button class="btn" id="journal-next" disabled>Berikutnya ›</button></div></div></div></section>
 <section class="page" id="page-accounts">
   <div class="accounts-card accounts-import-card">
     <div class="accounts-card-title"><div class="accounts-icon">⇧</div><div><h3>Import Master Akun</h3><p>Impor data akun dari Excel (.xlsx/.xls), CSV (.csv), atau DBF (.dbf).</p></div></div>
@@ -87,7 +84,7 @@
     <div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="account-list-content" aria-expanded="false">＋ Tampilkan 114 akun</button><span class="list-hint">Daftar disembunyikan agar halaman lebih ringkas.</span></div><div id="account-list-content" hidden><div class="table-wrap"><table class="account-table"><thead><tr><th>No</th><th>Kode / SANDI</th><th>Nama akun</th><th>Saldo Awal</th><th>Mutasi Debit</th><th>Mutasi Kredit</th><th>Saldo Aktual</th><th>Aksi</th></tr></thead><tbody id="account-rows"></tbody></table></div>
   </div>
 </section>
-<section class="page" id="page-nptrans">
+<section class="page" id="page-nptrans" hidden>
   <div class="panel"><div class="panel-head"><div><h3>Pusat kompatibilitas NPTRANS</h3><p>Impor NPTRANS akan membuat draft jurnal otomatis berdasarkan tanggal dan nomor bukti sumber.</p></div><span class="tag">LEGACY BRIDGE</span></div>
     <div class="callout"><b>Alur yang aman</b><p>Impor file NPTRANS / NPSALDO → periksa kolom dan akun → simpan sebagai data legacy → ekspor kembali menggunakan struktur DBF sumber. File asli tidak diubah.</p></div>
     <div class="import-grid">
@@ -101,9 +98,9 @@
     <p class="footnote">Catatan: ekspor DBF dikunci sampai struktur file DBF asli tersedia. Format enam kolom saja belum cukup untuk memastikan panjang field, tipe data, encoding, dan kompatibilitas penuh dengan program NPTRANS.</p>
   </div>
 </section>
-<section class="page" id="page-reports"><div class="panel"><div class="panel-head"><div><h3>Neraca saldo</h3><p>Ringkasan mutasi dari jurnal manual yang tersimpan.</p></div><div class="button-row"><button class="btn" id="export-trial-xlsx">Ekspor Excel</button><button class="btn" id="print-report">Cetak laporan</button></div></div><div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="trial-balance-content" aria-expanded="false">＋ Tampilkan neraca saldo</button></div><div id="trial-balance-content" hidden><div id="trial-balance" class="empty">Belum ada data jurnal.</div></div></div></section>
-<section class="page" id="page-backup"><div class="panel"><div class="panel-head"><div><h3>Backup & pemulihan data</h3><p>Data disimpan lokal di browser/perangkat ini. Backup secara rutin.</p></div><span class="tag">LOCAL DATA</span></div><div class="backup-grid"><div class="backup-card"><h4>Unduh backup</h4><p>Simpan akun, jurnal, dan data NPTRANS dalam satu file JSON.</p><button class="btn btn-primary" id="backup-download">Unduh backup JSON</button></div><div class="backup-card"><h4>Pulihkan backup</h4><p>Memuat kembali data dari backup JSON. Data lokal saat ini akan digantikan.</p><label class="file-btn">Pilih backup JSON<input type="file" id="backup-file" accept=".json,application/json"></label></div></div><div id="backup-message" class="inline-message">Lakukan backup sebelum berpindah browser atau perangkat.</div></div></section>
+<section class="page" id="page-reports"><div class="panel"><div class="panel-head"><div><h3>Neraca saldo</h3><p>Ringkasan mutasi dari seluruh jurnal yang sudah terposting, termasuk jurnal pembalik.</p></div><div class="button-row"><button class="btn" id="export-trial-xlsx">Ekspor Excel</button><button class="btn" id="print-report">Cetak laporan</button></div></div><div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="trial-balance-content" aria-expanded="false">＋ Tampilkan neraca saldo</button></div><div id="trial-balance-content" hidden><div id="trial-balance" class="empty">Belum ada data jurnal.</div></div></div></section>
+<section class="page" id="page-backup"><div class="panel"><div class="panel-head"><div><h3>Backup & pemulihan data</h3><p>Data disimpan lokal di browser/perangkat ini. Backup secara rutin; data legacy tetap ikut tersimpan dalam backup lama.</p></div><span class="tag">LOCAL DATA</span></div><div class="backup-grid"><div class="backup-card"><h4>Unduh backup</h4><p>Simpan akun, jurnal, dan data NPTRANS dalam satu file JSON.</p><button class="btn btn-primary" id="backup-download">Unduh backup JSON</button></div><div class="backup-card"><h4>Pulihkan backup</h4><p>Memuat kembali data dari backup JSON. Data lokal saat ini akan digantikan.</p><label class="file-btn">Pilih backup JSON<input type="file" id="backup-file" accept=".json,application/json"></label></div></div><div id="backup-message" class="inline-message">Lakukan backup sebelum berpindah browser atau perangkat.</div></div></section>
 <footer>SBP Accounting V19 · HTML / CSS / JavaScript · Offline-first · DBF compatibility in progress</footer>
 </main></div>
-<script src="app.js?v=27"></script>
+<script src="app.js?v=28"></script>
 </body></html>
