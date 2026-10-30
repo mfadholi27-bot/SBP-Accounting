@@ -34,3 +34,29 @@ table{background:#fff}
 input,select,textarea{background:#fff!important;border:1px solid #dce6de!important}
 @media(max-width:900px){.main{padding:14px!important}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.stats,.quick-grid{grid-template-columns:1fr}.main{padding:10px!important}.welcome{border-radius:13px!important}.stat,.quick-card{padding:15px!important}}
+
+/* PREMIUM REFINEMENT — editorial green, warm ivory, restrained palm motif */
+:root{--green:#08764b;--green2:#159765;--ink:#18372c;--muted:#718078;--bg:#f4f6f2;--line:#e5eae4;--soft:#f8faf7;--shadow:0 8px 24px rgba(24,55,44,.055)}
+html,body{background:#f2f5f1!important;color:#18372c!important}
+body{background-image:linear-gradient(rgba(245,248,244,.965),rgba(245,248,244,.965)),url('./assets/palm-wallpaper.svg')!important;background-position:center!important;background-size:cover!important;background-attachment:fixed!important}
+.sidebar{background:#fbfcfa!important;border-right:1px solid #e6ebe5!important;box-shadow:4px 0 18px rgba(27,55,42,.035)!important}
+.main{padding:22px 24px!important}
+.topbar{background:#fff!important;border:1px solid #e8ede8!important;border-radius:16px!important;box-shadow:0 4px 16px rgba(27,55,42,.04)!important}
+.welcome{position:relative!important;isolation:isolate;overflow:hidden!important;min-height:190px;background:linear-gradient(105deg,#073f2e 0%,#075d40 52%,#0d7650 100%)!important;border:1px solid rgba(255,255,255,.2)!important;border-radius:18px!important;box-shadow:0 12px 28px rgba(5,65,43,.16)!important;color:#fff!important}
+.welcome:after{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,rgba(3,54,37,.04),rgba(4,72,47,.08)),url('./assets/palm-wallpaper.svg') right center/auto 210% no-repeat!important;opacity:.20!important;pointer-events:none}
+.welcome h2,.welcome p,.welcome .eyebrow,.welcome *{color:#fff!important}.welcome h2{font-size:clamp(25px,2.2vw,34px)!important;line-height:1.16!important;letter-spacing:-.8px!important}.welcome p{opacity:.88!important}.welcome .eyebrow{opacity:.72!important}
+.stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;margin:18px 0 25px!important}
+.stat{background:#fff!important;border:1px solid #e7ece7!important;border-radius:16px!important;box-shadow:0 5px 18px rgba(23,55,41,.045)!important;padding:20px 22px!important;min-width:0}
+.stat span{color:#78867e!important;font-size:12px!important}.stat strong{color:#126342!important;font-size:clamp(21px,1.7vw,27px)!important;letter-spacing:-.5px!important}.stat small{color:#87938b!important}
+.section-heading{margin:0 0 13px!important}.section-heading h3{color:#183d2e!important;font-size:17px!important}.section-heading p{color:#839087!important}
+.quick-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:15px!important;margin-bottom:22px!important}
+.quick-card{background:#fff!important;border:1px solid #e6ece6!important;border-radius:16px!important;box-shadow:0 5px 18px rgba(23,55,41,.04)!important;padding:20px!important;min-height:124px!important}
+.quick-card b{color:#1a3c2f!important}.quick-card small{color:#7b8980!important}.quick-icon{background:#edf7f0!important;color:#08764b!important;border-radius:12px!important}
+.panel,.bulk-post-panel,.bulk-journal-panel{background:#fff!important;border:1px solid #e6ece6!important;border-radius:17px!important;box-shadow:0 5px 20px rgba(23,55,41,.045)!important}
+.panel-head h3{color:#183d2e!important}.panel-head p{color:#849087!important}
+.table-wrap{background:#fff!important;border:1px solid #edf0ec!important;border-radius:12px!important;overflow:auto}
+table{background:#fff!important}thead th{background:#f5f8f5!important;color:#607268!important}
+input,select,textarea{background:#fff!important;border:1px solid #dfe7e0!important;border-radius:9px!important}
+.nav-item.active{background:linear-gradient(110deg,#08764b,#139563)!important;box-shadow:0 5px 13px rgba(8,118,75,.16)!important}
+@media(max-width:900px){.main{padding:14px!important}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){.main{padding:10px!important}.stats,.quick-grid{grid-template-columns:1fr!important}.welcome{min-height:165px!important}.stat,.quick-card{padding:16px!important}}
