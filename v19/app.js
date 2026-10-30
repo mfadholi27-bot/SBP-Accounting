@@ -63,8 +63,10 @@ $('save-account').onclick=async()=>{
  else {if(state.accounts.some(a=>a.code===code)){toast('Kode akun sudah ada. Gunakan tombol Edit.');return}state.accounts.push({code,name,ptdacost,mutasiDebit,mutasiKredit})}
  const wasEditing=!!editingAccountCode;await persist();resetAccountForm();renderAccounts();renderNptrans();toast(wasEditing?'Akun diperbarui.':'Akun baru ditambahkan.')
 };
+function accountRowsAoa(){return [['SANDI','NAMA','PTDACOST','MUTASIDB','MUTASIKR'],...state.accounts.map(a=>[a.code,a.name,a.ptdacost||0,a.mutasiDebit||0,a.mutasiKredit||0])]}
 function exportAccountsCsv(){const rows=[['SANDI','NAMA','PTDACOST','MUTASIDB','MUTASIKR'],...state.accounts.map(a=>[a.code,a.name,a.ptdacost||0,a.mutasiDebit||0,a.mutasiKredit||0])];downloadBlob(new Blob(['\\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\\r\\n')],{type:'text/csv;charset=utf-8'}),'Master-Akun-SBP.csv')}
-$('export-accounts').onclick=exportAccountsCsv;
+function exportAccountsXlsx(){exportXlsxSheet('Master-Akun-SBP.xlsx','Master Akun',accountRowsAoa())}
+$('export-accounts').onclick=exportAccountsCsv;$('export-accounts-xlsx').onclick=exportAccountsXlsx;
 function parseCSV(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'&&quoted&&next==='"'){cell+='"';i++}else if(ch==='"'){quoted=!quoted}else if(ch===','&&!quoted){row.push(cell);cell=''}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row);row=[];cell=''}else cell+=ch}row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row);return rows}
 function norm(s){return String(s||'').replace(new RegExp('^'+String.fromCharCode(65279)),'').trim().toUpperCase().replace(/[ _-]/g,'')}
 function mapHeaders(header){const aliases={SANDI:['SANDI','KODE','KODEAKUN','ACCOUNT'],TANGGAL:['TANGGAL','DATE'],NOBUKTI:['NOBUKTI','NOMORBUKTI','BUKTI'],NOURUT:['NOURUT','URUT','NO'],KET:['KET','KETERANGAN','URAIAN'],JUMLAH:['JUMLAH','NILAI','AMOUNT']};const out={};header.forEach((h,i)=>{for(const [key,vals] of Object.entries(aliases))if(vals.includes(norm(h)))out[key]=i});return out}
@@ -73,6 +75,8 @@ function parseAmount(v){const s=String(v??'').trim().replace(/\s/g,'');if(!s)ret
 function csvToNp(text){const rows=parseCSV(text);if(rows.length<2)throw Error('CSV kosong atau hanya memiliki header.');const h=mapHeaders(rows[0]);const missing=['SANDI','TANGGAL','NOBUKTI','NOURUT','KET','JUMLAH'].filter(k=>h[k]===undefined);if(missing.length)throw Error('Kolom wajib tidak ditemukan: '+missing.join(', '));return rows.slice(1).map((r,i)=>({sandi:(r[h.SANDI]||'').trim(),tanggal:normalizeDate(r[h.TANGGAL]),nobukti:(r[h.NOBUKTI]||'').trim(),nourut:(r[h.NOURUT]||'').trim(),ket:(r[h.KET]||'').trim(),jumlah:parseAmount(r[h.JUMLAH]),_row:i+2}))}
 function csvToAccounts(text){const rows=parseCSV(text);if(rows.length<2)throw Error('CSV master akun kosong.');const h=rows[0].map(norm),find=names=>h.findIndex(x=>names.includes(x)),ci=find(['SANDI','KODE','KODEAKUN']),ni=find(['NAMA','DES','NAMAAKUN','KETERANGAN','URAIAN']),pi=find(['PTDACOST','SALDOAWAL']),di=find(['MUTASIDB','MUTASIDEBIT']),ki=find(['MUTASIKR','MUTASIKREDIT']);if(ci<0)throw Error('Kolom SANDI tidak ditemukan.');return rows.slice(1).filter(r=>r[ci]).map(r=>({code:r[ci].trim(),name:ni>=0?String(r[ni]||'').trim():'',ptdacost:pi>=0?parseAmount(r[pi]):0,mutasiDebit:di>=0?parseAmount(r[di]):0,mutasiKredit:ki>=0?parseAmount(r[ki]):0}))}
 
+function xlsxFirstSheetToCsv(buffer){if(!window.XLSX)throw Error('Mesin Excel lokal belum termuat. Muat ulang aplikasi.');const wb=XLSX.read(buffer,{type:'array',cellDates:false});const name=wb.SheetNames[0];if(!name)throw Error('Workbook tidak memiliki lembar kerja.');return XLSX.utils.sheet_to_csv(wb.Sheets[name],{FS:',',RS:'\n'})}
+function exportXlsxSheet(filename,sheetName,rows){if(!window.XLSX){toast('Mesin Excel belum siap.');return}const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,sheetName);const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});downloadBlob(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),filename)}
 function parseDBF(buffer){
  const b=new Uint8Array(buffer),v=new DataView(buffer);
  if(b.length<33)throw Error('File terlalu kecil untuk DBF.');
@@ -112,7 +116,9 @@ function parseDBF(buffer){
 function dbfToNp(parsed){return parsed.records.map((r,i)=>{const o={};for(const k of Object.keys(r))o[norm(k)]=r[k];return {sandi:String(o.SANDI??''),tanggal:normalizeDate(o.TANGGAL),nobukti:String(o.NOBUKTI??''),nourut:String(o.NOURUT??''),ket:String(o.KET??''),jumlah:typeof o.JUMLAH==='number'?o.JUMLAH:parseAmount(o.JUMLAH),_row:i+1}})}
 function downloadBlob(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 function csvCell(v){const s=String(v??'');return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+function npRowsAoa(){return [['SANDI','TANGGAL','NOBUKTI','NOURUT','KET','JUMLAH'],...state.nptrans.map(r=>[r.sandi,r.tanggal,r.nobukti,r.nourut,r.ket,r.jumlah])]}
 function exportNpCsv(){const rows=[['SANDI','TANGGAL','NOBUKTI','NOURUT','KET','JUMLAH'],...state.nptrans.map(r=>[r.sandi,r.tanggal,r.nobukti,r.nourut,r.ket,r.jumlah])];downloadBlob(new Blob(['\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'NPTRANS-export.csv')}
+function exportNpXlsx(){exportXlsxSheet('NPTRANS-export.xlsx','NPTRANS',npRowsAoa())}
 function fieldValue(row,field){const name=norm(field.name);let value='';if(name==='SANDI')value=row.sandi;else if(name==='TANGGAL')value=row.tanggal;else if(name==='NOBUKTI')value=row.nobukti;else if(name==='NOURUT')value=row.nourut;else if(name==='KET')value=row.ket;else if(name==='JUMLAH')value=row.jumlah;return value}
 function exportDbf(){if(!state.npTemplate?.fields?.length){setMessage('np-message','Ekspor DBF belum tersedia: unggah file NPTRANS.DBF asli terlebih dahulu agar struktur field tidak ditebak.','bad');return}const fields=state.npTemplate.fields,headerLen=32+fields.length*32+1,recordLen=1+fields.reduce((s,f)=>s+f.length,0),count=state.nptrans.length,buffer=new ArrayBuffer(headerLen+recordLen*count+1),b=new Uint8Array(buffer),v=new DataView(buffer);b[0]=state.npTemplate.version||0x03;const now=new Date();b[1]=now.getFullYear()-1900;b[2]=now.getMonth()+1;b[3]=now.getDate();v.setUint32(4,count,true);v.setUint16(8,headerLen,true);v.setUint16(10,recordLen,true);let p=32;for(const f of fields){const name=new TextEncoder().encode(f.name);b.set(name.slice(0,11),p);b[p+11]=f.type.charCodeAt(0);b[p+16]=f.length;b[p+17]=f.decimals||0;b.set(f.raw.slice(18,32),p+18);p+=32}b[p]=0x0d;p++;const enc=new TextEncoder();for(const row of state.nptrans){b[p]=0x20;p++;for(const f of fields){let val=fieldValue(row,f),out='';if(f.type==='C'){out=String(val??'').slice(0,f.length).padEnd(f.length,' ')}else if(f.type==='N'||f.type==='F'){const n=Number(val||0);out=Number.isFinite(n)?(f.decimals? n.toFixed(f.decimals):String(Math.trunc(n))):'';out=out.slice(-f.length).padStart(f.length,' ')}else if(f.type==='D'){let s=String(val||'').trim();if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){const [dd,mm,yyyy]=s.split('/');s=yyyy+mm+dd}else if(/^\d{4}-\d\d-\d\d$/.test(s))s=s.replace(/-/g,'');else s=s.replace(/[^0-9]/g,'');out=(s.length===8?s:'        ').padEnd(f.length,' ')}else if(f.type==='L'){out=val?'T':'F'}else{out=''.padEnd(f.length,' ')}const bytes=enc.encode(out);b.set(bytes.slice(0,f.length),p);if(bytes.length<f.length){for(let k=bytes.length;k<f.length;k++)b[p+k]=0x20}p+=f.length}}b[p]=0x1a;downloadBlob(new Blob([buffer],{type:'application/octet-stream'}),'NPTRANS.DBF');setMessage('np-message','File NPTRANS.DBF berhasil dibuat berdasarkan struktur template yang diunggah. Tetap uji pada salinan program NPTRANS lama.','good')}
 let npPage=1;const NP_PAGE_SIZE=100;
@@ -143,6 +149,7 @@ $('np-file').onchange=async e=>{
  try{
   let rows,p=null;
   if(f.name.toLowerCase().endsWith('.dbf')){p=parseDBF(await f.arrayBuffer());rows=dbfToNp(p)}
+  else if(/\\.xlsx?$/i.test(f.name))rows=csvToNp(xlsxFirstSheetToCsv(await f.arrayBuffer()));
   else rows=csvToNp(await f.text());
   const valid=rows.filter(r=>r.sandi&&r.nobukti&&Number.isFinite(Number(r.jumlah))),rejected=rows.length-valid.length;
   const mode=$('np-import-mode').value;
@@ -192,7 +199,7 @@ $('account-file').onchange=async e=>{
     return {code,name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??'').trim(),ptdacost:parseAmount(o.PTDACOST??0),mutasiDebit:parseAmount(o.MUTASIDB??0),mutasiKredit:parseAmount(o.MUTASIKR??0),_row:index+1};
    }).filter(a=>a.code);
   }else{
-   accounts=csvToAccounts(await f.text());
+   accounts=/\\.xlsx?$/i.test(f.name)?csvToAccounts(xlsxFirstSheetToCsv(await f.arrayBuffer())):csvToAccounts(await f.text());
   }
   if(!accounts.length)throw Error('File terbaca tetapi tidak ditemukan akun dengan SANDI yang terisi.');
   if(!state.nptrans.length)throw Error('Data NPTRANS belum tersedia. Impor dan setujui NPTRANS terlebih dahulu.');
@@ -217,7 +224,7 @@ $('account-file').onchange=async e=>{
   setMessage('np-message',msg,'bad');
  }finally{e.target.value=''}
 };
-$('np-search').addEventListener('input',()=>{npPage=1;renderNptrans()});$('np-prev').onclick=()=>{npPage=Math.max(1,npPage-1);renderNptrans()};$('np-next').onclick=()=>{npPage++;renderNptrans()};$('export-np-csv').onclick=exportNpCsv;$('export-np-dbf').onclick=exportDbf;
+$('np-search').addEventListener('input',()=>{npPage=1;renderNptrans()});$('np-prev').onclick=()=>{npPage=Math.max(1,npPage-1);renderNptrans()};$('np-next').onclick=()=>{npPage++;renderNptrans()};$('export-np-csv').onclick=exportNpCsv;$('export-np-xlsx').onclick=exportNpXlsx;$('export-np-dbf').onclick=exportDbf;
 
 function renderTrialBalance(){const postedJournals=state.journals.filter(j=>j.status!=='draft');if(!postedJournals.length){$('trial-balance').innerHTML='<div class="empty">Belum ada data jurnal.</div>';return}const map=new Map();postedJournals.forEach(j=>j.lines.forEach(l=>{const a=map.get(l.code)||{debit:0,credit:0};a.debit+=Number(l.debit||0);a.credit+=Number(l.credit||0);map.set(l.code,a)}));const rows=[...map.entries()].map(([code,v])=>({code,name:state.accounts.find(a=>a.code===code)?.name||'(Akun tidak ditemukan)',debit:v.debit,credit:v.credit,balance:v.debit-v.credit}));const td=rows.reduce((s,r)=>s+r.debit,0),tc=rows.reduce((s,r)=>s+r.credit,0);$('trial-balance').innerHTML='<div class="table-wrap"><table><thead><tr><th>Kode</th><th>Nama akun</th><th>Total debit</th><th>Total kredit</th><th>Saldo bersih D/(K)</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td>'+money(r.debit)+'</td><td>'+money(r.credit)+'</td><td>'+money(r.balance)+'</td></tr>').join('')+'<tr><th colspan="2">TOTAL</th><th>'+money(td)+'</th><th>'+money(tc)+'</th><th>'+money(td-tc)+'</th></tr></tbody></table></div>'}
 $('print-report').onclick=()=>window.print();
