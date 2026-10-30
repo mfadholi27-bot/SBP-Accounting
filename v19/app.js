@@ -44,29 +44,35 @@ function parseBulkJournalRows(rows){
  if(!parsed.length)throw Error('Header ditemukan, tetapi tidak ada baris transaksi.');return parsed;
 }
 function validateBulkJournals(rows){
- const errors=[],groups=new Map(),known=new Set(state.accounts.map(a=>String(a.code)));
+ const errors=[],warnings=[],groups=new Map(),known=new Set(state.accounts.map(a=>String(a.code)));
  rows.forEach(r=>{
   if(!r.date)errors.push('Baris '+r.row+': tanggal tidak valid.');
   if(!r.number)errors.push('Baris '+r.row+': nomor bukti kosong.');
   if(!r.description)errors.push('Baris '+r.row+': keterangan jurnal kosong.');
-  if(!r.code)errors.push('Baris '+r.row+': SANDI kosong.');else if(!known.has(r.code))errors.push('Baris '+r.row+': SANDI '+r.code+' belum ada di Master Akun.');
+  if(!r.code)errors.push('Baris '+r.row+': SANDI kosong.');
+  else if(!known.has(r.code))warnings.push('SANDI '+r.code+' belum ada di Master Akun; tambahkan setelah import untuk penyesuaian.');
   if(!Number.isFinite(r.debit)||!Number.isFinite(r.credit)||r.debit<0||r.credit<0)errors.push('Baris '+r.row+': nilai debit/kredit tidak valid.');
-  else if((r.debit>0)===(r.credit>0))errors.push('Baris '+r.row+': isi tepat satu sisi, debit atau kredit.');
   const key=r.date+'|'+r.number;if(!groups.has(key))groups.set(key,{date:r.date,number:r.number,description:r.description,lines:[],debit:0,credit:0});
   const g=groups.get(key);if(g.description!==r.description)errors.push('Nomor '+r.number+': keterangan berbeda dalam satu nomor bukti.');
   g.lines.push({code:r.code,note:r.note,debit:r.debit,credit:r.credit});g.debit+=Number.isFinite(r.debit)?r.debit:0;g.credit+=Number.isFinite(r.credit)?r.credit:0;
  });
- const prepared=[];for(const g of groups.values()){if(Math.abs(g.debit-g.credit)>.005)errors.push(g.number+': jurnal tidak seimbang (debit '+money(g.debit)+'; kredit '+money(g.credit)+').');if(g.lines.length<2)errors.push(g.number+': minimal dua baris akun.');if(state.journals.some(j=>j.number===g.number))errors.push(g.number+': nomor bukti sudah ada di Daftar Jurnal.');prepared.push({...g,id:crypto.randomUUID(),status:'draft',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()})}
- return {prepared,errors};
+ const prepared=[];for(const g of groups.values()){
+  if(Math.abs(g.debit-g.credit)>.005)warnings.push(g.number+': belum seimbang (debit '+money(g.debit)+'; kredit '+money(g.credit)+'). Tetap disimpan sebagai Draft.');
+  if(!g.lines.length)errors.push(g.number+': tidak memiliki baris transaksi.');
+  if(state.journals.some(j=>j.number===g.number))errors.push(g.number+': nomor bukti sudah ada di Daftar Jurnal.');
+  prepared.push({...g,id:crypto.randomUUID(),status:'draft',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+ }
+ return {prepared,errors,warnings:[...new Set(warnings)]};
 }
 function showBulkPreview(rows){
  const result=validateBulkJournals(rows);pendingBulkJournals=result.errors.length?[]:result.prepared;
  $('bulk-journal-summary').textContent=rows.length+' baris · '+result.prepared.length+' nomor bukti';
- $('bulk-journal-detail').textContent=result.errors.length?'Ditemukan '+result.errors.length+' masalah. Perbaiki file sebelum menyimpan.':'Semua jurnal lolos validasi. Debit dan kredit seimbang; siap disimpan.';
- $('bulk-journal-errors').hidden=!result.errors.length;$('bulk-journal-errors').innerHTML=result.errors.length?'<b>Perlu diperbaiki:</b><ul>'+result.errors.map(e=>'<li>'+esc(e)+'</li>').join('')+'</ul>':'';
+ $('bulk-journal-detail').textContent=result.errors.length?'Ditemukan '+result.errors.length+' kesalahan. Perbaiki file sebelum menyimpan.':(result.warnings.length?'Data dapat diimpor sebagai Draft dengan '+result.warnings.length+' catatan penyesuaian.':'Semua data lolos pemeriksaan.');
+ const notes=[...result.errors.map(e=>'KESALAHAN: '+e),...result.warnings.map(w=>'CATATAN: '+w)];
+ $('bulk-journal-errors').hidden=!notes.length;$('bulk-journal-errors').innerHTML=notes.length?'<b>Hasil pemeriksaan:</b><ul>'+notes.map(e=>'<li>'+esc(e)+'</li>').join('')+'</ul>':'';
  $('bulk-journal-preview-rows').innerHTML=rows.slice(0,100).map(r=>'<tr><td>'+esc(r.date||'—')+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td>'+esc(r.code)+'</td><td>'+money(r.debit)+'</td><td>'+money(r.credit)+'</td></tr>').join('');
  $('bulk-journal-save').disabled=!!result.errors.length;$('bulk-journal-review').hidden=false;
- setMessage('bulk-journal-message',result.errors.length?'Validasi gagal. Tidak ada data yang disimpan.':'Validasi berhasil. Jurnal akan disimpan sebagai Draft dan dapat diperiksa sebelum diposting.',result.errors.length?'bad':'good');
+ setMessage('bulk-journal-message',result.errors.length?'Validasi gagal. Tidak ada data yang disimpan.':(result.warnings.length?'Bisa diimpor sebagai Draft. Periksa SANDI dan keseimbangan sebelum melakukan posting.':'Validasi berhasil. Data siap disimpan sebagai Draft.'),result.errors.length?'bad':(result.warnings.length?'':'good'));
 }
 $('bulk-journal-file').onchange=e=>{const f=e.target.files?.[0];$('bulk-journal-file-name').textContent=f?f.name:'Belum ada file dipilih.';$('bulk-journal-preview').disabled=!f;pendingBulkJournals=[];$('bulk-journal-review').hidden=true};
 $('bulk-journal-preview').onclick=async()=>{const f=$('bulk-journal-file').files?.[0];if(!f)return;try{let rows;if(/\.xlsx?$/i.test(f.name)){if(!window.XLSX)throw Error('Mesin Excel lokal belum siap.');const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:false});let found=null;for(const name of wb.SheetNames){const data=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:true});try{parseBulkJournalRows(data);found=data;break}catch{}}if(!found)throw Error('Format kolom jurnal tidak ditemukan pada sheet Excel.');rows=parseBulkJournalRows(found)}else rows=parseBulkJournalRows(parseCSV(await f.text()));showBulkPreview(rows)}catch(err){pendingBulkJournals=[];$('bulk-journal-review').hidden=true;setMessage('bulk-journal-message','Gagal membaca file: '+err.message,'bad')}};
