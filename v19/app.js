@@ -584,6 +584,12 @@ $('opening-export').onclick=()=>{const p=$('opening-period').value,items=(state.
 
 /* PRINT ENGINE V1 — independent report renderer; does not mutate accounting records. */
 const PRINT_CONFIG={paper:'F4',orientation:'auto',header:'simple',signatures:true,summary:true,pageNumbers:true};
+const PRINT_SETTINGS_KEY='sbp-print-settings-v1';
+const PRINT_DEFAULTS={paper:'A4',orientation:'auto',margin:10,fontSize:8,rowPadding:1.4,brand:true,printedAt:true,footer:true,summary:true,signatures:false,tableLines:true,headerColor:'#eaf2ed'};
+let PRINT_CONFIG={...PRINT_DEFAULTS,...(()=>{try{return JSON.parse(localStorage.getItem(PRINT_SETTINGS_KEY)||'{}')}catch{return {}}})()};
+function savePrintSettings(){const get=id=>$(id);PRINT_CONFIG={paper:get('print-paper').value,orientation:get('print-orientation').value,margin:Number(get('print-margin').value),fontSize:Number(get('print-font-size').value),rowPadding:Number(get('print-row-padding').value),brand:get('print-brand').checked,printedAt:get('print-date').checked,footer:get('print-footer').checked,summary:get('print-summary').checked,signatures:get('print-signatures').checked,tableLines:get('print-lines').checked,headerColor:get('print-header-color').value};localStorage.setItem(PRINT_SETTINGS_KEY,JSON.stringify(PRINT_CONFIG));toast('Pengaturan template cetak disimpan dan berlaku untuk seluruh laporan.')}
+function loadPrintSettings(){const map={'print-paper':'paper','print-orientation':'orientation','print-margin':'margin','print-font-size':'fontSize','print-row-padding':'rowPadding','print-brand':'brand','print-date':'printedAt','print-footer':'footer','print-summary':'summary','print-signatures':'signatures','print-lines':'tableLines','print-header-color':'headerColor'};for(const [id,key] of Object.entries(map)){const el=$(id);if(!el)continue;if(el.type==='checkbox')el.checked=!!PRINT_CONFIG[key];else el.value=PRINT_CONFIG[key]??PRINT_DEFAULTS[key]}}
+function resetPrintSettings(){PRINT_CONFIG={...PRINT_DEFAULTS};localStorage.setItem(PRINT_SETTINGS_KEY,JSON.stringify(PRINT_CONFIG));loadPrintSettings();toast('Pengaturan template cetak dikembalikan ke standar.')}
 function printMoney(v){return money(Number(v||0))}
 function printTable(headers,rows,foot=''){return '<table class="sbp-print-table"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody>'+(foot?'<tfoot>'+foot+'</tfoot>':'')+'</table>'}
 function printSummary(items){return PRINT_CONFIG.summary?'<section class="sbp-print-summary">'+items.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>').join('')+'</section>':''}
@@ -591,23 +597,29 @@ function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-p
 function printDocument(title,subtitle,body,orientation='portrait'){
  const old=document.getElementById('sbp-print-frame');if(old)old.remove();
  const frame=document.createElement('iframe');frame.id='sbp-print-frame';frame.title='Pratinjau cetak '+title;
- frame.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
- document.body.appendChild(frame);
- const pageSize=orientation==='landscape'?'330mm 215mm':'215mm 330mm',pageMargin=orientation==='landscape'?'10mm':'13mm 12mm 16mm';
+ frame.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(frame);
+ const paperMap={A4:'210mm 297mm',F4:'215mm 330mm',Letter:'8.5in 11in',Legal:'8.5in 14in'};
+ const pageOrientation=PRINT_CONFIG.orientation==='auto'?orientation:PRINT_CONFIG.orientation;
+ const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4, pageSize=pageOrientation==='landscape'?paper.split(' ').reverse().join(' '):paper;
+ const margin=Math.max(5,Math.min(25,Number(PRINT_CONFIG.margin)||10))+'mm';
  const printed=new Date().toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
- const style='@page{size:'+pageSize+';margin:'+pageMargin+';@bottom-right{content:"Halaman "+counter(page);font:9pt Arial;color:#64748b}}'+
- '*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#17212b;font:9pt Arial,Helvetica,sans-serif}'+
- '.sheet{width:100%}.header{border-bottom:2px solid #176b4a;padding:0 0 7mm;margin-bottom:4mm}'+
+ const style='@page{size:'+pageSize+';margin:'+margin+'}'+
+ '*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#17212b;font:'+Number(PRINT_CONFIG.fontSize||8)+'pt Arial,Helvetica,sans-serif}'+
+ '.sheet{width:100%}.header{border-bottom:2px solid #176b4a;padding:0 0 5mm;margin-bottom:3mm}'+
  '.brand{font-size:15pt;font-weight:800;letter-spacing:.5px;color:#145c40}.brand small{display:block;font-size:7.5pt;font-weight:500;letter-spacing:1px;color:#64748b;margin-top:1mm}'+
- '.heading{text-align:center;margin-top:5mm}.heading h1{font-size:14pt;margin:0 0 2mm}.heading p{font-size:9pt;margin:0;color:#475569}'+
- '.meta{display:flex;justify-content:space-between;color:#64748b;font-size:8pt;margin:0 0 4mm;padding-bottom:2mm;border-bottom:1px solid #cbd5e1}'+
- '.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2mm;margin:0 0 4mm}.summary>div{border:1px solid #cbd5e1;border-radius:2mm;padding:2.5mm}'+
+ '.heading{text-align:center;margin-top:3mm}.heading h1{font-size:14pt;margin:0 0 2mm}.heading p{font-size:9pt;margin:0;color:#475569}'+
+ '.meta{display:flex;justify-content:space-between;color:#64748b;font-size:8pt;margin:0 0 3mm;padding-bottom:2mm;border-bottom:1px solid #cbd5e1}'+
+ '.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2mm;margin:0 0 3mm}.summary>div{border:1px solid #cbd5e1;border-radius:1mm;padding:2mm}'+
  '.summary span{display:block;color:#64748b;font-size:7.5pt;margin-bottom:1mm}.summary b{font-size:9pt}'+
- 'table{width:100%;border-collapse:collapse;table-layout:auto;font-size:7.5pt}thead{display:table-header-group}th{background:#eaf2ed!important;color:#173c2d!important;font-weight:700;text-align:center}'+
- 'th,td{border:1px solid #aebbb4;padding:2mm 1.5mm;vertical-align:top}td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}tbody tr{break-inside:avoid;page-break-inside:avoid}tfoot{display:table-row-group;font-weight:700}'+
- '.signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm;margin:13mm 0 0;text-align:center;break-inside:avoid;page-break-inside:avoid}.signatures span,.signatures small{display:block;font-size:8pt}.signatures b{display:block;height:20mm}'+
- '.footer{border-top:1px solid #cbd5e1;margin-top:7mm;padding-top:2mm;color:#64748b;font-size:7pt;text-align:center}';
- const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body><main class="sheet"><header class="header"><div class="brand">SBP ACCOUNTING <small>SISTEM INFORMASI AKUNTANSI · V19</small></div><div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header><div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>'+body+(PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'')+'<footer class="footer">SBP Accounting V19 · Dokumen hasil cetak sistem</footer></main></body></html>');doc.close();
+ 'table{width:100%;border-collapse:collapse;table-layout:auto;font-size:inherit}thead{display:table-header-group}th{background:'+PRINT_CONFIG.headerColor+'!important;color:#173c2d!important;font-weight:700;text-align:center}'+
+ 'th,td{'+(PRINT_CONFIG.tableLines?'border:1px solid #aebbb4;':'border:0;')+'padding:'+Math.max(.5,Math.min(4,Number(PRINT_CONFIG.rowPadding)||1.4))+'mm 1.2mm;vertical-align:top}td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}tbody tr{break-inside:avoid;page-break-inside:avoid}tfoot{display:table-row-group;font-weight:700}'+
+ '.signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm;margin:12mm 0 0;text-align:center;break-inside:avoid;page-break-inside:avoid}.signatures span,.signatures small{display:block;font-size:8pt}.signatures b{display:block;height:20mm}'+
+ '.footer{border-top:1px solid #cbd5e1;margin-top:6mm;padding-top:2mm;color:#64748b;font-size:7pt;text-align:center}';
+ const brand=PRINT_CONFIG.brand?'<div class="brand">SBP ACCOUNTING <small>SISTEM INFORMASI AKUNTANSI · V19</small></div>':'';
+ const meta=PRINT_CONFIG.printedAt?'<div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>':'';
+ const signatures=PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'';
+ const footer=PRINT_CONFIG.footer?'<footer class="footer">SBP Accounting V19 · Dokumen hasil cetak sistem</footer>':'';
+ const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body><main class="sheet"><header class="header">'+brand+'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
  const cleanup=()=>{frame.remove();window.removeEventListener('afterprint',cleanup)};
  frame.onload=()=>{setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(err){toast('Gagal membuka cetak: '+err.message)}},150)};
  window.addEventListener('afterprint',cleanup,{once:true});
@@ -645,6 +657,7 @@ function printCurrentPage(){
  if(id==='page-journal-list')return printJournalList();
  toast('Cetak profesional tersedia untuk Daftar Jurnal, Master Akun, Saldo Awal, Buku Besar, dan Neraca Percobaan.');
 }
+$('print-settings-save').onclick=savePrintSettings;$('print-settings-reset').onclick=resetPrintSettings;$('print-settings-preview').onclick=()=>printDocument('CONTOH TEMPLATE CETAK','Pratinjau pengaturan global',printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT'],['<tr><td>31/10/2026</td><td>CONTOH/001</td><td>Contoh tampilan dokumen</td><td class="num">Rp 100.000</td><td class="num">Rp 100.000</td></tr>']),'landscape');loadPrintSettings();
 $('print-current-page').onclick=printCurrentPage;
 $('print-journal-list').onclick=printJournalList;
 $('print-accounts').onclick=printAccounts;
