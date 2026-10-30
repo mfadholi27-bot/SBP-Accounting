@@ -43,6 +43,12 @@
   <div class="panel"><div class="panel-head"><div><h3>Jurnal terbaru</h3><p>Aktivitas pembukuan terakhir.</p></div><button class="btn" data-go="journal-list">Lihat semua</button></div><div id="recent-journals" class="empty">Belum ada jurnal tersimpan.</div></div>
 </section>
 <section class="page" id="page-journal">
+  <div class="panel bulk-journal-panel">
+    <div class="panel-head"><div><h3>Import Jurnal Massal</h3><p>Masukkan banyak transaksi dari Excel sekaligus. Setiap nomor bukti digabung menjadi satu jurnal.</p></div><span class="tag">EXCEL IMPORT</span></div>
+    <div class="bulk-import-controls"><label class="file-btn">Pilih File Excel<input type="file" id="bulk-journal-file" accept=".xlsx,.xls,.csv"></label><span id="bulk-journal-file-name" class="file-status">Belum ada file dipilih.</span><button class="btn btn-primary" id="bulk-journal-preview" type="button" disabled>Periksa & Pratinjau</button><button class="btn" id="bulk-journal-template" type="button">Unduh Format Excel</button></div>
+    <div id="bulk-journal-message" class="inline-message">Format kolom: TANGGAL, NOBUKTI, KETERANGAN, SANDI, KETERANGAN BARIS, DEBIT, KREDIT.</div>
+    <div id="bulk-journal-review" class="bulk-review" hidden><div class="bulk-review-head"><div><b id="bulk-journal-summary">Pratinjau impor</b><p id="bulk-journal-detail">Periksa data sebelum disimpan.</p></div><div class="button-row"><button class="btn" id="bulk-journal-cancel" type="button">Batal</button><button class="btn btn-primary" id="bulk-journal-save" type="button" disabled>Simpan Jurnal Massal</button></div></div><div id="bulk-journal-errors" class="bulk-errors" hidden></div><div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan</th><th>SANDI</th><th>Debit</th><th>Kredit</th></tr></thead><tbody id="bulk-journal-preview-rows"></tbody></table></div></div>
+  </div>
   <div class="panel"><div class="panel-head"><div><h3>Input jurnal umum</h3><p>Jurnal dari NPTRANS dapat dilengkapi di sini. Tentukan debit/kredit secara manual, lalu simpan setelah seimbang.</p></div><span class="tag">MANUAL ENTRY</span></div>
     <div class="form-grid">
       <label>Tanggal<input type="date" id="j-date"></label><label>Nomor bukti<input id="j-number" placeholder="Contoh: JU/001/2026"></label><label>Keterangan<input id="j-description" placeholder="Uraian transaksi"></label>
