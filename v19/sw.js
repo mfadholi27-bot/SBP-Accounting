@@ -1,1 +1,40 @@
-const CACHE='sbp-accounting-v19-v57';const FILES=['./','./index.html','./styles.css','./app.js?v=55','./vendor/xlsx.full.min.js','./manifest.webmanifest','./assets/sbp-app-icon.svg','./lucide-local.js','./palm-glass-theme.css?v=6','./assets/palm-wallpaper.svg','./palm-glass-theme.css','./assets/palm-plantation-wallpaper.svg'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return res}).catch(()=>caches.match('./index.html'))))});
+/* SBP Accounting V19 — safe same-origin offline cache */
+const CACHE='sbp-accounting-v19-v58';
+const FILES=[
+ './','./index.html','./styles.css','./app.js?v=55',
+ './vendor/xlsx.full.min.js','./manifest.webmanifest',
+ './assets/sbp-app-icon.svg','./lucide-local.js',
+ './palm-glass-theme.css?v=6','./assets/palm-wallpaper.svg',
+ './palm-glass-theme.css','./assets/palm-plantation-wallpaper.svg'
+];
+self.addEventListener('install',event=>{
+ event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting()));
+});
+self.addEventListener('activate',event=>{
+ event.waitUntil(caches.keys().then(keys=>Promise.all(
+  keys.filter(key=>key.startsWith('sbp-accounting-v19-')&&key!==CACHE).map(key=>caches.delete(key))
+ )).then(()=>self.clients.claim()));
+});
+self.addEventListener('fetch',event=>{
+ const request=event.request;
+ if(request.method!=='GET') return;
+ const url=new URL(request.url);
+ // Never intercept browser extensions, cross-origin requests, or unsupported schemes.
+ if(url.protocol!=='https:'||url.origin!==self.location.origin) return;
+ event.respondWith((async()=>{
+  const cache=await caches.open(CACHE);
+  const cached=await cache.match(request);
+  if(cached) return cached;
+  try{
+   const response=await fetch(request);
+   if(response&&response.ok&&response.type==='basic'){
+    try{await cache.put(request,response.clone());}catch(error){/* Cache quota/write failure must not break navigation. */}
+   }
+   return response;
+  }catch(error){
+   const fallback=await cache.match('./index.html');
+   if(fallback) return fallback;
+   throw error;
+  }
+ })());
+});
