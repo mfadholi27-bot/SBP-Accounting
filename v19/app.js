@@ -180,42 +180,14 @@ $('bulk-post-confirm').addEventListener('click',async()=>{
 });
 $('journal-search').addEventListener('input',()=>{journalPage=0;renderJournals()});$('journal-status-filter').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-page-size').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-prev').onclick=()=>{journalPage=Math.max(0,journalPage-1);renderJournals()};$('journal-next').onclick=()=>{journalPage++;renderJournals()};$('export-journals-xlsx').onclick=exportJournalsXlsx;
 
-function accountActual(a){return Number(a.ptdacost||0)+Number(a.mutasiDebit||0)-Number(a.mutasiKredit||0)}
-function syncNptransSandis(){
- const map=new Map(state.accounts.map(a=>[String(a.code),a]));let added=0;
- for(const row of state.nptrans){const code=String(row.sandi||'').trim();if(!code||map.has(code))continue;const blank={code,name:'',ptdacost:0,mutasiDebit:0,mutasiKredit:0};map.set(code,blank);added++}
- if(added)state.accounts=[...map.values()];
- return added;
-}
-function accountAmountInput(id,value){$(id).value=Number(value||0)}
-function updateAccountActualPreview(){const v=Number($('a-ptdacost').value||0)+Number($('a-mutasi-debit').value||0)-Number($('a-mutasi-kredit').value||0);$('a-actual-balance').value=money(v)}
-function renderAccounts(){
- const q=($('account-search')?.value||'').trim().toLowerCase();
- const items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));
- $('account-count').textContent=state.accounts.length.toLocaleString('id-ID')+' AKUN';
- $('account-rows').innerHTML=items.length?items.map((a,index)=>'<tr><td>'+(index+1)+'</td><td><b>'+esc(a.code)+'</b></td><td>'+esc(a.name)+'</td><td class="account-number">'+money(a.ptdacost)+'</td><td class="account-number">'+money(a.mutasiDebit)+'</td><td class="account-number">'+money(a.mutasiKredit)+'</td><td class="account-number account-balance">'+money(accountActual(a))+'</td><td><button class="btn edit-account" data-code="'+esc(a.code)+'">Edit</button> <button class="icon-btn delete-account" data-code="'+esc(a.code)+'">Hapus</button></td></tr>').join(''):'<tr><td colspan="7" class="empty">Tidak ada akun yang cocok.</td></tr>';
- document.querySelectorAll('.edit-account').forEach(b=>b.onclick=()=>editAccount(b.dataset.code));
- document.querySelectorAll('.delete-account').forEach(b=>b.onclick=async()=>{
-  const code=b.dataset.code,usedOpening=(state.openingBalances||[]).some(x=>x.accountCode===code),usedJournal=state.journals.some(j=>(j.lines||[]).some(l=>l.code===code)),usedNp=state.nptrans.some(r=>r.sandi===code);if(usedOpening){toast('Akun tidak dapat dihapus karena masih memiliki saldo awal. Hapus saldo awal terkait terlebih dahulu.');return}
-  const warning=usedJournal||usedNp?'\\n\\nKode ini masih dipakai pada '+(usedJournal?'jurnal ':'')+(usedJournal&&usedNp?'dan ':'')+(usedNp?'transaksi NPTRANS':'')+'. Jika dihapus, data tersebut tetap ada tetapi akan berstatus akun tidak cocok.':'';
-  if(confirm('Hapus akun '+code+'?'+warning)){state.accounts=state.accounts.filter(a=>a.code!==code);if(editingAccountCode===code)resetAccountForm();await persist();renderAccounts();renderNptrans();toast('Akun dihapus.')}
- });
-}
-function resetAccountForm(){editingAccountCode=null;$('a-code').value='';$('a-code').disabled=false;$('a-name').value='';accountAmountInput('a-ptdacost',0);accountAmountInput('a-mutasi-debit',0);accountAmountInput('a-mutasi-kredit',0);updateAccountActualPreview();$('save-account').textContent='＋ Tambah akun';$('cancel-account-edit').hidden=true}
-function editAccount(code){const a=state.accounts.find(x=>x.code===code);if(!a)return;editingAccountCode=code;$('a-code').value=a.code;$('a-code').disabled=true;$('a-name').value=a.name;accountAmountInput('a-ptdacost',a.ptdacost);accountAmountInput('a-mutasi-debit',a.mutasiDebit);accountAmountInput('a-mutasi-kredit',a.mutasiKredit);updateAccountActualPreview();$('save-account').textContent='Simpan perubahan';$('cancel-account-edit').hidden=false;$('a-name').focus()}
-$('cancel-account-edit').onclick=resetAccountForm;
-['a-ptdacost','a-mutasi-debit','a-mutasi-kredit'].forEach(id=>$(id).addEventListener('input',updateAccountActualPreview));
-$('account-search').addEventListener('input',renderAccounts);
-$('save-account').onclick=async()=>{
- const code=$('a-code').value.trim(),name=$('a-name').value.trim(),ptdacost=Number($('a-ptdacost').value||0),mutasiDebit=Number($('a-mutasi-debit').value||0),mutasiKredit=Number($('a-mutasi-kredit').value||0);
- if(!code||!name){toast('Isi kode dan nama akun.');return}
- if([ptdacost,mutasiDebit,mutasiKredit].some(v=>!Number.isFinite(v))){toast('Nilai saldo dan mutasi harus berupa angka.');return}
- if(editingAccountCode){const a=state.accounts.find(x=>x.code===editingAccountCode);if(!a)return;Object.assign(a,{name,ptdacost,mutasiDebit,mutasiKredit})}
- else {if(state.accounts.some(a=>a.code===code)){toast('Kode akun sudah ada. Gunakan tombol Edit.');return}state.accounts.push({code,name,ptdacost,mutasiDebit,mutasiKredit})}
- const wasEditing=!!editingAccountCode;await persist();resetAccountForm();renderAccounts();renderNptrans();toast(wasEditing?'Akun diperbarui.':'Akun baru ditambahkan.')
-};
-function accountRowsAoa(){return [['SANDI','NAMA','PTDACOST','MUTASIDB','MUTASIKR'],...state.accounts.map(a=>[a.code,a.name,a.ptdacost||0,a.mutasiDebit||0,a.mutasiKredit||0])]}
-function exportAccountsCsv(){const rows=[['SANDI','NAMA','PTDACOST','MUTASIDB','MUTASIKR'],...state.accounts.map(a=>[a.code,a.name,a.ptdacost||0,a.mutasiDebit||0,a.mutasiKredit||0])];downloadBlob(new Blob(['\\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\\r\\n')],{type:'text/csv;charset=utf-8'}),'Master-Akun-SBP.csv')}
+function syncNptransSandis(){const map=new Map(state.accounts.map(a=>[String(a.code),a]));let added=0;for(const row of state.nptrans){const code=String(row.sandi||'').trim();if(code&&!map.has(code)){map.set(code,{code,name:''});added++}}if(added)state.accounts=[...map.values()];return added}
+function renderAccounts(){const q=($('account-search')?.value||'').trim().toLowerCase(),items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));$('account-count').textContent=state.accounts.length.toLocaleString('id-ID')+' AKUN';$('account-rows').innerHTML=items.length?items.map((a,index)=>'<tr><td>'+(index+1)+'</td><td><b>'+esc(a.code)+'</b></td><td>'+esc(a.name)+'</td><td><button class="btn edit-account" data-code="'+esc(a.code)+'">Edit</button> <button class="icon-btn delete-account" data-code="'+esc(a.code)+'">Hapus</button></td></tr>').join(''):'<tr><td colspan="4" class="empty">Tidak ada akun yang cocok.</td></tr>';document.querySelectorAll('.edit-account').forEach(b=>b.onclick=()=>editAccount(b.dataset.code));document.querySelectorAll('.delete-account').forEach(b=>b.onclick=async()=>{const code=b.dataset.code,usedOpening=(state.openingBalances||[]).some(x=>x.accountCode===code),usedJournal=state.journals.some(j=>(j.lines||[]).some(l=>l.code===code)),usedNp=state.nptrans.some(r=>r.sandi===code);if(usedOpening){toast('Akun tidak dapat dihapus karena masih memiliki saldo awal. Hapus saldo awal terkait terlebih dahulu.');return}const warning=usedJournal||usedNp?'\n\nKode ini masih dipakai pada transaksi. Jika dihapus, data tetap ada tetapi akun menjadi tidak cocok.':'';if(confirm('Hapus akun '+code+'?'+warning)){state.accounts=state.accounts.filter(x=>x.code!==code);if(editingAccountCode===code)resetAccountForm();await persist();renderAccounts();renderNptrans();toast('Akun dihapus.')}})}
+function resetAccountForm(){editingAccountCode=null;$('a-code').value='';$('a-code').disabled=false;$('a-name').value='';$('save-account').textContent='＋ Tambah akun';$('cancel-account-edit').hidden=true}
+function editAccount(code){const a=state.accounts.find(x=>x.code===code);if(!a)return;editingAccountCode=code;$('a-code').value=a.code;$('a-code').disabled=true;$('a-name').value=a.name;$('save-account').textContent='Simpan perubahan';$('cancel-account-edit').hidden=false;$('a-name').focus()}
+$('cancel-account-edit').onclick=resetAccountForm;$('account-search').addEventListener('input',renderAccounts);
+$('save-account').onclick=async()=>{const code=$('a-code').value.trim(),name=$('a-name').value.trim();if(!code||!name){toast('Isi kode dan nama akun.');return}if(editingAccountCode){const a=state.accounts.find(x=>x.code===editingAccountCode);if(!a)return;a.name=name}else{if(state.accounts.some(a=>a.code===code)){toast('Kode akun sudah ada. Gunakan tombol Edit.');return}state.accounts.push({code,name})}const wasEditing=!!editingAccountCode;await persist();resetAccountForm();renderAccounts();renderNptrans();toast(wasEditing?'Akun diperbarui.':'Akun baru ditambahkan.')};
+function accountRowsAoa(){return [['SANDI','NAMA'],...state.accounts.map(a=>[a.code,a.name])]}
+function exportAccountsCsv(){const rows=accountRowsAoa();downloadBlob(new Blob(['\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),'Master-Akun-SBP.csv')}
 function exportAccountsXlsx(){exportXlsxSheet('Master-Akun-SBP.xlsx','Master Akun',accountRowsAoa())}
 $('export-accounts').onclick=exportAccountsCsv;$('export-accounts-xlsx').onclick=exportAccountsXlsx;
 function parseCSV(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'&&quoted&&next==='"'){cell+='"';i++}else if(ch==='"'){quoted=!quoted}else if(ch===','&&!quoted){row.push(cell);cell=''}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row);row=[];cell=''}else cell+=ch}row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row);return rows}
@@ -224,29 +196,10 @@ function mapHeaders(header){const aliases={SANDI:['SANDI','KODE','KODEAKUN','ACC
 function normalizeDate(v){v=String(v||'').trim();if(/^\d{8}$/.test(v))return v.slice(6,8)+'/'+v.slice(4,6)+'/'+v.slice(0,4);if(/^\d{4}-\d\d-\d\d$/.test(v)){const [y,m,d]=v.split('-');return d+'/'+m+'/'+y}return v}
 function parseAmount(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return Number.isFinite(v)?v:NaN;let s=String(v).trim().replace(/[\\s\\u00a0]/g,'').replace(/^Rp/i,'');if(!s)return 0;s=s.replace(/[^0-9,.-]/g,'');if(s.includes(',')&&s.includes('.'))s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');else if(s.includes(',')){const parts=s.split(',');s=parts.length===2&&parts[1].length<=2?s.replace(',','.'):s.replace(/,/g,'')}const n=Number(s);return Number.isFinite(n)?n:NaN}
 function csvToNp(text){const rows=parseCSV(text);if(rows.length<2)throw Error('CSV kosong atau hanya memiliki header.');const h=mapHeaders(rows[0]);const missing=['SANDI','TANGGAL','NOBUKTI','NOURUT','KET','JUMLAH'].filter(k=>h[k]===undefined);if(missing.length)throw Error('Kolom wajib tidak ditemukan: '+missing.join(', '));return rows.slice(1).map((r,i)=>({sandi:(r[h.SANDI]||'').trim(),tanggal:normalizeDate(r[h.TANGGAL]),nobukti:(r[h.NOBUKTI]||'').trim(),nourut:(r[h.NOURUT]||'').trim(),ket:(r[h.KET]||'').trim(),jumlah:parseAmount(r[h.JUMLAH]),_row:i+2}))}
-function csvToAccounts(text){const rows=parseCSV(text);if(rows.length<2)throw Error('CSV master akun kosong.');const aliases={code:['SANDI','KODE','KODEAKUN','ACCOUNTCODE'],name:['NAMA','NAMAAKUN','DES','KETERANGAN','URAIAN'],pt:['PTDACOST','SALDOAWAL'],db:['MUTASIDB','MUTASIDEBIT'],kr:['MUTASIKR','MUTASIKREDIT']};let headerIndex=-1,cols=null;for(let i=0;i<Math.min(rows.length,30);i++){const h=rows[i].map(norm),find=names=>h.findIndex(x=>names.includes(x));const ci=find(aliases.code);if(ci>=0){headerIndex=i;cols={ci,ni:find(aliases.name),pi:find(aliases.pt),di:find(aliases.db),ki:find(aliases.kr)};break}}if(headerIndex<0)throw Error('Kolom SANDI tidak ditemukan. Pastikan baris judul tabel memuat kolom SANDI.');const data=rows.slice(headerIndex+1).filter(r=>r[cols.ci]&&String(r[cols.ci]).trim());if(!data.length)throw Error('Header SANDI ditemukan, tetapi tidak ada baris akun di bawahnya.');return data.map(r=>({code:String(r[cols.ci]).trim(),name:cols.ni>=0?String(r[cols.ni]||'').trim():'',ptdacost:cols.pi>=0?parseAmount(r[cols.pi]):0,mutasiDebit:cols.di>=0?parseAmount(r[cols.di]):0,mutasiKredit:cols.ki>=0?parseAmount(r[cols.ki]):0}))}
+function csvToAccounts(text){const rows=parseCSV(text);if(rows.length<2)throw Error('CSV master akun kosong.');const aliases={code:['SANDI','KODE','KODEAKUN','ACCOUNTCODE'],name:['NAMA','NAMAAKUN','DES','KETERANGAN','URAIAN']};let cols=null,header=-1;for(let i=0;i<Math.min(rows.length,30);i++){const h=rows[i].map(norm),find=names=>h.findIndex(x=>names.includes(x)),ci=find(aliases.code);if(ci>=0){cols={ci,ni:find(aliases.name)};header=i;break}}if(!cols)throw Error('Kolom SANDI tidak ditemukan. Pastikan baris judul tabel memuat kolom SANDI.');const data=rows.slice(header+1).filter(r=>r[cols.ci]&&String(r[cols.ci]).trim());if(!data.length)throw Error('Header SANDI ditemukan, tetapi tidak ada baris akun di bawahnya.');return data.map(r=>({code:String(r[cols.ci]).trim(),name:cols.ni>=0?String(r[cols.ni]||'').trim():''}))}
 
 function xlsxFirstSheetToCsv(buffer){if(!window.XLSX)throw Error('Mesin Excel lokal belum termuat. Muat ulang aplikasi.');const wb=XLSX.read(buffer,{type:'array',cellDates:false});const name=wb.SheetNames[0];if(!name)throw Error('Workbook tidak memiliki lembar kerja.');return XLSX.utils.sheet_to_csv(wb.Sheets[name],{FS:',',RS:'\n'})}
-function xlsxToAccounts(buffer){
- if(!window.XLSX)throw Error('Mesin Excel lokal belum termuat. Muat ulang aplikasi.');
- const wb=XLSX.read(buffer,{type:'array',cellDates:false});
- const aliases={code:['SANDI','KODE','KODEAKUN','ACCOUNTCODE'],name:['NAMA','NAMAAKUN','DES','KETERANGAN','URAIAN'],pt:['PTDACOST','SALDOAWAL'],db:['MUTASIDB','MUTASIDEBIT'],kr:['MUTASIKR','MUTASIKREDIT']};
- const errors=[];
- for(const name of wb.SheetNames){
-  const rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:false});
-  for(let i=0;i<Math.min(rows.length,50);i++){
-   const h=rows[i].map(norm),find=names=>h.findIndex(x=>names.includes(x));
-   const ci=find(aliases.code);
-   if(ci<0)continue;
-   const cols={ci,ni:find(aliases.name),pi:find(aliases.pt),di:find(aliases.db),ki:find(aliases.kr)};
-   const data=rows.slice(i+1).filter(r=>String(r[ci]??'').trim()!=='');
-   if(!data.length){errors.push(name+': header SANDI ada tetapi baris akun kosong');continue}
-   return data.map(r=>({code:String(r[ci]).trim(),name:cols.ni>=0?String(r[cols.ni]??'').trim():'',ptdacost:cols.pi>=0?parseAmount(r[cols.pi]):0,mutasiDebit:cols.di>=0?parseAmount(r[cols.di]):0,mutasiKredit:cols.ki>=0?parseAmount(r[cols.ki]):0}));
-  }
-  errors.push(name+': header SANDI tidak ditemukan pada 50 baris pertama');
- }
- throw Error('Kolom SANDI tidak ditemukan. '+errors.join(' | '));
-}
+function xlsxToAccounts(buffer){if(!window.XLSX)throw Error('Mesin Excel lokal belum termuat. Muat ulang aplikasi.');const wb=XLSX.read(buffer,{type:'array',cellDates:false}),aliases={code:['SANDI','KODE','KODEAKUN','ACCOUNTCODE'],name:['NAMA','NAMAAKUN','DES','KETERANGAN','URAIAN']};for(const sheetName of wb.SheetNames){const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:'',raw:false});for(let i=0;i<Math.min(rows.length,50);i++){const h=rows[i].map(norm),find=names=>h.findIndex(x=>names.includes(x)),ci=find(aliases.code);if(ci<0)continue;const ni=find(aliases.name),data=rows.slice(i+1).filter(r=>String(r[ci]??'').trim()!=='');if(data.length)return data.map(r=>({code:String(r[ci]).trim(),name:ni>=0?String(r[ni]??'').trim():''}));}}throw Error('Kolom SANDI tidak ditemukan atau tidak ada data akun.')}
 function exportXlsxSheet(filename,sheetName,rows){if(!window.XLSX){toast('Mesin Excel belum siap.');return}const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,sheetName);const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});downloadBlob(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),filename)}
 function parseDBF(buffer){
  const b=new Uint8Array(buffer),v=new DataView(buffer);
@@ -381,7 +334,7 @@ $('np-import-confirm').onclick=async()=>{
  }catch(err){setMessage('np-message','Penyimpanan impor gagal: '+err.message,'bad')}
 };
 $('np-template').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!requireImportPassword('Memuat Template DBF NPTRANS')){e.target.value='';return}try{const p=parseDBF(await f.arrayBuffer());state.npTemplate={fields:p.fields,version:p.version};await persist();renderNptrans();setMessage('np-message','Struktur template DBF berhasil dibaca: '+p.fields.map(x=>x.name+'('+x.type+','+x.length+')').join(' · '),'good')}catch(err){setMessage('np-message','Template gagal dibaca: '+err.message,'bad')}e.target.value=''};
-function accountTemplateRows(){return [['SANDI','NAMA','PTDACOST','MUTASIDB','MUTASIKR'],['114.130.2','Persediaan Barang',1000000,250000,50000],['114.140.2','Persediaan Bahan Baku',2000000,500000,100000],['716.100.','Biaya Operasional',0,1500000,250000]]}
+function accountTemplateRows(){return [['SANDI','NAMA'],['114.130.2','Persediaan Barang'],['114.140.2','Persediaan Bahan Baku'],['716.100.','Biaya Operasional']]}
 function exportAccountTemplateCsv(){const rows=accountTemplateRows();downloadBlob(new Blob(['\\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\\r\\n')],{type:'text/csv;charset=utf-8'}),'Format-Import-Master-Akun-SBP.csv')}
 function exportAccountTemplateXlsx(){exportXlsxSheet('Format-Import-Master-Akun-SBP.xlsx','Master Akun',accountTemplateRows())}
 $('download-account-template-csv').onclick=exportAccountTemplateCsv;
@@ -407,7 +360,7 @@ $('import-account-button').onclick=async()=>{
    accounts=p.records.map((r,index)=>{
     const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);
     const code=String(o.SANDI??o.KODE??'').trim();
-    return {code,name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??'').trim(),ptdacost:parseAmount(o.PTDACOST??0),mutasiDebit:parseAmount(o.MUTASIDB??0),mutasiKredit:parseAmount(o.MUTASIKR??0),_row:index+1};
+    return {code,name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??'').trim(),_row:index+1};
    }).filter(a=>a.code);
   }else{
    accounts=/\.xlsx?$/i.test(f.name)?xlsxToAccounts(await f.arrayBuffer()):csvToAccounts(await f.text());
@@ -452,24 +405,12 @@ $('clear-np-data').onclick=async()=>{
 $('np-search').addEventListener('input',()=>{npPage=1;renderNptrans()});$('np-prev').onclick=()=>{npPage=Math.max(1,npPage-1);renderNptrans()};$('np-next').onclick=()=>{npPage++;renderNptrans()};$('export-np-csv').onclick=exportNpCsv;$('export-np-xlsx').onclick=exportNpXlsx;$('export-np-dbf').onclick=exportDbf;
 
 function getTrialBalanceRows(period){
- const openingMap=new Map((state.openingBalances||[]).filter(x=>x.period===period).map(x=>[String(x.accountCode),{debit:Number(x.debit||0),credit:Number(x.credit||0)}]));
- const movement=new Map();
- state.journals.filter(j=>(j.status==='posted'||(!j.status&&j.status!=='draft'))&&String(j.date||'').slice(0,7)===period).forEach(j=>(j.lines||[]).forEach(l=>{const v=movement.get(String(l.code))||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(String(l.code),v)}));
+ const openingMap=new Map((state.openingBalances||[]).filter(x=>x.period===period).map(x=>[String(x.accountCode),{debit:Number(x.debit||0),credit:Number(x.credit||0)}])),movement=new Map();
+ state.journals.filter(j=>j.status==='posted'&&String(j.date||'').slice(0,7)===period).forEach(j=>(j.lines||[]).forEach(l=>{const v=movement.get(String(l.code))||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(String(l.code),v)}));
  const codes=new Set([...state.accounts.map(a=>String(a.code)),...openingMap.keys(),...movement.keys()]);
- return [...codes].sort((a,b)=>a.localeCompare(b)).map(code=>{
-  const account=state.accounts.find(a=>String(a.code)===code),explicit=openingMap.get(code);
-  // Prioritas: saldo awal periode yang diinput pada modul; jika belum ada, gunakan saldo legacy Master Akun.
-  const legacy=account?accountActual(account):0,netOpening=explicit?(explicit.debit-explicit.credit):legacy;
-  const openingDebit=Math.max(netOpening,0),openingCredit=Math.max(-netOpening,0),move=movement.get(code)||{debit:0,credit:0};
-  const net=netOpening+move.debit-move.credit;
-  return {code,name:account?.name||'(Akun tidak ditemukan)',openingDebit,openingCredit,debit:move.debit,credit:move.credit,endingDebit:Math.max(net,0),endingCredit:Math.max(-net,0),balance:net};
- });
+ return [...codes].sort((a,b)=>a.localeCompare(b)).map(code=>{const account=state.accounts.find(a=>String(a.code)===code),opening=openingMap.get(code)||{debit:0,credit:0},netOpening=opening.debit-opening.credit,move=movement.get(code)||{debit:0,credit:0},net=netOpening+move.debit-move.credit;return {code,name:account?.name||'(Akun tidak ditemukan)',openingDebit:Math.max(netOpening,0),openingCredit:Math.max(-netOpening,0),debit:move.debit,credit:move.credit,endingDebit:Math.max(net,0),endingCredit:Math.max(-net,0),balance:net}});
 }
-
-function ledgerOpeningNet(period,account){
- const record=(state.openingBalances||[]).find(x=>x.period===period&&String(x.accountCode)===String(account.code));
- return record?Number(record.debit||0)-Number(record.credit||0):accountActual(account);
-}
+function ledgerOpeningNet(period,account){const record=(state.openingBalances||[]).find(x=>x.period===period&&String(x.accountCode)===String(account.code));return record?Number(record.debit||0)-Number(record.credit||0):0}
 function getLedgerTransactions(period,code){
  const account=state.accounts.find(a=>String(a.code)===String(code));if(!account)return null;
  const openingNet=ledgerOpeningNet(period,account),rows=[{date:period+'-01',number:'SALDO AWAL',description:'Saldo awal periode',debit:Math.max(openingNet,0),credit:Math.max(-openingNet,0),kind:'opening'}];
@@ -600,12 +541,7 @@ function printOpeningBalances(){
  const body=printSummary([['Periode',period],['Jumlah akun',String(items.length)],['Total debit awal',printMoney(d)],['Total kredit awal',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['NO','SANDI','NAMA AKUN','KETERANGAN','DEBIT AWAL','KREDIT AWAL'],items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.accountCode)+'</td><td>'+esc(state.accounts.find(a=>a.code===x.accountCode)?.name||'(Akun tidak ditemukan)')+'</td><td>'+esc(x.note||'')+'</td><td class="num">'+printMoney(x.debit)+'</td><td class="num">'+printMoney(x.credit)+'</td></tr>'),'<tr><th colspan="4">TOTAL</th><th class="num">'+printMoney(d)+'</th><th class="num">'+printMoney(c)+'</th></tr>');
  printDocument('DAFTAR SALDO AWAL ACC & PROGRAM','Periode '+period,body,'landscape');
 }
-function printAccounts(){
- const q=($('account-search')?.value||'').trim().toLowerCase(),items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));
- const d=items.reduce((n,a)=>n+Math.max(accountActual(a),0),0),c=items.reduce((n,a)=>n+Math.max(-accountActual(a),0),0);
- const body=printSummary([['Jumlah akun',String(items.length)],['Total saldo debit',printMoney(d)],['Total saldo kredit',printMoney(c)]])+printTable(['NO','KODE / SANDI','NAMA AKUN','SALDO AWAL','MUTASI DEBIT','MUTASI KREDIT','SALDO AKTUAL'],items.map((a,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(a.code)+'</td><td>'+esc(a.name)+'</td><td class="num">'+printMoney(a.ptdacost)+'</td><td class="num">'+printMoney(a.mutasiDebit)+'</td><td class="num">'+printMoney(a.mutasiKredit)+'</td><td class="num">'+printMoney(accountActual(a))+'</td></tr>'));
- printDocument('DAFTAR MASTER AKUN','Seluruh akun sesuai filter pencarian aktif',body,'landscape');
-}
+function printAccounts(){const q=($('account-search')?.value||'').trim().toLowerCase(),items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));const body=printSummary([['Jumlah akun',String(items.length)]])+printTable(['NO','KODE / SANDI','NAMA AKUN'],items.map((a,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(a.code)+'</td><td>'+esc(a.name)+'</td></tr>'));printDocument('DAFTAR MASTER AKUN','Daftar kode dan nama akun sesuai filter pencarian aktif',body,'portrait')}
 function printJournalList(){
  const q=($('journal-search')?.value||'').toLowerCase().trim(),status=$('journal-status-filter')?.value||'all',items=state.journals.filter(j=>(j.number+' '+j.description+' '+(j.date||'')).toLowerCase().includes(q)&&(status==='all'||(status==='draft'?j.status==='draft':j.status!=='draft'))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
  const d=items.reduce((n,j)=>n+(j.lines||[]).reduce((s,l)=>s+Number(l.debit||0),0),0),c=items.reduce((n,j)=>n+(j.lines||[]).reduce((s,l)=>s+Number(l.credit||0),0),0);
@@ -633,5 +569,5 @@ $('export-trial-xlsx').onclick=exportTrialBalanceXlsx;
 $('backup-download').onclick=()=>{const safeState=JSON.parse(JSON.stringify(state));if(safeState.npTemplate?.fields)safeState.npTemplate.fields.forEach(f=>{if(f.raw&&typeof f.raw==='object')f.raw=Array.from(f.raw)});const payload={app:'SBP Accounting',version:19,exportedAt:new Date().toISOString(),state:safeState};downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),'SBP-Accounting-V19-backup.json');setMessage('backup-message','Backup JSON berhasil disiapkan. Simpan di lokasi aman.','good')};
 $('backup-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!requireImportPassword('Pemulihan / Import Backup')){e.target.value='';return}try{const parsed=JSON.parse(await f.text()),candidate=parsed.state||parsed;if(!Array.isArray(candidate.accounts)||!Array.isArray(candidate.journals)||!Array.isArray(candidate.nptrans))throw Error('Struktur backup tidak dikenali.');if(!confirm('Pulihkan backup? Data lokal saat ini akan digantikan.'))return;state={...emptyState(),...candidate};if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();renderDashboard();setMessage('backup-message','Backup berhasil dipulihkan.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}e.target.value=''};
 
-async function init(){await loadState();state.accounts=state.accounts.map(a=>({...a,ptdacost:Number(a.ptdacost||0),mutasiDebit:Number(a.mutasiDebit||0),mutasiKredit:Number(a.mutasiKredit||0)}));syncNptransSandis();await persist();resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn)}
+async function init(){await loadState();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();await persist();resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn)}
 init();
