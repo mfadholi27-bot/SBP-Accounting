@@ -55,10 +55,6 @@
 </section>
 <section class="page" id="page-journal-list"><div class="panel"><div class="panel-head"><div><h3>Daftar jurnal</h3><p>Draft dari NPTRANS otomatis muncul di sini. Lengkapi debit/kredit untuk menjadikannya jurnal terposting.</p></div><div class="button-row"><input class="search" id="journal-search" placeholder="Cari nomor / keterangan..."><button class="btn" id="export-journals-xlsx">Ekspor Excel</button></div></div><div id="journal-table" class="empty">Belum ada jurnal.</div></div></section>
 <section class="page" id="page-accounts">
-  <div class="accounts-page-head">
-    <div><div class="eyebrow">SBP ACCOUNTING / V19</div><h2>Master Akun</h2><p>Kelola daftar akun, saldo awal, dan mutasi akun perusahaan.</p></div>
-    <div class="accounts-head-actions"><button class="btn" id="export-accounts">Ekspor CSV</button><button class="btn" id="export-accounts-xlsx">Ekspor Excel</button><span class="tag" id="account-count">0 AKUN</span></div>
-  </div>
   <div class="accounts-card accounts-import-card">
     <div class="accounts-card-title"><div class="accounts-icon">⇧</div><div><h3>Import Master Akun</h3><p>Impor data akun dari Excel (.xlsx/.xls), CSV (.csv), atau DBF (.dbf).</p></div></div>
     <div class="accounts-import-controls">
@@ -81,7 +77,7 @@
     <p class="accounts-form-note">Sisa saldo aktual = PTDACOST + MUTASIDB − MUTASIKR.</p>
   </div>
   <div class="accounts-card accounts-list-card">
-    <div class="accounts-list-head"><div class="accounts-card-title"><div class="accounts-icon">▤</div><div><h3>Daftar Master Akun</h3><p>Daftar kode dan saldo akun yang tersimpan.</p></div></div><input class="search" id="account-search" placeholder="Cari kode atau nama akun..."></div>
+    <div class="accounts-list-head"><div class="accounts-card-title"><div class="accounts-icon">▤</div><div><h3>Daftar Master Akun <span class="tag" id="account-count">0 AKUN</span></h3><p>Daftar kode dan saldo akun yang tersimpan.</p></div></div><div class="accounts-list-tools"><input class="search" id="account-search" placeholder="Cari kode atau nama akun..."><button class="btn" id="export-accounts">Ekspor CSV</button><button class="btn" id="export-accounts-xlsx">Ekspor Excel</button></div></div>
     <div class="table-wrap"><table class="account-table"><thead><tr><th>No</th><th>Kode / SANDI</th><th>Nama akun</th><th>Saldo Awal</th><th>Mutasi Debit</th><th>Mutasi Kredit</th><th>Saldo Aktual</th><th>Aksi</th></tr></thead><tbody id="account-rows"></tbody></table></div>
   </div>
 </section>
