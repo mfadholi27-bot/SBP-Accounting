@@ -151,3 +151,42 @@ html,body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif!important}
  #page-ledger .opening-summary{grid-template-columns:1fr 1fr!important}
  .topbar h1{font-size:20px!important}
 }
+
+/* V59 — compact ledger layout refinement */
+#page-ledger>.panel{padding:22px!important}
+#page-ledger .panel-head{margin-bottom:16px!important}
+#page-ledger .ledger-filters{
+ display:grid!important;
+ grid-template-columns:220px minmax(280px,1fr) 190px!important;
+ gap:12px!important;
+ align-items:end!important;
+ margin-bottom:12px!important;
+}
+#page-ledger .ledger-field{gap:5px!important;font-size:12px!important}
+#page-ledger .ledger-field input,
+#page-ledger .ledger-field select{height:40px!important;min-height:40px!important;font-size:13px!important}
+#page-ledger .ledger-submit{
+ height:40px!important;min-height:40px!important;
+ padding:0 12px!important;font-size:12px!important;
+ justify-content:center!important;white-space:nowrap!important
+}
+#page-ledger .ledger-actions{
+ grid-column:1/-1!important;
+ display:flex!important;justify-content:flex-end!important;
+ gap:8px!important;margin-top:0!important
+}
+#page-ledger .ledger-actions .btn{
+ height:36px!important;min-height:36px!important;
+ padding:0 12px!important;font-size:12px!important
+}
+#page-ledger #ledger-content{margin-top:12px!important}
+#page-ledger .empty{min-height:88px!important;padding:18px!important}
+@media(max-width:1000px){
+ #page-ledger .ledger-filters{grid-template-columns:190px minmax(220px,1fr)!important}
+ #page-ledger .ledger-submit{grid-column:1/-1!important;justify-self:start!important}
+}
+@media(max-width:600px){
+ #page-ledger .ledger-filters{grid-template-columns:1fr!important}
+ #page-ledger .ledger-submit{width:100%!important}
+ #page-ledger .ledger-actions{justify-content:stretch!important}
+}
