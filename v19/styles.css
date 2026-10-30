@@ -26,3 +26,26 @@ html,body{min-width:1180px;overflow-x:auto}
 th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 .icon-btn{font-size:15px;padding:8px 11px}.file-btn{font-size:12px;padding:11px 14px}
 .inline-message,.footnote,footer{font-size:11px}
+
+/* NPTRANS data grid refinements */
+.np-heading{align-items:flex-end;margin-top:26px}
+.np-total-line{margin:7px 0 0;color:#63776b;font-size:12px}
+.np-total-line b{color:#155f40;font-size:16px}
+.np-table-tools{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0 10px}
+.np-table-tools .search{width:min(480px,65%);font-size:13px}
+.np-page-info{font-size:12px;color:#74877c;white-space:nowrap}
+.np-table-wrap{max-height:680px;overflow:auto}
+.np-table{min-width:1080px;table-layout:fixed}
+.np-table th:nth-child(1){width:105px}.np-table th:nth-child(2){width:115px}
+.np-table th:nth-child(3){width:155px}.np-table th:nth-child(4){width:75px}
+.np-table th:nth-child(5){width:auto}.np-table th:nth-child(6){width:165px}
+.np-table th:nth-child(7){width:125px}
+.np-table td{vertical-align:top;line-height:1.45}
+.np-table .np-ket{white-space:normal;overflow-wrap:anywhere;min-width:260px}
+.np-table .np-amount{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.np-table tbody tr:nth-child(even){background:#fbfdfb}
+.np-table tbody tr:hover{background:#f0f8f3}
+.np-ok{background:#e6f5ec;color:#176c45}.np-warn{background:#fff4e5;color:#9a5b13}
+.np-pagination{display:flex;justify-content:flex-end;gap:9px;padding:13px 2px}
+.np-pagination button:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:720px){.np-table-tools{align-items:flex-start;flex-direction:column}.np-table-tools .search{width:100%}.np-page-info{white-space:normal}.np-heading{align-items:flex-start}}
