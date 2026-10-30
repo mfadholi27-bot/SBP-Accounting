@@ -150,7 +150,7 @@ $('np-file').onchange=async e=>{
  try{
   let rows,p=null;
   if(f.name.toLowerCase().endsWith('.dbf')){p=parseDBF(await f.arrayBuffer());rows=dbfToNp(p)}
-  else if(/\\.xlsx?$/i.test(f.name))rows=csvToNp(xlsxFirstSheetToCsv(await f.arrayBuffer()));
+  else if(/\.xlsx?$/i.test(f.name))rows=csvToNp(xlsxFirstSheetToCsv(await f.arrayBuffer()));
   else rows=csvToNp(await f.text());
   const valid=rows.filter(r=>r.sandi&&r.nobukti&&Number.isFinite(Number(r.jumlah))),rejected=rows.length-valid.length;
   const mode=$('np-import-mode').value;
@@ -200,7 +200,7 @@ $('account-file').onchange=async e=>{
     return {code,name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??'').trim(),ptdacost:parseAmount(o.PTDACOST??0),mutasiDebit:parseAmount(o.MUTASIDB??0),mutasiKredit:parseAmount(o.MUTASIKR??0),_row:index+1};
    }).filter(a=>a.code);
   }else{
-   accounts=/\\.xlsx?$/i.test(f.name)?csvToAccounts(xlsxFirstSheetToCsv(await f.arrayBuffer())):csvToAccounts(await f.text());
+   accounts=/\.xlsx?$/i.test(f.name)?csvToAccounts(xlsxFirstSheetToCsv(await f.arrayBuffer())):csvToAccounts(await f.text());
   }
   if(!accounts.length)throw Error('File terbaca tetapi tidak ditemukan akun dengan SANDI yang terisi.');
   if(!state.nptrans.length)throw Error('Data NPTRANS belum tersedia. Impor dan setujui NPTRANS terlebih dahulu.');
