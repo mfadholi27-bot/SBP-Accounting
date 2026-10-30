@@ -121,6 +121,56 @@ function renderJournals(){
 }
 let journalPage=0;
 function editJournal(id){const j=state.journals.find(x=>x.id===id);if(!j||j.status!=='draft'){toast('Hanya Draft yang dapat diedit.');return}editingId=id;$('j-date').value=j.date;$('j-number').value=j.number;$('j-description').value=j.description;$('journal-lines').innerHTML='';j.lines.forEach(l=>addJournalLine(l));$('save-journal').textContent='Simpan perubahan Draft';$('post-journal').textContent='Posting Jurnal';go('journal')}
+let bulkPostCandidates=[];
+function updateBulkPostMode(){
+ const mode=$('bulk-post-mode').value;
+ $('bulk-post-date-wrap').hidden=mode!=='date';
+ $('bulk-post-month-wrap').hidden=mode!=='month';
+ $('bulk-post-from-wrap').hidden=mode!=='range';
+ $('bulk-post-to-wrap').hidden=mode!=='range';
+ $('bulk-post-result').hidden=true;$('bulk-post-confirm').disabled=true;bulkPostCandidates=[];
+}
+function validateBulkPostJournal(j){
+ const lines=j.lines||[];
+ if(lines.length<2)return 'Minimal harus memiliki 2 baris akun.';
+ let debit=0,credit=0;
+ for(let i=0;i<lines.length;i++){
+  const l=lines[i],d=Number(l.debit||0),c=Number(l.credit||0);
+  if(!l.code||!state.accounts.some(a=>String(a.code)===String(l.code)))return 'Baris '+(i+1)+': akun tidak ditemukan di Master Akun.';
+  if(!Number.isFinite(d)||!Number.isFinite(c)||d<0||c<0)return 'Baris '+(i+1)+': nilai debit/kredit tidak valid.';
+  if(!((d>0&&c===0)||(c>0&&d===0)))return 'Baris '+(i+1)+': isi tepat satu sisi debit atau kredit.';
+  debit+=d;credit+=c;
+ }
+ if(Math.abs(debit-credit)>0.000001)return 'Tidak seimbang. Debit '+money(debit)+' dan kredit '+money(credit)+'.';
+ return '';
+}
+function previewBulkPosting(){
+ const mode=$('bulk-post-mode').value;let from='',to='';
+ if(mode==='date'){from=to=$('bulk-post-date').value}
+ else if(mode==='month'){const m=$('bulk-post-month').value;if(m){from=m+'-01';const [y,mm]=m.split('-').map(Number);to=new Date(y,mm,0).toISOString().slice(0,10)}}
+ else {from=$('bulk-post-from').value;to=$('bulk-post-to').value}
+ if(!from||!to||from>to){toast('Periode tanggal belum benar.');return}
+ const drafts=state.journals.filter(j=>j.status==='draft'&&String(j.date||'')>=from&&String(j.date||'')<=to);
+ const valid=[],invalid=[];
+ drafts.forEach(j=>{const reason=validateBulkPostJournal(j);(reason?invalid:valid).push({journal:j,reason})});
+ bulkPostCandidates=valid.map(x=>x.journal);
+ const totalDebit=valid.reduce((s,j)=>s+(j.lines||[]).reduce((n,l)=>n+Number(l.debit||0),0),0);
+ const totalCredit=valid.reduce((s,j)=>s+(j.lines||[]).reduce((n,l)=>n+Number(l.credit||0),0),0);
+ const invalidHtml=invalid.length?'<div class="bulk-post-invalid"><b>Draft tidak dapat diposting ('+invalid.length+')</b><ul>'+invalid.map(x=>'<li><b>'+esc(x.journal.number)+'</b> · '+esc(x.reason)+'</li>').join('')+'</ul></div>':'<p class="balance-ok">Semua Draft dalam periode lolos validasi.</p>';
+ $('bulk-post-result').innerHTML='<div class="bulk-post-stats"><div><span>Periode</span><b>'+esc(fmtDate(from))+' – '+esc(fmtDate(to))+'</b></div><div><span>Draft ditemukan</span><b>'+drafts.length+'</b></div><div><span>Siap diposting</span><b>'+valid.length+'</b></div><div><span>Total debit / kredit valid</span><b>'+money(totalDebit)+' / '+money(totalCredit)+'</b></div></div>'+invalidHtml;
+ $('bulk-post-result').hidden=false;$('bulk-post-confirm').disabled=valid.length===0;
+}
+$('bulk-post-mode').addEventListener('change',updateBulkPostMode);
+$('bulk-post-preview').addEventListener('click',previewBulkPosting);
+$('bulk-post-confirm').addEventListener('click',async()=>{
+ const ids=new Set(bulkPostCandidates.map(j=>j.id));if(!ids.size)return;
+ const count=ids.size;
+ if(!confirm('Konfirmasi posting '+count+' jurnal Draft yang sudah lolos validasi? Jurnal yang tidak valid tetap menjadi Draft.'))return;
+ const now=new Date().toISOString();
+ state.journals.forEach(j=>{if(ids.has(j.id)){j.status='posted';j.updatedAt=now;j.postedAt=now}});
+ await persist();bulkPostCandidates=[];$('bulk-post-confirm').disabled=true;$('bulk-post-result').innerHTML='<p class="balance-ok"><b>'+count+' jurnal berhasil diposting.</b> Draft yang tidak lolos validasi tetap berstatus Draft.</p>';$('bulk-post-result').hidden=false;
+ renderJournals();renderDashboard();renderTrialBalance();toast(count+' jurnal berhasil diposting secara kolektif.');
+});
 $('journal-search').addEventListener('input',()=>{journalPage=0;renderJournals()});$('journal-status-filter').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-page-size').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-prev').onclick=()=>{journalPage=Math.max(0,journalPage-1);renderJournals()};$('journal-next').onclick=()=>{journalPage++;renderJournals()};$('export-journals-xlsx').onclick=exportJournalsXlsx;
 
 function accountActual(a){return Number(a.ptdacost||0)+Number(a.mutasiDebit||0)-Number(a.mutasiKredit||0)}
