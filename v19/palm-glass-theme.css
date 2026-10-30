@@ -241,3 +241,80 @@ html,body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif!important}
  #page-reports .force-delete-controls{grid-template-columns:1fr!important}
  #page-reports #force-delete-period{grid-column:auto!important;width:100%!important}
 }
+
+
+/* V62 — precise, larger Lucide navigation and application controls */
+.sidebar{
+  overflow-y:auto!important;
+  scrollbar-width:thin;
+  scrollbar-color:#d5e5da transparent;
+  padding:24px 16px!important;
+}
+.brand{gap:14px!important;padding:5px 8px 26px!important;min-height:78px!important}
+.brand-mark,.brand-logo{
+  width:58px!important;height:58px!important;min-width:58px!important;
+  border-radius:16px!important;object-fit:contain!important;
+  filter:drop-shadow(0 3px 5px rgba(15,75,45,.10));
+}
+.brand b{font-size:17px!important;font-weight:750!important;letter-spacing:-.35px!important;line-height:1.35!important}
+.brand small{font-size:12px!important;line-height:1.45!important;margin-top:3px!important}
+.side-label{
+  font-size:11px!important;font-weight:750!important;letter-spacing:.09em!important;
+  padding:14px 12px 9px!important;color:#94a3b8!important;
+}
+.nav-group-label{margin:14px 12px 6px!important;padding:8px 12px 5px!important}
+nav{gap:7px!important}
+.nav-item{
+  min-height:47px!important;padding:10px 12px!important;gap:13px!important;
+  border-radius:10px!important;font-size:15px!important;font-weight:600!important;
+  line-height:1.4!important;color:#475569!important;
+  transition:background .22s ease-out,color .22s ease-out,border-color .22s ease-out,box-shadow .22s ease-out!important;
+}
+.nav-icon{
+  width:28px!important;height:28px!important;min-width:28px!important;
+  display:inline-grid!important;place-items:center!important;border-radius:8px!important;
+  color:#64748b!important;background:transparent!important;
+  transition:color .22s ease-out,transform .22s ease-out!important;
+}
+.nav-icon svg{
+  display:block!important;width:25px!important;height:25px!important;
+  min-width:25px!important;stroke-width:2!important;
+  stroke-linecap:round!important;stroke-linejoin:round!important;
+}
+.nav-item:hover{
+  background:#f0fdf4!important;color:#14532d!important;
+  border-color:#dcfce7!important;transform:none!important;
+}
+.nav-item:hover .nav-icon{color:#16a34a!important;transform:translateX(2px) scale(1.06)!important}
+.nav-item.active{
+  min-height:49px!important;background:#ecfdf3!important;color:#14532d!important;
+  border:1px solid #bbf7d0!important;border-left:3px solid #15803d!important;
+  box-shadow:0 1px 3px rgba(22,101,52,.06)!important;font-weight:700!important;
+}
+.nav-item.active .nav-icon{color:#15803d!important}
+.nav-item:focus-visible{outline:2px solid #22c55e!important;outline-offset:2px!important}
+.sidebar-foot{font-size:12px!important;padding:16px 10px!important}
+.sidebar-foot .dot{width:8px!important;height:8px!important}
+.accounts-icon,.import-icon{
+  width:48px!important;height:48px!important;min-width:48px!important;
+  display:grid!important;place-items:center!important;border-radius:12px!important;
+  background:#f0fdf4!important;color:#166534!important;font-size:0!important;
+}
+.accounts-icon svg,.import-icon svg{width:27px!important;height:27px!important;stroke-width:2!important}
+.accounts-card-title{gap:13px!important;align-items:center!important}
+.btn svg,.top-actions svg,.inline-icon svg{width:18px!important;height:18px!important;stroke-width:2!important}
+.quick-icon svg{width:27px!important;height:27px!important;stroke-width:2!important}
+@media(max-width:1000px){
+ .sidebar{padding:18px 12px!important}
+ .nav-item{font-size:14px!important;min-height:44px!important}
+ .nav-icon{width:26px!important;height:26px!important;min-width:26px!important}
+ .nav-icon svg{width:23px!important;height:23px!important}
+}
+@media(max-width:760px){
+ .sidebar{overflow:visible!important}
+ .sidebar nav{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+ .nav-item{min-height:48px!important;padding:9px 10px!important;font-size:13px!important;gap:9px!important}
+ .nav-icon{width:24px!important;height:24px!important;min-width:24px!important}
+ .nav-icon svg{width:22px!important;height:22px!important}
+ .brand-mark,.brand-logo{width:52px!important;height:52px!important;min-width:52px!important}
+}
