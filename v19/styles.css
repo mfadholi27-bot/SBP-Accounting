@@ -112,3 +112,42 @@ th,td{font-size:12px;padding:13px 12px}th{font-size:10px}
 #page-accounts #account-rows td:last-child{min-width:125px}
 @media(max-width:900px){.account-importbar{grid-template-columns:1fr 1fr}.account-import-copy{grid-column:1/-1}.account-importbar .file-status{grid-column:1/-1}}
 @media(max-width:720px){#page-accounts .panel{padding:14px}.account-importbar{grid-template-columns:1fr 1fr}.account-importbar .file-btn,.account-importbar #import-account-button{width:100%}.account-template-actions{grid-column:1/-1}.account-template-actions .btn{flex:1}.account-form-balance{grid-template-columns:1fr 1fr}.account-form-heading{align-items:flex-start;flex-direction:column;gap:1px}#page-accounts .account-tools .button-row{width:100%}#page-accounts .account-tools .button-row .btn{flex:1}}
+
+/* Master Akun — redesigned clean dashboard layout */
+#page-accounts{display:none}
+#page-accounts.active{display:block}
+#page-accounts .accounts-page-head{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:2px 0 20px}
+#page-accounts .accounts-page-head h2{font-size:30px;letter-spacing:-1px;margin:4px 0 3px;color:var(--ink);line-height:1.15}
+#page-accounts .accounts-page-head p{font-size:12px;color:var(--muted);margin:0}
+#page-accounts .accounts-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#page-accounts .accounts-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px 19px;margin-bottom:14px;box-shadow:var(--shadow);min-width:0}
+#page-accounts .accounts-card-title{display:flex;align-items:center;gap:11px;min-width:0}
+#page-accounts .accounts-icon{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:12px;background:#e9f6ee;color:var(--green);font-size:22px;font-weight:800}
+#page-accounts .accounts-card-title h3{font-size:14px;margin:0;color:var(--ink)}
+#page-accounts .accounts-card-title p{font-size:11px;margin:3px 0 0;color:var(--muted)}
+#page-accounts .accounts-import-card{display:flex;align-items:center;justify-content:space-between;gap:18px}
+#page-accounts .accounts-import-controls{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap;min-width:0}
+#page-accounts .accounts-import-controls .file-status{margin:0;min-width:100px;max-width:180px}
+#page-accounts .accounts-template-actions{display:flex;gap:7px;flex-wrap:wrap}
+#page-accounts .accounts-entry-head,#page-accounts .accounts-list-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px}
+#page-accounts .accounts-entry-head .form-actions{margin:0}
+#page-accounts .accounts-form-grid{display:grid;grid-template-columns:1fr 1.5fr repeat(4,minmax(120px,1fr));gap:11px}
+#page-accounts .accounts-form-grid label{display:flex;flex-direction:column;gap:6px;min-width:0;color:#60776a;font-size:11px;font-weight:750}
+#page-accounts .accounts-form-grid input{width:100%;min-width:0;height:42px;padding:9px 11px;border:1px solid #dce8df;border-radius:9px;background:#fbfdfb;color:var(--ink);font:inherit}
+#page-accounts .accounts-form-grid input:focus{outline:0;border-color:#5bb987;box-shadow:0 0 0 3px #16845b16}
+#page-accounts .accounts-form-grid input:disabled{background:#edf2ee;color:#718579}
+#page-accounts .accounts-form-note{font-size:10px;color:var(--muted);margin:10px 0 0}
+#page-accounts .accounts-list-head{margin-bottom:12px}
+#page-accounts .accounts-list-head .search{width:min(320px,45%)}
+#page-accounts .account-table{min-width:950px;width:100%;table-layout:auto}
+#page-accounts .account-table th,#page-accounts .account-table td{padding:10px 11px;white-space:nowrap;font-size:11px}
+#page-accounts .account-table th{font-size:9px}
+#page-accounts .account-table td:nth-child(3){white-space:normal;min-width:190px}
+#page-accounts .account-table td:nth-child(4),#page-accounts .account-table td:nth-child(5),#page-accounts .account-table td:nth-child(6),#page-accounts .account-table td:nth-child(7){text-align:right;font-variant-numeric:tabular-nums}
+#page-accounts .account-table td:nth-child(7){font-weight:800;color:#155f40}
+#page-accounts .account-table td:last-child{min-width:115px}
+#page-accounts .account-table tbody tr:nth-child(even){background:#fbfdfb}
+#page-accounts .account-table tbody tr:hover{background:#f0f8f3}
+#page-accounts #cancel-account-edit[hidden]{display:none!important}
+@media(max-width:1150px){#page-accounts .accounts-import-card{align-items:flex-start;flex-direction:column}#page-accounts .accounts-import-controls{justify-content:flex-start;width:100%}#page-accounts .accounts-form-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){#page-accounts .accounts-page-head,#page-accounts .accounts-entry-head,#page-accounts .accounts-list-head{align-items:flex-start;flex-direction:column}#page-accounts .accounts-page-head h2{font-size:26px}#page-accounts .accounts-head-actions{width:100%}#page-accounts .accounts-head-actions .btn{flex:1}#page-accounts .accounts-card{padding:14px}#page-accounts .accounts-import-controls{display:grid;grid-template-columns:1fr 1fr}#page-accounts .accounts-import-controls .file-status{grid-column:1/-1;max-width:none}#page-accounts .accounts-template-actions{grid-column:1/-1}#page-accounts .accounts-template-actions .btn{flex:1}#page-accounts .accounts-form-grid{grid-template-columns:1fr 1fr}#page-accounts .accounts-form-grid .account-name-field{grid-column:1/-1}#page-accounts .accounts-entry-head .form-actions{width:100%}#page-accounts .accounts-entry-head .form-actions .btn{flex:1}#page-accounts .accounts-list-head .search{width:100%}}
