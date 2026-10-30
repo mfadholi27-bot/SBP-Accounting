@@ -251,6 +251,25 @@ $('account-file').onchange=async e=>{
   setMessage('np-message',msg,'bad');
  }finally{e.target.value=''}
 };
+$('clear-np-data').onclick=async()=>{
+ const count=state.nptrans.length;
+ const linkedDrafts=state.journals.filter(j=>j.status==='draft'&&j.source==='NPTRANS').length;
+ if(!count&&!linkedDrafts){setMessage('np-message','Tidak ada data NPTRANS yang perlu dibersihkan.','');return}
+ const ok=confirm('BERSIHKAN DATA NPTRANS?\\n\\nData transaksi NPTRANS ('+count+' baris) dan draft jurnal hasil impor NPTRANS ('+linkedDrafts+' jurnal) akan dihapus.\\n\\nMaster akun, jurnal manual/terposting, dan template DBF tidak akan dihapus. Tindakan ini tidak dapat dibatalkan. Lanjutkan?');
+ if(!ok)return;
+ state.nptrans=[];
+ state.journals=state.journals.filter(j=>!(j.status==='draft'&&j.source==='NPTRANS'));
+ pendingNpImport=null;
+ $('np-import-review').hidden=true;
+ $('np-file').value='';
+ npPage=1;
+ await persist();
+ renderNptrans();
+ renderJournals();
+ renderDashboard();
+ setMessage('np-message','Data NPTRANS berhasil dibersihkan. '+count+' baris transaksi dan '+linkedDrafts+' draft jurnal NPTRANS dihapus. Master akun, jurnal manual/terposting, dan template DBF tetap dipertahankan.','good');
+ toast('Data NPTRANS berhasil dibersihkan.');
+};
 $('np-search').addEventListener('input',()=>{npPage=1;renderNptrans()});$('np-prev').onclick=()=>{npPage=Math.max(1,npPage-1);renderNptrans()};$('np-next').onclick=()=>{npPage++;renderNptrans()};$('export-np-csv').onclick=exportNpCsv;$('export-np-xlsx').onclick=exportNpXlsx;$('export-np-dbf').onclick=exportDbf;
 
 function exportTrialBalanceXlsx(){const map=new Map();state.journals.filter(j=>j.status!=='draft').forEach(j=>(j.lines||[]).forEach(l=>{const v=map.get(l.code)||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);map.set(l.code,v)}));const rows=[['SANDI','NAMA AKUN','TOTAL DEBIT','TOTAL KREDIT','SALDO BERSIH D/(K)'],...[...map].map(([code,v])=>[code,state.accounts.find(a=>a.code===code)?.name||'(Akun tidak ditemukan)',v.debit,v.credit,v.debit-v.credit])];exportXlsxSheet('Neraca-Saldo.xlsx','Neraca Saldo',rows)}
