@@ -318,3 +318,21 @@ nav{gap:7px!important}
  .nav-icon svg{width:22px!important;height:22px!important}
  .brand-mark,.brand-logo{width:52px!important;height:52px!important;min-width:52px!important}
 }
+
+/* V63 — Accounting period control */
+.period-control-grid,.period-close-grid{display:grid;grid-template-columns:minmax(180px,240px) minmax(220px,1fr) auto;gap:16px;align-items:end;margin:18px 0}
+.period-control-grid label,.period-close-grid label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:650;color:#475569}
+.period-control-grid input,.period-close-grid input{min-height:42px;border:1px solid #dbe5df;border-radius:9px;padding:8px 11px;background:#fff;color:#1f2937;font:inherit}
+.period-active-status{display:flex;flex-direction:column;gap:5px;padding:10px 14px;border:1px solid #dcebe1;border-radius:10px;background:#f8fcf9}
+.period-active-status>span,.period-active-status small{font-size:12px;color:#64748b}
+.period-active-status b{font-size:15px;color:#166534}
+.period-active-status b.period-closed{color:#b45309}
+.period-checklist{margin-top:18px;padding:16px;border:1px solid #e2ece5;border-radius:12px;background:#fbfdfb}
+.period-checklist h4{margin:0 0 12px;font-size:15px;color:#1f2937}
+.period-check-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.period-check{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:8px;padding:10px;border-radius:9px;background:#fff;border:1px solid #e5e7eb}
+.period-check>span{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;font-weight:800}
+.period-check.ok>span{background:#dcfce7;color:#166534}.period-check.warn>span{background:#fef3c7;color:#92400e}
+.period-check b{font-size:12px;color:#334155}.period-check small{font-size:11px;color:#64748b}
+#page-periods .table-wrap{margin-top:10px}
+@media(max-width:850px){.period-control-grid,.period-close-grid{grid-template-columns:1fr}.period-check-items{grid-template-columns:1fr}.period-check{grid-template-columns:26px 1fr}.period-check small{grid-column:2}}
