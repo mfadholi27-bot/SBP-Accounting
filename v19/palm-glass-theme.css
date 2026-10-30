@@ -1,0 +1,10 @@
+/* SBP Palm Plantation Glass UI */
+:root{--green:#087849;--green2:#16a36a;--ink:#12392d;--muted:#526f62;--bg:#e7f0e9;--line:rgba(255,255,255,.56);--soft:rgba(244,253,247,.76);--shadow:0 12px 36px rgba(5,67,40,.13)}
+body{background:linear-gradient(115deg,rgba(236,249,239,.76),rgba(234,248,231,.48)),url('./assets/palm-wallpaper.svg') center/cover fixed no-repeat;color:var(--ink)}
+.sidebar{background:rgba(248,255,250,.88);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-right:1px solid rgba(255,255,255,.75);box-shadow:6px 0 30px rgba(10,60,36,.07)}
+.main{min-width:0;background:transparent}.topbar{background:rgba(248,255,250,.76);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.72);border-radius:20px;padding:16px 20px;margin-bottom:16px}
+.panel,.stat,.accounts-card,.card,.welcome,.bulk-post-panel{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 12px 35px rgba(12,75,45,.11);border:1px solid rgba(255,255,255,.78);border-radius:20px}
+.panel,.stat,.accounts-card,.card,.bulk-post-panel{background:rgba(255,255,255,.91)}.welcome{background:linear-gradient(110deg,rgba(246,255,248,.94),rgba(228,247,231,.82))}
+.nav-item{transition:background .18s,transform .18s,color .18s}.nav-item:hover{background:rgba(28,145,87,.11);transform:translateX(2px)}.nav-item.active{background:linear-gradient(125deg,#087c4c,#22b56d);color:white;box-shadow:0 6px 18px rgba(6,117,68,.24)}
+.btn-primary{background:linear-gradient(125deg,#087849,#18a768);box-shadow:0 6px 14px rgba(4,112,63,.16)}input,select,textarea{max-width:100%}
+@media(max-width:780px){body{background-attachment:scroll}.sidebar{backdrop-filter:blur(18px)}.topbar{padding:12px}}
