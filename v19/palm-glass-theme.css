@@ -390,3 +390,14 @@ section.page[hidden],section.page:not(.active){display:none!important}
 section.page[hidden]{display:none!important;visibility:hidden!important}
 section.page:not(.active){display:none!important;visibility:hidden!important}
 section.page.active:not([hidden]){display:block!important;visibility:visible!important}
+
+
+/* BUILD V77 — align all detailed import sections inside page container */
+#page-import-center{width:100%;min-width:0;}
+#page-import-center>.import-center-section-title{margin:24px 0 12px;padding:0 2px;}
+#page-import-center>.bulk-journal-panel{width:100%;max-width:100%;margin:0 0 18px;padding:20px;border-radius:14px;box-sizing:border-box;}
+#page-import-center>.bulk-journal-panel .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
+#page-import-center>.bulk-journal-panel .bulk-import-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+#page-import-center>.bulk-journal-panel .inline-message{margin-top:14px;}
+#page-import-center>.import-center-notes{width:100%;max-width:100%;margin-top:18px;}
+@media(max-width:760px){#page-import-center>.bulk-journal-panel{padding:16px;}#page-import-center>.bulk-journal-panel .panel-head{flex-direction:column;}#page-import-center>.bulk-journal-panel .bulk-import-controls{align-items:stretch;flex-direction:column;}#page-import-center>.bulk-journal-panel .bulk-import-controls>*{width:100%;}}
