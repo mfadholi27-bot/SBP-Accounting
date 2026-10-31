@@ -1046,3 +1046,21 @@ let pendingBackupRestore=null;
 
 async function init(){await loadState();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();resetJournalForm();initAnnualBudget();renderDashboard();renderAccounts();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
 init();
+
+/* BUILD V93 — compact contextual help for monthly budget */
+(()=>{
+ const button=document.getElementById('journal-budget-help');
+ const popover=document.getElementById('journal-budget-help-popover');
+ if(!button||!popover)return;
+ const close=()=>{popover.hidden=true;button.setAttribute('aria-expanded','false')};
+ button.addEventListener('click',event=>{
+  event.stopPropagation();
+  const opening=popover.hidden;
+  popover.hidden=!opening;
+  button.setAttribute('aria-expanded',String(opening));
+ });
+ document.addEventListener('click',event=>{
+  if(!popover.hidden&&!popover.contains(event.target)&&!button.contains(event.target))close();
+ });
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
+})();
