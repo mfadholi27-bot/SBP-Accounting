@@ -1,4 +1,4 @@
-/* BUILD V70 — unified import preview, approval and restore workflow */
+/* BUILD V71 — centralized import entry points */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 const DB_NAME='sbp-accounting-v19', STORE='app', STATE_KEY='main';
@@ -101,7 +101,7 @@ async function verifyFiveYearArchive(){
 }
 
 document.querySelectorAll('[data-import-launch]').forEach(button=>button.addEventListener('click',()=>{
- const routes={accounts:{page:'accounts',input:'account-file'},journal:{page:'import-center',input:'bulk-journal-file'},nptrans:{page:'nptrans',input:'np-file'},opening:{page:'opening-balances',input:'opening-import-file'},backup:{page:'backup',input:'backup-file'}};
+ const routes={accounts:{page:'import-center',input:'account-file'},journal:{page:'import-center',input:'bulk-journal-file'},nptrans:{page:'nptrans',input:'np-file'},opening:{page:'import-center',input:'opening-import-file'},backup:{page:'backup',input:'backup-file'}};
  const route=routes[button.dataset.importLaunch];if(!route)return;go(route.page);
  const input=$(route.input);if(input)setTimeout(()=>input.click(),80);
 }));
