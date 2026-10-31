@@ -378,3 +378,9 @@ nav{gap:7px!important}
 .opening-import-panel{margin:0 0 18px!important;padding:20px!important;border:1px solid #dce8e0!important;border-radius:14px!important;background:#fff!important;box-shadow:0 3px 12px rgba(25,75,52,.04)!important}
 .opening-import-head{align-items:center!important}
 @media(max-width:760px){.accounts-import-controls{align-items:stretch!important;flex-direction:column!important}.accounts-import-controls>*{width:100%!important}.accounts-import-controls .accounts-template-actions{flex-direction:column!important}.accounts-import-controls .accounts-template-actions .btn{width:100%!important}}
+
+
+/* BUILD V74 — strict page isolation */
+section.page{display:none!important}
+section.page.active:not([hidden]){display:block!important}
+section.page[hidden],section.page:not(.active){display:none!important}
