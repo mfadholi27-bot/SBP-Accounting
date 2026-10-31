@@ -199,7 +199,7 @@ html,body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif!important}
 @media(max-width:650px){.app-footer{align-items:flex-start!important;flex-direction:column!important}.build-stamp{gap:6px!important}}
 
 /* V61 — Reports page layout: trial balance and protected journal deletion */
-#page-reports{display:flex!important;flex-direction:column!important;gap:18px!important}
+#page-reports.active{display:flex!important;flex-direction:column!important;gap:18px!important}#page-reports:not(.active){display:none!important}
 #page-reports>.panel{padding:22px!important}
 #page-reports .panel-head{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:20px!important;margin-bottom:16px!important}
 #page-reports .panel-head>div:first-child{min-width:0!important;flex:1 1 auto!important}
