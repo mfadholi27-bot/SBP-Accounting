@@ -1,4 +1,4 @@
-/* BUILD V71 — centralized import entry points */
+/* BUILD V74 — enforce exclusive page visibility */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 const DB_NAME='sbp-accounting-v19', STORE='app', STATE_KEY='main';
@@ -105,7 +105,28 @@ document.querySelectorAll('[data-import-launch]').forEach(button=>button.addEven
  const route=routes[button.dataset.importLaunch];if(!route)return;go(route.page);
  const input=$(route.input);if(input)setTimeout(()=>input.click(),80);
 }));
-function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const labels={'import-center':'Pusat Import Data','journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar Jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Laporan',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data'};$('page-title').textContent=labels[page]||page;if(page==='journal-admin'){}if(page==='periods')renderPeriodControl();if(page==='dashboard')renderDashboard();if(page==='journal-list')renderJournals();if(page==='accounts')renderAccounts();if(page==='opening-balances')renderOpeningBalances();if(page==='nptrans')renderNptrans();if(page==='reports')renderTrialBalance();if(page==='ledger')renderLedger();if(page==='audit')renderAuditLogs();if(page==='validation')renderValidation()}
+function go(page){
+ const target='page-'+page;
+ document.querySelectorAll('section.page').forEach(p=>{
+  const isTarget=p.id===target;
+  p.classList.toggle('active',isTarget);
+  p.hidden=!isTarget;
+  if(isTarget)p.removeAttribute('hidden');
+ });
+ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+ const labels={'import-center':'Pusat Import Data','journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Laporan',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data','print-settings':'Pengaturan Cetak'};
+ $('page-title').textContent=labels[page]||page;
+ if(page==='periods')renderPeriodControl();
+ if(page==='dashboard')renderDashboard();
+ if(page==='journal-list')renderJournals();
+ if(page==='accounts')renderAccounts();
+ if(page==='opening-balances')renderOpeningBalances();
+ if(page==='nptrans')renderNptrans();
+ if(page==='reports')renderTrialBalance();
+ if(page==='ledger')renderLedger();
+ if(page==='audit')renderAuditLogs();
+ if(page==='validation')renderValidation();
+}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
 document.querySelectorAll('.list-toggle').forEach(b=>b.addEventListener('click',()=>{const panel=$(b.dataset.target);if(!panel)return;const opening=panel.hidden;panel.hidden=!opening;b.setAttribute('aria-expanded',String(opening));const labels={'account-list-content':opening?'− Sembunyikan daftar akun':'＋ Tampilkan '+state.accounts.length+' akun','journal-list-content':opening?'− Sembunyikan daftar jurnal':'＋ Tampilkan daftar jurnal','np-list-content':opening?'− Sembunyikan data NPTRANS':'＋ Tampilkan data NPTRANS','trial-balance-content':opening?'− Sembunyikan neraca saldo':'＋ Tampilkan neraca saldo'};b.textContent=labels[b.dataset.target]||'Tampilkan / sembunyikan';}));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
