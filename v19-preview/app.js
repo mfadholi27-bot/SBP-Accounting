@@ -1064,3 +1064,44 @@ init();
  });
  document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
 })();
+
+
+/* BUILD V94 — ensure budget help appears even on previously cached markup */
+(()=>{
+ const heading=document.querySelector('#page-journal .journal-budget-heading');
+ if(!heading)return;
+ const title=heading.querySelector('h3');
+ if(!title)return;
+ const oldHint=heading.querySelector('p');
+ if(oldHint)oldHint.hidden=true;
+ let button=document.getElementById('journal-budget-help');
+ let popover=document.getElementById('journal-budget-help-popover');
+ const wrapper=title.closest('.journal-budget-title-wrap')||title.parentElement;
+ if(!button){
+  button=document.createElement('button');
+  button.type='button';button.id='journal-budget-help';button.className='budget-help-button';
+  button.setAttribute('aria-label','Keterangan kontrol anggaran');
+  button.setAttribute('aria-expanded','false');
+  button.setAttribute('aria-controls','journal-budget-help-popover');
+  button.textContent='?';
+  title.insertAdjacentElement('afterend',button);
+ }
+ if(!popover){
+  popover=document.createElement('div');
+  popover.id='journal-budget-help-popover';popover.className='budget-help-popover';
+  popover.hidden=true;
+  popover.textContent='Anggaran mengikuti tanggal dan SANDI yang dipilih. Nilai transaksi masih berupa simulasi.';
+  wrapper.appendChild(popover);
+ }
+ if(button.dataset.bound==='1')return;
+ button.dataset.bound='1';
+ const close=()=>{popover.hidden=true;button.setAttribute('aria-expanded','false')};
+ button.addEventListener('click',event=>{
+  event.stopPropagation();const opening=popover.hidden;
+  popover.hidden=!opening;button.setAttribute('aria-expanded',String(opening));
+ });
+ document.addEventListener('click',event=>{
+  if(!popover.hidden&&!popover.contains(event.target)&&!button.contains(event.target))close();
+ });
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
+})();
