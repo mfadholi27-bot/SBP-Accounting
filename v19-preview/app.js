@@ -225,9 +225,37 @@ function renderBudgetImportPreview(result,fileName){
  $('budget-import-preview').innerHTML='<table><thead><tr><th>Tahun</th><th>SANDI</th><th>Nama Akun</th><th>Anggaran Tahunan</th><th>Total Bulanan</th><th>Status</th></tr></thead><tbody>'+result.items.map(x=>'<tr><td>'+x.year+'</td><td>'+esc(x.code)+'</td><td>'+esc((state.accounts.find(a=>a.code===x.code)||{}).name||'')+'</td><td class="num">'+money(x.annual)+'</td><td class="num">'+money(x.monthly.reduce((s,n)=>s+n,0))+'</td><td>'+(findBudget(x.year,x.code)?'Perbarui':'Baru')+'</td></tr>').join('')+(result.errors.length?'<tr><td colspan="6"><b>Temuan:</b><br>'+result.errors.map(esc).join('<br>')+'</td></tr>':'')+'</tbody></table>';
  $('budget-import-confirm').disabled=!result.items.length||result.errors.length>0;
 }
-$('budget-import-open').onclick=()=>{$('budget-import-panel').hidden=false;$('budget-import-file').click()};
-$('budget-import-cancel').onclick=()=>{$('budget-import-panel').hidden=true;pendingBudgetImport=null;$('budget-import-file').value='';$('budget-import-confirm').disabled=true};
-$('budget-import-file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(!window.XLSX)throw Error('Mesin Excel belum tersedia.');let wb;if(/\.csv$/i.test(f.name)){const rows=parseCSV(await f.text());const ws=XLSX.utils.aoa_to_sheet(rows);wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Anggaran_Tahunan');throw Error('Import CSV belum didukung untuk template gabungan. Gunakan file Excel (.xlsx).')}wb=XLSX.read(await f.arrayBuffer(),{type:'array'});renderBudgetImportPreview(parseBudgetWorkbook(wb),f.name)}catch(err){pendingBudgetImport=null;$('budget-import-confirm').disabled=true;$('budget-import-message').textContent='Gagal membaca template: '+err.message;$('budget-import-message').className='inline-message bad';$('budget-import-preview').hidden=true}};
+let selectedBudgetFile=null;
+$('budget-import-file').onchange=e=>{
+ selectedBudgetFile=e.target.files?.[0]||null;
+ pendingBudgetImport=null;
+ $('budget-import-run').disabled=!selectedBudgetFile;
+ $('budget-import-status').textContent=selectedBudgetFile?'File dipilih: '+selectedBudgetFile.name:'Belum ada file dipilih.';
+ $('budget-import-panel').hidden=true;
+};
+$('budget-import-run').onclick=async()=>{
+ const f=selectedBudgetFile;if(!f)return;
+ $('budget-import-run').disabled=true;
+ $('budget-import-panel').hidden=false;
+ $('budget-import-message').textContent='Sedang memeriksa file anggaran...';
+ try{
+  if(!window.XLSX)throw Error('Mesin Excel belum tersedia.');
+  if(/\.csv$/i.test(f.name))throw Error('Import anggaran menggunakan template Excel gabungan (.xlsx).');
+  const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+  renderBudgetImportPreview(parseBudgetWorkbook(wb),f.name);
+ }catch(err){
+  pendingBudgetImport=null;$('budget-import-confirm').disabled=true;
+  $('budget-import-message').textContent='Gagal membaca template: '+err.message;
+  $('budget-import-message').className='inline-message bad';
+  $('budget-import-preview').hidden=true;
+ }finally{$('budget-import-run').disabled=false;}
+};
+$('budget-import-cancel').onclick=()=>{
+ $('budget-import-panel').hidden=true;pendingBudgetImport=null;
+ $('budget-import-file').value='';selectedBudgetFile=null;
+ $('budget-import-status').textContent='Belum ada file dipilih.';
+ $('budget-import-run').disabled=true;$('budget-import-confirm').disabled=true;
+};
 $('budget-import-confirm').onclick=async()=>{const batch=pendingBudgetImport;if(!batch?.items?.length||batch.errors.length)return;if(!requireImportPassword('Import Anggaran'))return;const replacements=batch.items.filter(x=>findBudget(x.year,x.code));if(replacements.length&&!confirm(replacements.length+' anggaran sudah ada dan akan diperbarui. Lanjutkan import?'))return;try{const now=new Date().toISOString();for(const x of batch.items){const old=findBudget(x.year,x.code),item={...(old||{}),year:x.year,accountCode:x.code,annual:x.annual,monthly:x.monthly,createdAt:old?.createdAt||now,updatedAt:now,revisions:[...(old?.revisions||[]),...(old?[{at:now,before:{annual:old.annual,monthly:old.monthly},after:{annual:x.annual,monthly:x.monthly},source:'IMPORT'}]:[])]};state.annualBudgets=old?state.annualBudgets.map(z=>z===old?item:z):[...state.annualBudgets,item]}await persist();const years=[...new Set([new Date().getFullYear(),...state.annualBudgets.map(x=>Number(x.year))])].sort((a,b)=>b-a);$('budget-filter-year').innerHTML=years.map(y=>'<option value="'+y+'">'+y+'</option>').join('');$('budget-filter-year').value=String(batch.items[0].year);renderAnnualBudgets();updateJournalBudgetPreview();$('budget-import-message').textContent=batch.items.length+' anggaran berhasil diimpor dan disimpan ke database lokal.';$('budget-import-message').className='inline-message good';$('budget-import-confirm').disabled=true;pendingBudgetImport=null;toast('Import anggaran berhasil.')}catch(err){$('budget-import-message').textContent='Import gagal: '+err.message;$('budget-import-message').className='inline-message bad'}};
 function initAnnualBudget(){ $('budget-account').innerHTML='<option value="">Pilih SANDI akun</option>'+state.accounts.map(a=>'<option value="'+esc(a.code)+'">'+esc(a.code)+' — '+esc(a.name)+'</option>').join('');$('budget-account').onchange=()=>{$('budget-account-name').value=(state.accounts.find(a=>a.code===$('budget-account').value)||{}).name||'';budgetValidation()};$('budget-annual').oninput=budgetValidation;$('budget-distribute').onclick=()=>{const n=Number($('budget-annual').value||0);if(n<=0)return toast('Isi anggaran tahunan terlebih dahulu.');const q=Math.floor(n/12),r=n-q*12;renderBudgetMonths(Array.from({length:12},(_,i)=>q+(i<r?1:0)));budgetValidation()};$('budget-reset').onclick=resetBudget;$('budget-save').onclick=async()=>{const y=Number($('budget-year').value),code=$('budget-account').value,annual=Number($('budget-annual').value||0),monthly=budgetMonths(),sum=monthly.reduce((a,b)=>a+b,0);if(!code||!Number.isInteger(y)||y<2000||y>2100||annual<=0||monthly.some(x=>!Number.isFinite(x)||x<0)||Math.abs(sum-annual)>.005)return toast('Periksa SANDI, tahun, dan distribusi bulanan.');const old=findBudget(y,code);if(old&&!editingBudget)return toast('Anggaran sudah ada. Gunakan Edit.');const now=new Date().toISOString(),item={...(old||{}),year:y,accountCode:code,annual,monthly,createdAt:old?.createdAt||now,updatedAt:now,revisions:[...(old?.revisions||[]),...(old?[{at:now,before:{annual:old.annual,monthly:old.monthly},after:{annual,monthly}}]:[])]};state.annualBudgets=old?state.annualBudgets.map(x=>x===old?item:x):[...state.annualBudgets,item];await persist();if(![...$('budget-filter-year').options].some(o=>Number(o.value)===y))$('budget-filter-year').add(new Option(y,y));$('budget-filter-year').value=y;renderAnnualBudgets();resetBudget();updateJournalBudgetPreview();toast('Anggaran berhasil disimpan.')};$('budget-filter-year').innerHTML=[...new Set([new Date().getFullYear(),...(state.annualBudgets||[]).map(x=>Number(x.year))])].sort((a,b)=>b-a).map(y=>'<option value="'+y+'">'+y+'</option>').join('');$('budget-filter-year').onchange=renderAnnualBudgets;$('budget-search').oninput=renderAnnualBudgets;resetBudget();renderAnnualBudgets()}
 
