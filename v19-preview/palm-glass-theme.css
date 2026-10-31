@@ -479,3 +479,79 @@ body{background:#f6f8f6;color:#17251d}
 .module-guide-content li{padding:5px 0 5px 4px;color:#33443a;font-size:13px;line-height:1.55}
 .module-guide-content .guide-note{padding:12px 14px;border-radius:12px;background:#f0f6f1;color:#42624e;font-size:12px;line-height:1.6}
 @media(max-width:760px){.sidebar{width:76px}.nav-item{justify-content:center;padding:9px 5px}.nav-item .nav-icon{width:42px;height:42px}.nav-item .nav-icon svg{width:24px;height:24px}.quick-icon{width:52px;height:52px}.module-guide-dialog{padding:19px}}
+
+
+/* BUILD V90 — clean dashboard and calmer navigation */
+:root{
+ --background:#f7f9f7!important;--foreground:#18231d!important;
+ --border:#e7ece8!important;--muted:#f2f5f2!important;
+}
+body{background:#f7f9f7!important;color:#18231d!important}
+.shell{grid-template-columns:224px minmax(0,1fr)!important;background:#f7f9f7!important}
+.sidebar{padding:22px 13px!important;background:#fff!important;border-right:1px solid #e9eeea!important}
+.brand{padding:3px 8px 25px!important;gap:10px!important}
+.brand-mark{width:38px!important;height:38px!important}
+.brand b{font-size:14px!important;letter-spacing:-.2px}
+.brand small{font-size:10px!important;color:#98a39b!important}
+.side-label{margin:17px 10px 7px!important;font-size:9px!important;letter-spacing:1px!important;color:#a0aaa3!important}
+.nav-item{min-height:42px!important;padding:7px 9px!important;gap:10px!important;border-radius:10px!important;font-size:12px!important;font-weight:600!important;color:#58665d!important}
+.nav-item .nav-icon{width:31px!important;height:31px!important;min-width:31px!important;border-radius:9px!important;background:#f3f6f3!important;color:#668071!important}
+.nav-item .nav-icon svg{width:18px!important;height:18px!important;stroke-width:1.9!important}
+.nav-item.active{background:#edf5ef!important;color:#145b3b!important;box-shadow:inset 2px 0 #18734b!important}
+.nav-item.active .nav-icon{background:#dceee2!important;color:#176b49!important}
+.sidebar-foot{font-size:10px!important;color:#89968d!important;padding:14px 9px!important}
+.main{padding:0 30px 32px!important;max-width:100%!important}
+.topbar{min-height:76px!important;padding:0 0 14px!important;margin-bottom:22px!important;border-bottom:1px solid #e9eeea!important}
+.page-brand{font-size:9px!important;letter-spacing:1.3px!important;color:#829087!important}
+#page-title{font-size:23px!important;font-weight:750!important;letter-spacing:-.7px!important;color:#1c2b22!important}
+.top-actions{gap:8px!important}
+.top-actions .btn{min-height:37px!important;padding:8px 12px!important;border-radius:10px!important;font-size:11px!important}
+.local-pill{font-size:10px!important;padding:7px 10px!important;background:#f0f5f1!important;border:1px solid #e5ece6!important}
+.page{gap:18px!important}
+.welcome{min-height:148px!important;padding:26px 30px!important;border-radius:17px!important;background:linear-gradient(115deg,#145b3b 0%,#1c7650 100%)!important;box-shadow:none!important}
+.welcome h2{font-size:25px!important;line-height:1.22!important;letter-spacing:-.7px!important;margin:9px 0!important}
+.welcome p{font-size:12px!important;opacity:.82!important;margin:0!important}
+.welcome-icon{font-size:72px!important;opacity:.16!important}
+.stats{gap:12px!important;margin:0!important}
+.stat{padding:17px 19px!important;border:1px solid #e9eeea!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important}
+.stat span{font-size:11px!important;color:#829087!important}
+.stat strong{font-size:21px!important;letter-spacing:-.4px!important;color:#1c2b22!important}
+.stat small{font-size:10px!important;color:#a0aaa3!important}
+.section-heading{margin:2px 0 0!important}
+.section-heading h3{font-size:15px!important;font-weight:750!important;color:#26362c!important}
+.section-heading p{display:none!important}
+.quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+.quick-card{min-height:116px!important;padding:17px!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;border:1px solid #e8eee9!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important;text-align:left!important;transition:transform .16s ease,border-color .16s ease!important}
+.quick-card:hover{transform:translateY(-2px)!important;border-color:#cbded0!important;box-shadow:0 7px 20px rgba(25,75,52,.05)!important}
+.quick-icon{width:46px!important;height:46px!important;min-width:46px!important;margin:0 0 8px!important;border-radius:13px!important;background:#edf5ef!important;color:#176b49!important}
+.quick-icon svg{width:24px!important;height:24px!important;stroke-width:1.9!important}
+.quick-card b{font-size:12px!important;font-weight:700!important;color:#26362c!important}
+.quick-card small{display:none!important}
+.panel{padding:19px!important;border:1px solid #e8eee9!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important}
+.panel-head{margin-bottom:14px!important}
+.panel-head h3{font-size:14px!important;color:#26362c!important}
+.panel-head p{font-size:10px!important;color:#98a39b!important}
+.btn{box-shadow:none!important}
+.btn-primary{background:#176b49!important;border-color:#176b49!important}
+input,select,textarea{border-radius:9px!important}
+.table-wrap{border-radius:10px!important}
+@media(max-width:980px){
+ .shell{grid-template-columns:205px minmax(0,1fr)!important}
+ .main{padding:0 20px 26px!important}
+}
+@media(max-width:720px){
+ .shell{grid-template-columns:1fr!important}
+ .sidebar{position:relative!important;width:100%!important;height:auto!important;padding:10px 12px!important}
+ .sidebar .brand{padding:4px 7px 10px!important}
+ .sidebar #nav{display:flex!important;overflow-x:auto!important;gap:5px!important;padding-bottom:5px!important}
+ .sidebar #nav .side-label{display:none!important}
+ .sidebar .nav-item{flex:0 0 auto!important;min-height:40px!important;padding:6px 9px!important}
+ .sidebar-foot{display:none!important}
+ .main{padding:0 14px 22px!important}
+ .topbar{align-items:flex-start!important;gap:10px!important;flex-wrap:wrap!important;padding-top:14px!important}
+ .top-actions{flex-wrap:wrap!important}
+ .welcome{padding:21px!important;min-height:130px!important}
+ .welcome h2{font-size:21px!important}
+ .welcome-icon{display:none!important}
+ .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
