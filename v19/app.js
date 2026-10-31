@@ -100,7 +100,7 @@ async function verifyFiveYearArchive(){
 }
 
 document.querySelectorAll('[data-import-launch]').forEach(button=>button.addEventListener('click',()=>{
- const routes={accounts:{page:'accounts',input:'account-file'},journal:{page:'journal',input:'bulk-journal-file'},nptrans:{page:'nptrans',input:'np-file'},opening:{page:'opening-balances',input:'opening-import-file'},backup:{page:'backup',input:'backup-file'}};
+ const routes={accounts:{page:'accounts',input:'account-file'},journal:{page:'import-center',input:'bulk-journal-file'},nptrans:{page:'nptrans',input:'np-file'},opening:{page:'opening-balances',input:'opening-import-file'},backup:{page:'backup',input:'backup-file'}};
  const route=routes[button.dataset.importLaunch];if(!route)return;go(route.page);
  const input=$(route.input);if(input)setTimeout(()=>input.click(),80);
 }));
