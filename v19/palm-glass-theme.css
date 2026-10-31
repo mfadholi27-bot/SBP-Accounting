@@ -362,3 +362,19 @@ nav{gap:7px!important}
 
 /* BUILD V70 — visible build identity refresh */
 .build-stamp[data-build="70"] b{color:#14532d!important}
+
+
+/* BUILD V73 — tidy centralized import panels */
+#import-center-section-title{margin:22px 0 12px}
+.import-center-section-title h3{margin:0 0 6px;color:#1f2937;font-size:17px;font-weight:750}
+.import-center-section-title p{margin:0;color:#64748b;font-size:13px;line-height:1.55}
+.accounts-import-card{display:block!important;margin:0 0 16px!important;padding:20px!important;border:1px solid #dce8e0!important;border-radius:14px!important;background:#fff!important}
+.accounts-import-card .accounts-card-title{display:flex!important;gap:13px!important;align-items:center!important;margin-bottom:15px!important}
+.accounts-import-card .accounts-card-title h3{margin:0 0 4px!important;font-size:16px!important;color:#1f2937!important}
+.accounts-import-card .accounts-card-title p{margin:0!important;color:#64748b!important;font-size:12px!important;line-height:1.5!important}
+.accounts-import-controls{display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:wrap!important}
+.accounts-import-controls .accounts-template-actions{display:flex!important;gap:8px!important;flex-wrap:wrap!important;width:100%!important;margin-top:2px!important}
+.accounts-import-controls .bulk-review{flex:1 0 100%!important;width:100%!important}
+.opening-import-panel{margin:0 0 18px!important;padding:20px!important;border:1px solid #dce8e0!important;border-radius:14px!important;background:#fff!important;box-shadow:0 3px 12px rgba(25,75,52,.04)!important}
+.opening-import-head{align-items:center!important}
+@media(max-width:760px){.accounts-import-controls{align-items:stretch!important;flex-direction:column!important}.accounts-import-controls>*{width:100%!important}.accounts-import-controls .accounts-template-actions{flex-direction:column!important}.accounts-import-controls .accounts-template-actions .btn{width:100%!important}}
