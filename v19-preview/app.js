@@ -1088,7 +1088,7 @@ init();
 })();
 
 
-/* BUILD V96 — universal compact heading help across modules */
+/* BUILD V97 — align every help marker directly beside its heading */
 (()=>{
  const selectors=[
   '.page .panel-head','.page .section-heading','.page .budget-month-head',
@@ -1098,7 +1098,10 @@ init();
  ];
  const closeAll=(except)=>{
   document.querySelectorAll('.sbp-context-help').forEach(pop=>{
-   if(pop!==except){pop.hidden=true;const b=pop.parentElement?.querySelector('.sbp-context-help-button');b?.setAttribute('aria-expanded','false')}
+   if(pop!==except){
+    pop.hidden=true;
+    pop.closest('.sbp-title-help-wrap')?.querySelector('.sbp-context-help-button')?.setAttribute('aria-expanded','false');
+   }
   });
  };
  document.querySelectorAll(selectors.join(',')).forEach((block,index)=>{
@@ -1110,19 +1113,21 @@ init();
   if(!message)return;
   block.dataset.contextHelpReady='1';
   paras.forEach(p=>{p.hidden=true;p.setAttribute('aria-hidden','true')});
-  const host=heading.parentElement||block;
-  if(getComputedStyle(host).position==='static')host.style.position='relative';
+  const wrap=document.createElement('span');
+  wrap.className='sbp-title-help-wrap';
+  heading.parentNode.insertBefore(wrap,heading);
+  wrap.appendChild(heading);
   const button=document.createElement('button');
   button.type='button';button.className='budget-help-button sbp-context-help-button';
   button.setAttribute('aria-label','Lihat keterangan bagian');
   button.setAttribute('aria-expanded','false');
-  const pop=document.createElement('div');
+  const pop=document.createElement('span');
   pop.className='budget-help-popover sbp-context-help';pop.hidden=true;
   pop.textContent=message;
   const id='sbp-context-help-'+index;
   pop.id=id;button.setAttribute('aria-controls',id);button.textContent='?';
-  heading.insertAdjacentElement('afterend',button);
-  host.appendChild(pop);
+  wrap.appendChild(button);
+  wrap.appendChild(pop);
   button.addEventListener('click',event=>{
    event.stopPropagation();
    const opening=pop.hidden;closeAll(pop);pop.hidden=!opening;
