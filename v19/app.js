@@ -679,6 +679,17 @@ function showOpeningImportPreview(rows,fileName){
  $('opening-import-review').hidden=false;$('opening-import-confirm').disabled=!pendingOpeningImport.valid.length||errors.length>0;
  $('opening-import-status').textContent=fileName+' · '+items.length+' baris diperiksa.';
 }
+// Template gabungan anggaran tahunan dan bulanan untuk Pusat Import Data.
+$('download-budget-import-template').onclick=()=>{
+ const wb=XLSX.utils.book_new();
+ const guide=[['TEMPLATE IMPORT ANGGARAN — SBP ACCOUNTING V19'],['Petunjuk','Isi satu baris untuk setiap Tahun + SANDI akun. Jangan ubah nama sheet atau header.'],['Anggaran_Tahunan','Isi Tahun, SANDI, Nama_Akun, Anggaran_Tahunan, dan Keterangan.'],['Anggaran_Bulanan','Isi Tahun, SANDI, Nama_Akun, Januari sampai Desember, dan Keterangan. Isi sesuai angka asli; tidak dibagi rata otomatis.'],['Nominal','Masukkan angka tanpa simbol Rp. Contoh: 1250000. Gunakan angka 0 jika memang tidak ada anggaran pada bulan tersebut.'],['Identitas akun','SANDI harus sama persis dengan Master Akun. Nama akun digunakan sebagai pemeriksaan tambahan.'],['Pemeriksaan','Periksa kembali total anggaran bulanan terhadap anggaran tahunan sebelum proses import. Perbedaan tidak otomatis diubah.'],['Catatan','Template ini adalah format pengisian. Proses import anggaran akan diaktifkan melalui modul import tersendiri.']];
+ const annual=[['Tahun','SANDI','Nama_Akun','Anggaran_Tahunan','Keterangan']];
+ const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+ const monthly=[['Tahun','SANDI','Nama_Akun',...months,'Total_Anggaran_Bulanan','Keterangan']];
+ const add=(rows,name,widths)=>{const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=widths.map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,name)};
+ add(guide,'Petunjuk',[24,105]);add(annual,'Anggaran_Tahunan',[12,18,32,22,36]);add(monthly,'Anggaran_Bulanan',[12,18,30,...months.map(()=>16),24,34]);
+ XLSX.writeFile(wb,'Template-Import-Anggaran-SBP-Accounting.xlsx');toast('Template import anggaran berhasil diunduh.');
+};
 $('opening-import-template').onclick=()=>{const rows=[['PERIODE','SANDI','DEBIT AWAL','KREDIT AWAL','KETERANGAN'],['2026-01','111.100',1000000,0,'Saldo awal kas'],['2026-01','211.100',0,1000000,'Saldo awal utang']];const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Saldo Awal');XLSX.writeFile(wb,'Format-Import-Saldo-Awal-SBP.xlsx')};
 $('opening-import-file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{let rows;if(/\.xlsx?$/i.test(f.name)){if(!window.XLSX)throw Error('Mesin Excel lokal belum siap.');const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});rows=null;for(const n of wb.SheetNames){const data=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:'',raw:true});try{parseOpeningImportRows(data);rows=data;break}catch{}}if(!rows)throw Error('Header saldo awal tidak ditemukan di sheet Excel.')}else rows=parseCSV(await f.text());showOpeningImportPreview(parseOpeningImportRows(rows),f.name)}catch(err){pendingOpeningImport=null;$('opening-import-review').hidden=true;$('opening-import-status').textContent='Gagal membaca file: '+err.message}finally{e.target.value=''}};
 $('opening-import-cancel').onclick=()=>{pendingOpeningImport=null;$('opening-import-review').hidden=true;$('opening-import-status').textContent='Pratinjau dibatalkan; data belum berubah.'};
