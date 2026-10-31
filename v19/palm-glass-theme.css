@@ -384,3 +384,9 @@ nav{gap:7px!important}
 section.page{display:none!important}
 section.page.active:not([hidden]){display:block!important}
 section.page[hidden],section.page:not(.active){display:none!important}
+
+
+/* BUILD V75 — hidden attribute is authoritative for page visibility */
+section.page[hidden]{display:none!important;visibility:hidden!important}
+section.page:not(.active){display:none!important;visibility:hidden!important}
+section.page.active:not([hidden]){display:block!important;visibility:visible!important}
