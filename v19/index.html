@@ -20,6 +20,24 @@
 .sbp-print-dialog>.button-row{display:flex!important;justify-content:flex-end!important;gap:9px!important;flex-wrap:wrap!important;margin-top:14px!important}
 .sbp-print-dialog button{min-height:38px!important}
 @media(max-width:620px){.sbp-print-modal{padding:12px!important;align-items:flex-start!important}.sbp-print-dialog{width:100%!important;max-height:calc(100vh - 24px)!important;padding:16px!important}.sbp-print-filter-grid{grid-template-columns:1fr!important;gap:11px!important}}
+</style><style id="sbp-force-delete-polish">
+/* BUILD V83 — tidy journal administration controls */
+.force-delete-panel{padding:22px!important;border-radius:15px!important}
+.force-delete-panel>.panel-head{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:18px!important;margin-bottom:20px!important}
+.force-delete-panel>.panel-head>div{min-width:0!important}
+.force-delete-panel>.panel-head h3{margin:0 0 6px!important;font-size:18px!important;font-weight:750!important;color:#17243a!important}
+.force-delete-panel>.panel-head p{margin:0!important;max-width:680px!important;font-size:13px!important;line-height:1.55!important;color:#64748b!important}
+.force-delete-panel .tag.np-warn{flex:0 0 auto!important;white-space:nowrap!important;align-self:flex-start!important;padding:8px 12px!important;border-radius:999px!important;font-size:11px!important;letter-spacing:.35px!important}
+.force-delete-controls{display:grid!important;grid-template-columns:minmax(180px,.9fr) minmax(220px,1.15fr) auto!important;align-items:end!important;gap:12px!important;margin:0 0 16px!important}
+.force-delete-controls>label{display:flex!important;flex-direction:column!important;gap:7px!important;min-width:0!important;margin:0!important;color:#475569!important;font-size:12px!important;font-weight:650!important;line-height:1.4!important}
+.force-delete-controls input,.force-delete-controls select{display:block!important;width:100%!important;min-width:0!important;height:42px!important;box-sizing:border-box!important;padding:0 11px!important;border:1px solid #cbd5e1!important;border-radius:9px!important;background:#fff!important;color:#17212b!important;font-size:13px!important}
+.force-delete-controls input:focus,.force-delete-controls select:focus{outline:none!important;border-color:#16804b!important;box-shadow:0 0 0 3px rgba(22,128,75,.12)!important}
+.force-delete-controls #force-delete-period{min-height:42px!important;padding:0 16px!important;border-radius:9px!important;white-space:nowrap!important}
+.force-delete-panel>.footnote{margin:4px 0 12px!important;color:#718096!important;font-size:11px!important;line-height:1.6!important}
+.force-delete-panel>#force-delete-result:empty{display:none!important}
+.force-delete-panel>#force-delete-result:not(:empty){display:block!important;margin-top:12px!important;padding:12px 14px!important;border-radius:9px!important;line-height:1.55!important}
+@media(max-width:720px){.force-delete-controls{grid-template-columns:1fr 1fr!important}.force-delete-controls #force-delete-period{grid-column:1/-1;width:100%!important}.force-delete-panel>.panel-head{flex-direction:column!important}.force-delete-panel .tag.np-warn{align-self:flex-start!important}}
+@media(max-width:480px){.force-delete-panel{padding:16px!important}.force-delete-controls{grid-template-columns:1fr!important}.force-delete-controls #force-delete-period{grid-column:auto!important;width:100%!important}}
 </style></head>
 <body>
 <div class="shell">
@@ -217,7 +235,7 @@
 <div class="button-row print-settings-actions"><button class="btn btn-primary" id="print-settings-save" type="button">Simpan Pengaturan</button><button class="btn" id="print-settings-reset" type="button">Kembalikan Standar</button><button class="btn" id="print-settings-preview" type="button">Cetak Contoh / Preview</button></div></div></section>
 
 <div id="journal-print-modal" class="sbp-print-modal" hidden role="dialog" aria-modal="true" aria-labelledby="journal-print-title"><div class="sbp-print-dialog"><div class="panel-head"><div><h3 id="journal-print-title">Pengaturan Cetak Daftar Jurnal</h3><p>Tentukan periode dan data jurnal yang akan dicetak.</p></div><button class="btn" id="journal-print-close" type="button">Tutup</button></div><div class="sbp-print-filter-grid"><label>Jenis periode<select id="jprint-mode"><option value="all">Seluruh data</option><option value="date">Tanggal tertentu</option><option value="month" selected>Bulan dan tahun</option><option value="year">Satu tahun penuh</option><option value="range">Rentang tanggal</option></select></label><label id="jprint-date-wrap" hidden>Tanggal jurnal<input id="jprint-date" type="date"></label><label id="jprint-month-wrap">Bulan<input id="jprint-month" type="month"></label><label id="jprint-year-wrap" hidden>Tahun<input id="jprint-year" type="number" min="1900" max="2200" step="1" value="2026"></label><label id="jprint-from-wrap" hidden>Dari tanggal<input id="jprint-from" type="date"></label><label id="jprint-to-wrap" hidden>Sampai tanggal<input id="jprint-to" type="date"></label><label>Status jurnal<select id="jprint-status"><option value="all">Semua status</option><option value="posted">Posted saja</option><option value="draft">Draft saja</option><option value="cancelled">Dibatalkan saja</option><option value="unknown">Status tidak dikenal/kosong</option></select></label><label>Akun / SANDI<select id="jprint-account"><option value="all">Semua akun</option></select></label><label>Nomor bukti / keterangan<input id="jprint-search" type="search" placeholder="Opsional: cari nomor atau uraian"></label><label>Urutan tanggal<select id="jprint-sort"><option value="asc">Terlama ke terbaru</option><option value="desc" selected>Terbaru ke terlama</option></select></label></div><div id="jprint-validation" class="inline-message" aria-live="polite">Pilih periode. Seluruh baris akun dalam jurnal terpilih akan dicetak agar nilai debit dan kredit tetap utuh.</div><div class="button-row"><button class="btn" id="journal-print-cancel" type="button">Batal</button><button class="btn btn-primary" id="journal-print-confirm" type="button">Pratinjau / Cetak</button></div></div></div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="82"><b>BUILD V82</b><span>SBP-V19-BUILD-0082</span><span>31-10-2026 · 10:04 WIB</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="83"><b>BUILD V83</b><span>SBP-V19-BUILD-0083</span><span>31-10-2026 · 10:05 WIB</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=82"></script>
+<script src="app.js?v=83"></script>
 </body></html>
