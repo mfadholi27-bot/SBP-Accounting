@@ -555,3 +555,35 @@ input,select,textarea{border-radius:9px!important}
  .welcome-icon{display:none!important}
  .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* BUILD V91 — remove on-page instructions; keep guidance inside the Panduan modal */
+.page .panel-head p,
+.page .section-heading p,
+.page .import-center-hero p,
+.page .import-center-card p,
+.page .budget-template-download .panel-head p,
+.page .budget-template-download-row p,
+.page .import-center-section-title p,
+.page .accounts-card-title p,
+.page .opening-import-head p,
+.page .validation-hero p,
+.page .footnote,
+.page .import-center-notes,
+.page .empty-state p,
+.page .welcome p,
+.page .panel > .intro-copy{display:none!important}
+.page .import-center-card{min-height:225px!important;padding:23px!important;gap:13px!important}
+.page .import-center-card h4{font-size:16px!important;margin:2px 0 6px!important}
+.page .import-center-card .btn{margin-top:auto!important;align-self:flex-start!important}
+.page .import-center-hero{min-height:76px!important;padding:18px 22px!important}
+.page .import-center-hero h3{margin:3px 0!important;font-size:19px!important}
+.page .budget-template-download{padding:20px!important}
+.page .budget-template-download-row{align-items:center!important}
+.page .import-center-section-title{margin:22px 0 10px!important}
+.page .import-center-section-title h3{font-size:16px!important;margin:0!important}
+.page .accounts-card-title{margin-bottom:12px!important}
+.page .opening-import-head{margin-bottom:12px!important}
+.page .bulk-journal-panel .panel-head{margin-bottom:12px!important}
+.page .inline-message{font-size:11px!important;padding:9px 12px!important}
+@media(max-width:720px){.page .import-center-card{min-height:190px!important;padding:17px!important}}
