@@ -723,3 +723,20 @@ input,select,textarea{border-radius:9px!important}
  #page-import-center .budget-template-download-row{align-items:flex-start!important;flex-direction:column!important}
  #page-import-center .budget-template-download-row .btn{width:100%!important;justify-content:center!important}
 }
+
+
+/* BUILD V99 — annual/monthly budget import follows Master Akun layout */
+#page-import-center .budget-import-account-style{margin:0 0 18px!important}
+#page-import-center .budget-import-account-style .accounts-card-title{align-items:center!important;margin:0 0 16px!important}
+#page-import-center .budget-import-account-style .accounts-card-title>div:last-child{display:flex!important;align-items:center!important;gap:8px!important}
+#page-import-center .budget-import-account-style .accounts-card-title h3{margin:0!important;font-size:17px!important;font-weight:750!important;color:#26362c!important}
+#page-import-center .budget-import-account-style .accounts-import-controls{display:flex!important;align-items:center!important;gap:12px!important;flex-wrap:wrap!important}
+#page-import-center .budget-import-account-style .accounts-template-actions{display:flex!important;gap:10px!important;flex:0 0 100%!important;margin-top:3px!important}
+#page-import-center .budget-import-account-style .accounts-template-actions .btn{min-height:42px!important}
+#page-import-center .budget-import-account-style .file-status{min-width:125px!important}
+#page-import-center .budget-import-account-style #budget-import-run{min-height:43px!important}
+@media(max-width:620px){
+ #page-import-center .budget-import-account-style .accounts-import-controls{align-items:stretch!important;flex-direction:column!important}
+ #page-import-center .budget-import-account-style .accounts-import-controls>*{width:100%!important}
+ #page-import-center .budget-import-account-style .accounts-template-actions{flex-direction:column!important}
+}
