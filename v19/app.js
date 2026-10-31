@@ -99,7 +99,7 @@ async function verifyFiveYearArchive(){
  try{const root=await backupDirectoryHandle.getDirectoryHandle('ARSIP_5_TAHUNAN',{create:false}),file=await root.getFileHandle(name,{create:false}),body=await(await file.getFile()).text(),manifest=JSON.parse(await(await(await root.getFileHandle(name+'.sha256.json',{create:false})).getFile()).text()),actual=await sha256Hex(body);if(actual!==manifest.sha256)throw Error('Checksum tidak cocok. Arsip mungkin berubah atau rusak.');const parsed=JSON.parse(body);if(!parsed.state||!Array.isArray(parsed.state.journals)||!Array.isArray(parsed.state.accounts))throw Error('Struktur arsip tidak lengkap.');setMessage('archive-message','Verifikasi berhasil: checksum cocok dan struktur data utama dapat dibaca.','good');$('archive-result').textContent='Valid · '+name+' · '+(manifest.bytes/1024/1024).toFixed(2)+' MB.'}catch(e){setMessage('archive-message','Verifikasi gagal: '+e.message,'bad')}
 }
 
-function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const labels={'journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar Jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Laporan',backup:'Backup & Restore',audit:'Riwayat Aktivitas'};$('page-title').textContent=labels[page]||page;if(page==='journal-admin'){}if(page==='periods')renderPeriodControl();if(page==='dashboard')renderDashboard();if(page==='journal-list')renderJournals();if(page==='accounts')renderAccounts();if(page==='opening-balances')renderOpeningBalances();if(page==='nptrans')renderNptrans();if(page==='reports')renderTrialBalance();if(page==='ledger')renderLedger();if(page==='audit')renderAuditLogs()}
+function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const labels={'journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar Jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Laporan',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data'};$('page-title').textContent=labels[page]||page;if(page==='journal-admin'){}if(page==='periods')renderPeriodControl();if(page==='dashboard')renderDashboard();if(page==='journal-list')renderJournals();if(page==='accounts')renderAccounts();if(page==='opening-balances')renderOpeningBalances();if(page==='nptrans')renderNptrans();if(page==='reports')renderTrialBalance();if(page==='ledger')renderLedger();if(page==='audit')renderAuditLogs();if(page==='validation')renderValidation()}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
 document.querySelectorAll('.list-toggle').forEach(b=>b.addEventListener('click',()=>{const panel=$(b.dataset.target);if(!panel)return;const opening=panel.hidden;panel.hidden=!opening;b.setAttribute('aria-expanded',String(opening));const labels={'account-list-content':opening?'− Sembunyikan daftar akun':'＋ Tampilkan '+state.accounts.length+' akun','journal-list-content':opening?'− Sembunyikan daftar jurnal':'＋ Tampilkan daftar jurnal','np-list-content':opening?'− Sembunyikan data NPTRANS':'＋ Tampilkan data NPTRANS','trial-balance-content':opening?'− Sembunyikan neraca saldo':'＋ Tampilkan neraca saldo'};b.textContent=labels[b.dataset.target]||'Tampilkan / sembunyikan';}));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
@@ -763,6 +763,72 @@ $('print-report').onclick=printTrialBalance;
 $('opening-print').onclick=printOpeningBalances;
 $('ledger-print').onclick=printLedger;
 $('export-trial-xlsx').onclick=exportTrialBalanceXlsx;
+
+
+/* BUILD V66 — read-only validation and data integrity checks. */
+function runDataValidation(){
+ const issues=[],accounts=Array.isArray(state.accounts)?state.accounts:[],journals=Array.isArray(state.journals)?state.journals:[],openings=Array.isArray(state.openingBalances)?state.openingBalances:[],npRows=Array.isArray(state.nptrans)?state.nptrans:[];
+ const accountCodes=new Set(accounts.map(a=>String(a.code??'').trim()).filter(Boolean));
+ const add=(level,category,location,detail,action)=>issues.push({level,category,location,detail,action});
+ const accountCount=new Map();
+ accounts.forEach(a=>{const code=String(a.code??'').trim();if(code)accountCount.set(code,(accountCount.get(code)||0)+1);if(!code)add('GAGAL','Master Akun','Baris akun','Kode/SANDI akun kosong.','Lengkapi kode akun atau periksa data sumber.');if(!String(a.name??'').trim())add('PERINGATAN','Master Akun','Akun '+(code||'(tanpa kode)'),'Nama akun kosong.','Lengkapi nama akun setelah memastikan kode akun benar.')});
+ for(const [code,count] of accountCount)if(count>1)add('GAGAL','Master Akun','Kode '+code,'Kode akun muncul '+count+' kali.','Tentukan satu kode akun yang benar dan tinjau transaksi yang menggunakannya.');
+ const journalNumbers=new Map();
+ journals.forEach((j,index)=>{
+  const no=String(j.number??'').trim(),date=String(j.date??''),loc='Jurnal '+(no||('#'+(index+1)));
+  if(no){const key=no.toLowerCase();if(!journalNumbers.has(key))journalNumbers.set(key,[]);journalNumbers.get(key).push(loc)}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(Date.parse(date)))add('GAGAL','Jurnal',loc,'Tanggal tidak valid atau kosong.','Periksa tanggal pada jurnal sumber.');
+  if(!no)add('GAGAL','Jurnal',loc,'Nomor bukti kosong.','Periksa dan lengkapi nomor bukti.');
+  if(!String(j.description??'').trim())add('PERINGATAN','Jurnal',loc,'Keterangan jurnal kosong.','Tambahkan uraian transaksi yang dapat ditelusuri.');
+  const period=date.slice(0,7),lines=Array.isArray(j.lines)?j.lines:[];
+  if(period&&isPeriodLocked(period))add('GAGAL','Periode',loc,'Transaksi ditemukan pada periode yang berstatus ditutup ('+period+').','Verifikasi riwayat tutup/buka periode dan sumber transaksi; jangan mengubah status secara langsung.');
+  if(!lines.length)add(j.status==='draft'?'PERINGATAN':'GAGAL','Jurnal',loc,'Jurnal tidak memiliki baris akun.','Periksa detail jurnal dan lengkapi melalui prosedur koreksi yang berlaku.');
+  let debit=0,credit=0;
+  lines.forEach((line,i)=>{
+   const code=String(line.code??'').trim(),d=Number(line.debit||0),c=Number(line.credit||0),where=loc+' · baris '+(i+1);
+   if(!code)add('GAGAL','Jurnal',where,'Kode akun kosong.','Pilih akun yang benar dari Master Akun.');
+   else if(!accountCodes.has(code))add('GAGAL','Jurnal',where,'Kode akun '+code+' tidak ditemukan di Master Akun.','Verifikasi kode terhadap dokumen sumber dan Master Akun.');
+   if(!Number.isFinite(d)||!Number.isFinite(c)||d<0||c<0)add('GAGAL','Jurnal',where,'Nilai debit/kredit tidak valid atau negatif.','Periksa nilai nominal pada baris jurnal.');
+   if(d>0&&c>0)add('GAGAL','Jurnal',where,'Satu baris berisi debit dan kredit sekaligus.','Pisahkan sisi debit dan kredit sesuai dokumen sumber.');
+   if(d===0&&c===0)add('PERINGATAN','Jurnal',where,'Baris tidak memiliki nilai debit maupun kredit.','Pastikan baris kosong memang diperlukan.');
+   if(Number.isFinite(d)&&d>0)debit+=d;if(Number.isFinite(c)&&c>0)credit+=c;
+  });
+  if(lines.length&&Math.abs(debit-credit)>.005)add(j.status==='draft'?'PERINGATAN':'GAGAL','Keseimbangan Jurnal',loc,'Debit '+money(debit)+' dan kredit '+money(credit)+'; selisih '+money(debit-credit)+'.','Telusuri baris jurnal dan dokumen sumber sebelum membuat jurnal koreksi.');
+ });
+ for(const [no,locations] of journalNumbers)if(locations.length>1)add('PERINGATAN','Nomor Bukti','Nomor '+no,'Nomor bukti digunakan oleh '+locations.length+' jurnal.','Pastikan nomor bukti memang boleh berulang menurut kebijakan penomoran; jika tidak, koreksi dengan prosedur resmi.');
+ const openingKeys=new Map(),openingTotals=new Map();
+ openings.forEach((o,i)=>{
+  const period=String(o.period??''),code=String(o.accountCode??'').trim(),d=Number(o.debit||0),c=Number(o.credit||0),loc='Saldo awal '+(period||'(tanpa periode)')+' / '+(code||'baris '+(i+1));
+  if(!/^\d{4}-\d{2}$/.test(period))add('GAGAL','Saldo Awal',loc,'Periode saldo awal tidak valid.','Periksa periode pada data saldo awal.');
+  if(!code)add('GAGAL','Saldo Awal',loc,'Kode akun kosong.','Pilih kode akun yang benar.');
+  else if(!accountCodes.has(code))add('GAGAL','Saldo Awal',loc,'Kode akun '+code+' tidak ditemukan di Master Akun.','Cocokkan saldo awal dengan Master Akun.');
+  if(!Number.isFinite(d)||!Number.isFinite(c)||d<0||c<0)add('GAGAL','Saldo Awal',loc,'Nilai debit/kredit tidak valid atau negatif.','Periksa nominal saldo awal.');
+  const key=period+'|'+code;openingKeys.set(key,(openingKeys.get(key)||0)+1);
+  const t=openingTotals.get(period)||{debit:0,credit:0};if(Number.isFinite(d)&&d>0)t.debit+=d;if(Number.isFinite(c)&&c>0)t.credit+=c;openingTotals.set(period,t);
+ });
+ for(const [key,count] of openingKeys)if(count>1)add('PERINGATAN','Saldo Awal',key,'Terdapat '+count+' baris saldo awal untuk akun dan periode yang sama.','Periksa apakah baris tersebut memang disengaja atau merupakan duplikasi.');
+ for(const [period,t] of openingTotals)if(Math.abs(t.debit-t.credit)>.005)add('GAGAL','Keseimbangan Saldo Awal',period,'Total debit '+money(t.debit)+' tidak sama dengan kredit '+money(t.credit)+'.','Rekonsiliasi saldo awal berdasarkan neraca saldo pembukaan yang disetujui.');
+ const npKeys=new Map();
+ npRows.forEach((r,i)=>{
+  const key=[r.tanggal,r.nobukti,r.nourut,r.sandi].map(v=>String(v??'').trim().toLowerCase()).join('|');
+  npKeys.set(key,(npKeys.get(key)||0)+1);
+  if(!String(r.sandi??'').trim())add('PERINGATAN','NPTRANS','Baris '+(i+1),'SANDI kosong.','Periksa record NPTRANS sumber.');
+  if(!String(r.nobukti??'').trim())add('PERINGATAN','NPTRANS','Baris '+(i+1),'Nomor bukti kosong.','Periksa record NPTRANS sumber.');
+  if(!Number.isFinite(Number(r.jumlah)))add('GAGAL','NPTRANS','Baris '+(i+1),'Nilai JUMLAH bukan angka yang valid.','Periksa nilai pada file sumber.');
+ });
+ for(const [key,count] of npKeys)if(count>1)add('PERINGATAN','NPTRANS','Kunci '+key,'Kombinasi tanggal, nomor bukti, nomor urut, dan SANDI muncul '+count+' kali.','Bandingkan dengan file NPTRANS asli sebelum memutuskan apakah record duplikat.');
+ return {issues,checkedAt:new Date(),counts:{accounts:accounts.length,journals:journals.length,openings:openings.length,nptrans:npRows.length}};
+}
+function renderValidation(){
+ const result=runDataValidation(),filter=$('validation-filter')?.value||'all',errors=result.issues.filter(x=>x.level==='GAGAL').length,warnings=result.issues.length-errors;
+ $('validation-total').textContent=result.issues.length.toLocaleString('id-ID');$('validation-errors').textContent=errors.toLocaleString('id-ID');$('validation-warnings').textContent=warnings.toLocaleString('id-ID');
+ const status=$('validation-status');status.textContent=errors?'PERLU PERBAIKAN':warnings?'ADA PERINGATAN':'VALID';status.className=errors?'validation-bad':warnings?'validation-warn':'validation-good';
+ $('validation-meta').textContent='Diperiksa '+result.checkedAt.toLocaleString('id-ID')+' · '+result.counts.accounts+' akun · '+result.counts.journals+' jurnal · '+result.counts.openings+' saldo awal · '+result.counts.nptrans+' baris NPTRANS.';
+ const shown=result.issues.filter(x=>filter==='all'||x.level===filter);
+ $('validation-results').innerHTML=shown.length?'<div class="table-wrap"><table class="validation-table"><thead><tr><th>Status</th><th>Kategori</th><th>Lokasi data</th><th>Temuan</th><th>Saran pemeriksaan</th></tr></thead><tbody>'+shown.map(x=>'<tr><td><span class="validation-badge '+(x.level==='GAGAL'?'bad':'warn')+'">'+x.level+'</span></td><td>'+esc(x.category)+'</td><td>'+esc(x.location)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.action)+'</td></tr>').join('')+'</tbody></table></div>':'<div class="validation-clear"><i data-lucide="check-circle-2"></i><b>'+(result.issues.length?'Tidak ada temuan pada filter ini.':'Tidak ditemukan masalah pada pemeriksaan yang tersedia.')+'</b><span>Hasil pemeriksaan hanya mencakup aturan validasi BUILD V66.</span></div>';
+ if(window.lucide?.createIcons)window.lucide.createIcons();
+}
+$('validation-run').onclick=renderValidation;$('validation-filter').onchange=renderValidation;
 
 function renderAuditLogs(){const q=($('audit-search')?.value||'').trim().toLowerCase(),filter=$('audit-action-filter')?.value||'all',items=(state.auditLogs||[]).filter(x=>(x.summary+' '+x.entity+' '+x.entityId+' '+x.action).toLowerCase().includes(q)&&(filter==='all'||x.action===filter)).sort((x,y)=>String(y.at).localeCompare(String(x.at)));$('audit-count').textContent=items.length.toLocaleString('id-ID')+' aktivitas';$('audit-rows').innerHTML=items.length?items.slice(0,500).map(x=>'<tr><td>'+esc(new Date(x.at).toLocaleString('id-ID'))+'</td><td><b>'+esc(x.action)+'</b></td><td>'+esc(x.entity)+'</td><td>'+esc(x.entityId)+'</td><td>'+esc(x.summary)+'</td><td><details><summary>Lihat perubahan</summary><pre class="audit-json">'+esc(JSON.stringify({sebelum:x.before,sesudah:x.after},null,2))+'</pre></details></td></tr>').join(''):'<tr><td colspan="6" class="empty">Belum ada aktivitas yang tercatat.</td></tr>'}
 function exportAuditCsv(){const rows=[['WAKTU','AKSI','MODUL','ID DATA','RINGKASAN','SEBELUM','SESUDAH'],...(state.auditLogs||[]).map(x=>[x.at,x.action,x.entity,x.entityId,x.summary,JSON.stringify(x.before??''),JSON.stringify(x.after??'')])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\\r\\n');downloadBlob(new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'SBP-Audit-Log.csv')}
