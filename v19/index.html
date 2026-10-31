@@ -137,6 +137,9 @@
   <div class="panel-head"><div><h3>Buku Besar per Akun</h3><p>Rincian saldo awal, mutasi debit/kredit, dan saldo berjalan untuk satu akun pada periode terpilih.</p></div><span class="tag">BUKU BESAR</span></div>
   <div class="ledger-filters"><label class="ledger-field">Periode<input type="month" id="ledger-period"></label><label class="ledger-field ledger-account-field">Akun / SANDI<select id="ledger-account"><option value="">Pilih akun</option></select></label><button class="btn btn-primary ledger-submit" id="ledger-refresh" type="button"><i data-lucide="search"></i><span>Tampilkan Buku Besar</span></button><div class="ledger-actions"><button class="btn" id="ledger-print" type="button"><i data-lucide="printer"></i><span>Cetak / PDF</span></button><button class="btn" id="ledger-export" type="button"><i data-lucide="file-spreadsheet"></i><span>Ekspor Excel</span></button></div></div>
   <div id="ledger-summary" class="opening-summary"></div>
+  <div class="panel-head"><div><h3>Status Transaksi Akun</h3><p>Seluruh jurnal yang memuat SANDI akun terpilih, termasuk Draft dan Posted.</p></div><label class="ledger-field">Filter status<select id="ledger-status-filter"><option value="all">Semua status</option><option value="posted">POSTED</option><option value="draft">DRAFT</option><option value="cancelled">DIBATALKAN</option></select></label></div>
+  <div id="ledger-status-summary" class="opening-summary"></div>
+  <div id="ledger-status-content" class="table-wrap"><div class="empty">Pilih periode dan akun untuk melihat status transaksi.</div></div>
   <div id="ledger-content" class="table-wrap"><div class="empty">Pilih periode dan akun untuk menampilkan buku besar.</div></div>
  </div>
 </section>
@@ -197,7 +200,7 @@
 <div class="print-settings-options"><label><input type="checkbox" id="print-brand"> Tampilkan identitas SBP Accounting</label><label><input type="checkbox" id="print-date"> Tampilkan tanggal dan waktu cetak</label><label><input type="checkbox" id="print-footer"> Tampilkan footer dokumen</label><label><input type="checkbox" id="print-summary"> Tampilkan ringkasan laporan</label><label><input type="checkbox" id="print-signatures"> Tampilkan kolom tanda tangan</label><label><input type="checkbox" id="print-lines"> Tampilkan garis tabel</label></div>
 <div class="inline-message">Pengaturan disimpan di browser pada perangkat ini. Tidak mengubah jurnal, saldo, NPTRANS, maupun database aktif. Orientasi otomatis mengikuti kebutuhan masing-masing laporan.</div>
 <div class="button-row print-settings-actions"><button class="btn btn-primary" id="print-settings-save" type="button">Simpan Pengaturan</button><button class="btn" id="print-settings-reset" type="button">Kembalikan Standar</button><button class="btn" id="print-settings-preview" type="button">Cetak Contoh / Preview</button></div></div></section>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="79"><b>BUILD V79</b><span>SBP-V19-BUILD-0079</span><span>31-10-2026 · 09:15 WIB</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="80"><b>BUILD V80</b><span>SBP-V19-BUILD-0080</span><span>31-10-2026 · 09:30 WIB</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=79"></script>
+<script src="app.js?v=80"></script>
 </body></html>
