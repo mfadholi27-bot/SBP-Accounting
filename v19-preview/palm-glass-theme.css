@@ -612,3 +612,13 @@ input,select,textarea{border-radius:9px!important}
 #page-journal .journal-budget-heading p{display:none!important}
 #page-journal .journal-budget-title-line{display:flex;align-items:center;gap:8px}
 #page-journal .budget-help-button{flex:0 0 19px}
+
+
+/* BUILD V96 — consistent contextual help controls for all module headings */
+.page .panel-head,.page .section-heading,.page .budget-month-head,
+.page .budget-hero,.page .import-center-hero,.page .import-center-section-title,
+.page .accounts-card-title,.page .opening-import-head,.page .validation-hero,
+.page .debit-note-intro{position:relative}
+.sbp-context-help-button{margin-left:7px;vertical-align:middle}
+.sbp-context-help{position:absolute;z-index:100;top:calc(100% + 7px);left:0;max-width:min(360px,calc(100vw - 48px));width:max-content;white-space:normal}
+.sbp-context-help[hidden]{display:none!important}
