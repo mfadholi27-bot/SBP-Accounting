@@ -416,3 +416,14 @@ input:disabled,select:disabled,textarea:disabled{color:#64748b!important;backgro
 /* BUILD V84 — Debit Note module */
 .debit-note-intro h3{margin:8px 0 5px!important;font-size:20px!important;color:#14532d!important}.debit-note-intro p{margin:0!important;max-width:950px;color:#64748b;font-size:13px;line-height:1.65}
 .debit-note-form{padding:22px!important}.debit-note-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.debit-note-grid label{display:flex;flex-direction:column;gap:7px;min-width:0;color:#475569;font-size:12px;font-weight:650}.debit-note-grid input,.debit-note-grid select{width:100%;min-width:0;height:42px;padding:8px 11px;border:1px solid #dbe5df;border-radius:9px;background:#fff;color:#1f2937;font:inherit}.debit-note-wide{grid-column:1/-1}.debit-note-lines{min-width:780px}.debit-note-lines input,.debit-note-lines select{width:100%;min-width:95px;padding:8px;border:1px solid #dce8df;border-radius:7px;background:#fff;font:inherit}.debit-note-lines .dn-note{min-width:180px}.debit-note-totals{justify-content:flex-end}#page-debit-notes .journal-toolbar{display:flex;gap:8px;flex-wrap:wrap}@media(max-width:760px){.debit-note-grid{grid-template-columns:1fr!important}.debit-note-wide{grid-column:auto}.debit-note-form{padding:15px!important}#page-debit-notes .panel-head{align-items:flex-start;flex-direction:column}}
+
+/* BUILD V86 — source transaction picker for debit notes */
+.debit-note-source-panel{border:1px solid #d6e9dc!important;background:#fbfefc!important;padding:20px!important;margin:18px 0!important}
+.debit-note-source-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:14px 0}
+.debit-note-source-controls label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:650;color:#475569;min-width:240px}
+.debit-note-source-controls select{height:40px;border:1px solid #dbe5df;border-radius:8px;padding:7px 10px;background:#fff}
+.debit-note-source-table{min-width:850px}.debit-note-source-table td,.debit-note-source-table th{white-space:nowrap}
+.dn-selected-wrap{border-top:1px solid #e5eee8;padding-top:14px;margin-top:14px}.dn-selected-wrap h4{margin:0 0 10px;color:#14532d}
+.dn-selected-list{display:grid;gap:7px}.dn-selected-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border:1px solid #dcebe1;border-radius:9px;background:#fff;font-size:12px}
+.dn-selected-item small{display:block;color:#64748b;margin-top:4px}.dn-selected-wrap>small{display:block;color:#64748b;margin-top:10px;line-height:1.5}
+@media(max-width:700px){.debit-note-source-controls{align-items:stretch;flex-direction:column}.debit-note-source-controls label{min-width:0}.debit-note-source-controls button{width:100%}.debit-note-source-panel{padding:14px!important}}
