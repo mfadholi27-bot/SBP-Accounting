@@ -777,3 +777,99 @@ input,select,textarea{border-radius:9px!important}
  }
  #page-import-center .import-center-shortcuts .btn{grid-column:1/-1!important;width:100%!important}
 }
+
+
+/* BUILD V101 — compact unified import cards */
+#page-import-center .import-center-work-grid{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:14px!important;
+ align-items:start!important;
+ margin:0 0 18px!important;
+}
+#page-import-center .import-center-work-grid>.accounts-card,
+#page-import-center .import-center-work-grid>.opening-import-panel,
+#page-import-center .import-center-work-grid>.bulk-journal-panel{
+ min-width:0!important;
+ width:100%!important;
+ min-height:0!important;
+ margin:0!important;
+ padding:16px!important;
+ border:1px solid #e3ebe5!important;
+ border-radius:15px!important;
+ background:#fff!important;
+ box-shadow:0 4px 15px rgba(24,56,39,.035)!important;
+}
+#page-import-center .import-center-work-grid .accounts-card-title,
+#page-import-center .import-center-work-grid .opening-import-head,
+#page-import-center .import-center-work-grid .panel-head{
+ display:flex!important;
+ align-items:center!important;
+ gap:10px!important;
+ margin:0 0 13px!important;
+ padding:0 0 12px!important;
+ border-bottom:1px solid #edf1ee!important;
+}
+#page-import-center .import-center-work-grid .accounts-card-title h3,
+#page-import-center .import-center-work-grid .opening-import-head h3,
+#page-import-center .import-center-work-grid .panel-head h3{
+ margin:0!important;
+ font-size:15px!important;
+ line-height:1.35!important;
+ font-weight:750!important;
+}
+#page-import-center .import-center-work-grid .accounts-card-title p,
+#page-import-center .import-center-work-grid .opening-import-head p,
+#page-import-center .import-center-work-grid .panel-head p{
+ display:none!important;
+}
+#page-import-center .import-center-work-grid .accounts-icon{
+ width:42px!important;height:42px!important;min-width:42px!important;
+ border-radius:12px!important;
+}
+#page-import-center .import-center-work-grid .accounts-import-controls,
+#page-import-center .import-center-work-grid .opening-import-controls,
+#page-import-center .import-center-work-grid .bulk-import-controls{
+ display:flex!important;
+ align-items:center!important;
+ flex-wrap:wrap!important;
+ gap:9px!important;
+}
+#page-import-center .import-center-work-grid .file-status{
+ flex:1 1 110px!important;
+ min-width:0!important;
+ font-size:12px!important;
+}
+#page-import-center .import-center-work-grid .file-btn,
+#page-import-center .import-center-work-grid .btn{
+ min-height:38px!important;
+ padding:8px 12px!important;
+ border-radius:9px!important;
+ font-size:12px!important;
+}
+#page-import-center .import-center-work-grid .accounts-template-actions{
+ display:flex!important;
+ flex:1 0 100%!important;
+ flex-wrap:wrap!important;
+ gap:8px!important;
+ margin-top:2px!important;
+}
+#page-import-center .import-center-work-grid .footnote,
+#page-import-center .import-center-work-grid .inline-message{
+ margin:10px 0 0!important;
+ padding:8px 10px!important;
+ font-size:11px!important;
+}
+#page-import-center .import-center-work-grid .budget-import-panel{
+ grid-column:1/-1!important;
+}
+#page-import-center .import-center-work-grid .bulk-review,
+#page-import-center .import-center-work-grid .opening-import-review{
+ margin-top:12px!important;
+}
+@media(max-width:760px){
+ #page-import-center .import-center-work-grid{grid-template-columns:1fr!important;gap:10px!important}
+ #page-import-center .import-center-work-grid>.accounts-card,
+ #page-import-center .import-center-work-grid>.opening-import-panel,
+ #page-import-center .import-center-work-grid>.bulk-journal-panel{padding:13px!important}
+}
