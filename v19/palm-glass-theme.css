@@ -401,3 +401,14 @@ section.page.active:not([hidden]){display:block!important;visibility:visible!imp
 #page-import-center>.bulk-journal-panel .inline-message{margin-top:14px;}
 #page-import-center>.import-center-notes{width:100%;max-width:100%;margin-top:18px;}
 @media(max-width:760px){#page-import-center>.bulk-journal-panel{padding:16px;}#page-import-center>.bulk-journal-panel .panel-head{flex-direction:column;}#page-import-center>.bulk-journal-panel .bulk-import-controls{align-items:stretch;flex-direction:column;}#page-import-center>.bulk-journal-panel .bulk-import-controls>*{width:100%;}}
+
+/* BUILD V84 — global text contrast and form-label visibility across every menu */
+:root{--foreground:#17212f;--muted-foreground:#64748b;--ink:#17212f;--muted-text:#64748b}
+body,.page,.panel,.card,.accounts-card,.stat,.welcome-card{color:#17212f}
+label,.field-label,.form-label,.form-group label,.form-grid label,.accounts-form-grid label,.opening-form-grid label,.ledger-field,.report-period-label,.period-control-grid label,.period-close-grid label,.force-delete-controls label{color:#475569!important;font-weight:600!important}
+label small,label .hint,label .help-text,.field-hint,.form-hint,.hint,.help-text,.footnote,.list-hint,.panel-head p,.subtext,.muted-text{color:#64748b!important}
+.stat span,.stat small,.summary-card span,.summary-card small,.opening-summary span,.ledger-summary span{color:#64748b!important}
+input,select,textarea{color:#17212f!important;background-color:#fff!important}
+input::placeholder,textarea::placeholder{color:#94a3b8!important;opacity:1!important}
+input:disabled,select:disabled,textarea:disabled{color:#64748b!important;background:#f1f5f9!important;opacity:1!important}
+/* Keep intentionally colored action and status text unchanged. */
