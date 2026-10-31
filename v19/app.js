@@ -1,3 +1,4 @@
+/* BUILD V70 — unified import preview, approval and restore workflow */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 const DB_NAME='sbp-accounting-v19', STORE='app', STATE_KEY='main';
