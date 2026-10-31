@@ -433,51 +433,22 @@ function exportAccountTemplateCsv(){const rows=accountTemplateRows();downloadBlo
 function exportAccountTemplateXlsx(){exportXlsxSheet('Format-Import-Master-Akun-SBP.xlsx','Master Akun',accountTemplateRows())}
 $('download-account-template-csv').onclick=exportAccountTemplateCsv;
 $('download-account-template-xlsx').onclick=exportAccountTemplateXlsx;
-let selectedAccountFile=null;
-$('account-file').onchange=e=>{
- selectedAccountFile=e.target.files?.[0]||null;
- $('import-account-button').disabled=!selectedAccountFile;
- $('account-import-status').textContent=selectedAccountFile?'File dipilih: '+selectedAccountFile.name+'. Tekan tombol Import Master Akun untuk memproses.':'Belum ada file master akun dipilih.';
-};
-$('import-account-button').onclick=async()=>{
- const f=selectedAccountFile;if(!f)return;
- if(!requireImportPassword('Import Master Akun'))return;
- const status=$('account-import-status');
- $('import-account-button').disabled=true;
- if(status)status.textContent='Membaca '+f.name+'...';
- try{
-  let accounts=[];
-  if(f.name.toLowerCase().endsWith('.dbf')){
-   const p=parseDBF(await f.arrayBuffer());
-   const fields=p.fields.map(x=>norm(x.name));
-   if(!fields.includes('SANDI'))throw Error('Kolom SANDI tidak ditemukan pada DBF. Kolom terbaca: '+fields.join(', '));
-   accounts=p.records.map((r,index)=>{
-    const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);
-    const code=String(o.SANDI??o.KODE??'').trim();
-    return {code,name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??'').trim(),_row:index+1};
-   }).filter(a=>a.code);
-  }else{
-   accounts=/\.xlsx?$/i.test(f.name)?xlsxToAccounts(await f.arrayBuffer()):csvToAccounts(await f.text());
-  }
-  if(!accounts.length)throw Error('File terbaca tetapi tidak ditemukan akun dengan SANDI yang terisi.');
-  const map=new Map(state.accounts.map(a=>[String(a.code),a]));let added=0,updated=0;
-  accounts.forEach(a=>{
-   if(!a.code) return;
-   if(map.has(a.code)){const current=map.get(a.code);Object.assign(current,a);updated++}
-   else{delete a._row;map.set(a.code,a);added++}
-  });
-  state.accounts=[...map.values()];
-  await persist();renderAccounts();renderNptrans();
-  const msg='Master akun berhasil diimpor: '+accounts.length+' record terbaca, '+added+' akun baru, '+updated+' akun diperbarui. Semua akun dalam file diproses, tidak harus sudah digunakan NPTRANS.';
-  if(status)status.textContent=msg;
-  toast('Import master akun berhasil.');
- }catch(err){
-  const msg='Import master akun gagal: '+err.message;
-  if(status)status.textContent=msg;
-  toast(msg);
- }finally{$('account-file').value='';selectedAccountFile=null;$('import-account-button').disabled=true}
-};
-$('clear-np-data').onclick=async()=>{
+let selectedAccountFile=null,pendingAccountImport=null;
+ $('account-file').onchange=e=>{selectedAccountFile=e.target.files?.[0]||null;pendingAccountImport=null;$('account-import-review').hidden=true;$('import-account-button').disabled=!selectedAccountFile;$('account-import-status').textContent=selectedAccountFile?'File dipilih: '+selectedAccountFile.name+'. Tekan Periksa & Pratinjau.':'Belum ada file master akun dipilih.'};
+ $('import-account-button').onclick=async()=>{const f=selectedAccountFile;if(!f)return;$('import-account-button').disabled=true;try{let accounts=[];
+  if(f.name.toLowerCase().endsWith('.dbf')){const p=parseDBF(await f.arrayBuffer());const fields=p.fields.map(x=>norm(x.name));if(!fields.includes('SANDI'))throw Error('Kolom SANDI tidak ditemukan pada DBF.');accounts=p.records.map((r,index)=>{const o={};Object.keys(r).forEach(k=>o[norm(k)]=r[k]);return{code:String(o.SANDI??o.KODE??'').trim(),name:String(o.DES??o.NAMA??o.NAMAAKUN??o.KET??'').trim(),_row:index+1}}).filter(x=>x.code)}
+  else accounts=/\.xlsx?$/i.test(f.name)?xlsxToAccounts(await f.arrayBuffer()):csvToAccounts(await f.text());
+  if(!accounts.length)throw Error('Tidak ditemukan akun dengan SANDI terisi.');
+  const seen=new Set(),errors=[],known=new Map(state.accounts.map(x=>[String(x.code),x]));accounts.forEach((x,i)=>{if(!x.code)errors.push('Baris '+(x._row||i+2)+': SANDI kosong.');if(seen.has(x.code))errors.push('Baris '+(x._row||i+2)+': SANDI duplikat '+x.code+'.');seen.add(x.code)});
+  const added=accounts.filter(x=>!known.has(x.code)).length,updated=accounts.length-added;pendingAccountImport={fileName:f.name,accounts,errors};
+  $('account-import-summary').textContent=accounts.length+' akun dibaca · '+added+' baru · '+updated+' diperbarui';$('account-import-detail').textContent=errors.length?errors.length+' kesalahan. Perbaiki file sebelum menyimpan.':'Periksa isi file. Belum ada data yang disimpan.';
+  $('account-import-errors').hidden=!errors.length;$('account-import-errors').innerHTML=errors.length?'<b>Hasil pemeriksaan:</b><ul>'+errors.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'';
+  $('account-import-rows').innerHTML=accounts.slice(0,300).map(x=>'<tr><td>'+(x._row||'—')+'</td><td>'+esc(x.code)+'</td><td>'+esc(x.name)+'</td><td>'+(known.has(x.code)?'PERBARUI':'TAMBAH')+'</td></tr>').join('');
+  $('account-import-confirm').disabled=!!errors.length;$('account-import-review').hidden=false;$('account-import-status').textContent='Pratinjau siap: '+f.name;
+ }catch(err){pendingAccountImport=null;$('account-import-status').textContent='Gagal membaca file: '+err.message;toast('Import akun gagal: '+err.message)}finally{$('import-account-button').disabled=!selectedAccountFile}};
+ $('account-import-confirm').onclick=async()=>{const b=pendingAccountImport;if(!b||b.errors.length)return;if(!requireImportPassword('Import Master Akun'))return;if(!confirm('Simpan '+b.accounts.length+' akun dari '+b.fileName+'? SANDI yang sudah ada akan diperbarui.'))return;try{const map=new Map(state.accounts.map(x=>[String(x.code),x]));let added=0,updated=0;b.accounts.forEach(x=>{const v={code:x.code,name:x.name};if(map.has(x.code)){Object.assign(map.get(x.code),v);updated++}else{map.set(x.code,v);added++}});state.accounts=[...map.values()];await persist();renderAccounts();renderNptrans();const msg='Import berhasil: '+b.accounts.length+' record · '+added+' akun baru · '+updated+' akun diperbarui.';$('account-import-status').textContent=msg;toast(msg);pendingAccountImport=null;$('account-import-review').hidden=true;$('account-file').value='';selectedAccountFile=null;$('import-account-button').disabled=true}catch(err){$('account-import-status').textContent='Penyimpanan gagal: '+err.message}};
+ $('account-import-cancel').onclick=()=>{pendingAccountImport=null;$('account-import-review').hidden=true;$('account-file').value='';selectedAccountFile=null;$('import-account-button').disabled=true;$('account-import-status').textContent='Pratinjau dibatalkan. Data tidak berubah.'};
+ $('clear-np-data').onclick=async()=>{
  const count=state.nptrans.length;
  const linkedDrafts=state.journals.filter(j=>j.status==='draft'&&j.source==='NPTRANS').length;
  if(!count&&!linkedDrafts){setMessage('np-message','Tidak ada data NPTRANS yang perlu dibersihkan.','');return}
@@ -870,7 +841,11 @@ $('audit-search').oninput=renderAuditLogs;$('audit-action-filter').onchange=rend
 $('archive-read-file').onchange=e=>loadArchiveReaderFile(e.target.files?.[0]);$('archive-read-mode').onchange=renderArchiveReader;$('archive-read-search').oninput=renderArchiveReader;$('archive-read-period').onchange=renderArchiveReader;$('archive-read-account').onchange=renderArchiveReader;
 $('archive-create').onclick=createFiveYearArchive;$('archive-verify').onclick=verifyFiveYearArchive;
 $('backup-connect-folder').onclick=connectBackupFolder;$('backup-reconnect-folder').onclick=reconnectBackupFolder;$('backup-now').onclick=()=>runAutomaticBackup('backup manual');$('backup-download').onclick=()=>{const payload=makeBackupPayload();downloadBlob(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),'SBP-Accounting-V19-backup.json');setMessage('backup-message','Backup JSON berhasil diunduh. Simpan juga salinannya di media lain.','good')};
-$('backup-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(!requireImportPassword('Pemulihan / Import Backup')){e.target.value='';return}try{const parsed=JSON.parse(await f.text()),candidate=parsed.state||parsed;if(!Array.isArray(candidate.accounts)||!Array.isArray(candidate.journals)||!Array.isArray(candidate.nptrans))throw Error('Struktur backup tidak dikenali.');if(!confirm('Pulihkan backup? Data lokal saat ini akan digantikan.'))return;const priorAudit=Array.isArray(state.auditLogs)?state.auditLogs:[];state={...emptyState(),...candidate};state.auditLogs=[...new Map([...priorAudit,...(Array.isArray(candidate.auditLogs)?candidate.auditLogs:[])].map(x=>[x.id||JSON.stringify(x),x])).values()].sort((x,y)=>String(y.at).localeCompare(String(x.at)));if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();renderDashboard();setMessage('backup-message','Backup berhasil dipulihkan.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}e.target.value=''};
+let pendingBackupRestore=null;
+ $('backup-file').onchange=async e=>{const f=e.target.files?.[0];pendingBackupRestore=null;$('backup-import-review').hidden=true;if(!f)return;try{const parsed=JSON.parse(await f.text()),candidate=parsed.state||parsed;if(!Array.isArray(candidate.accounts)||!Array.isArray(candidate.journals)||!Array.isArray(candidate.nptrans))throw Error('Struktur backup tidak dikenali atau tidak lengkap.');pendingBackupRestore={fileName:f.name,candidate};$('backup-import-summary').textContent='Backup valid · '+f.name;$('backup-import-detail').textContent='Akun: '+candidate.accounts.length+' · Jurnal: '+candidate.journals.length+' · NPTRANS: '+candidate.nptrans.length+' · Saldo awal: '+(candidate.openingBalances||[]).length+'. Pemulihan mengganti seluruh database lokal.';$('backup-import-review').hidden=false;setMessage('backup-message','File berhasil dibaca. Periksa ringkasan dan setujui pemulihan. Database belum berubah.','good')}catch(err){setMessage('backup-message','Validasi backup gagal: '+err.message,'bad');$('backup-file').value=''}};
+ $('backup-import-cancel').onclick=()=>{pendingBackupRestore=null;$('backup-import-review').hidden=true;$('backup-file').value='';setMessage('backup-message','Pemulihan dibatalkan. Database aktif tidak berubah.','good')};
+ $('backup-import-confirm').onclick=async()=>{const b=pendingBackupRestore;if(!b)return;if(!requireImportPassword('Pemulihan / Import Backup'))return;if(!confirm('PERINGATAN AKHIR: Ganti seluruh database lokal dengan backup '+b.fileName+'?'))return;try{const candidate=b.candidate,prior=Array.isArray(state.auditLogs)?state.auditLogs:[];state={...emptyState(),...candidate};state.auditLogs=[...new Map([...prior,...(Array.isArray(candidate.auditLogs)?candidate.auditLogs:[])].map(x=>[x.id||JSON.stringify(x),x])).values()].sort((x,y)=>String(y.at).localeCompare(String(x.at)));if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();pendingBackupRestore=null;$('backup-import-review').hidden=true;$('backup-file').value='';renderDashboard();renderAccounts();renderNptrans();renderJournals();renderOpeningBalances();renderPeriodControl();setMessage('backup-message','Backup '+b.fileName+' berhasil dipulihkan. Database aktif telah diganti.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}};
+
 
 async function init(){await loadState();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances});await persist();resetAccountForm();resetJournalForm();renderDashboard();renderAccounts();renderPeriodControl();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
 init();
