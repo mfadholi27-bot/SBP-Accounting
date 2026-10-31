@@ -606,3 +606,9 @@ input,select,textarea{border-radius:9px!important}
 .budget-help-button:hover,.budget-help-button[aria-expanded="true"]{background:#eaf5ed!important;border-color:#176b49!important}
 .budget-help-popover{position:absolute;z-index:30;top:calc(100% + 9px);left:0;width:min(330px,calc(100vw - 70px));padding:11px 13px;border:1px solid #d8e8dd;border-radius:10px;background:#fff;color:#52645a;font-size:11px;line-height:1.55;box-shadow:0 10px 28px rgba(20,55,35,.12)}
 .budget-help-popover[hidden]{display:none!important}
+
+
+/* BUILD V94 — hide legacy inline hint; show only the help control */
+#page-journal .journal-budget-heading p{display:none!important}
+#page-journal .journal-budget-title-line{display:flex;align-items:center;gap:8px}
+#page-journal .budget-help-button{flex:0 0 19px}
