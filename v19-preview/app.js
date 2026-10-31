@@ -1086,3 +1086,55 @@ init();
  });
  document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
 })();
+
+
+/* BUILD V96 — universal compact heading help across modules */
+(()=>{
+ const selectors=[
+  '.page .panel-head','.page .section-heading','.page .budget-month-head',
+  '.page .budget-hero','.page .import-center-hero','.page .import-center-section-title',
+  '.page .accounts-card-title','.page .opening-import-head','.page .validation-hero',
+  '.page .debit-note-intro'
+ ];
+ const closeAll=(except)=>{
+  document.querySelectorAll('.sbp-context-help').forEach(pop=>{
+   if(pop!==except){pop.hidden=true;const b=pop.parentElement?.querySelector('.sbp-context-help-button');b?.setAttribute('aria-expanded','false')}
+  });
+ };
+ document.querySelectorAll(selectors.join(',')).forEach((block,index)=>{
+  if(block.dataset.contextHelpReady==='1')return;
+  const heading=block.querySelector('h2,h3,h4');
+  if(!heading)return;
+  const paras=[...block.querySelectorAll('p')].filter(p=>!p.closest('.sbp-context-help'));
+  const message=paras.map(p=>p.textContent.trim()).filter(Boolean).join(' ');
+  if(!message)return;
+  block.dataset.contextHelpReady='1';
+  paras.forEach(p=>{p.hidden=true;p.setAttribute('aria-hidden','true')});
+  const host=heading.parentElement||block;
+  if(getComputedStyle(host).position==='static')host.style.position='relative';
+  const button=document.createElement('button');
+  button.type='button';button.className='budget-help-button sbp-context-help-button';
+  button.setAttribute('aria-label','Lihat keterangan bagian');
+  button.setAttribute('aria-expanded','false');
+  const pop=document.createElement('div');
+  pop.className='budget-help-popover sbp-context-help';pop.hidden=true;
+  pop.textContent=message;
+  const id='sbp-context-help-'+index;
+  pop.id=id;button.setAttribute('aria-controls',id);button.textContent='?';
+  heading.insertAdjacentElement('afterend',button);
+  host.appendChild(pop);
+  button.addEventListener('click',event=>{
+   event.stopPropagation();
+   const opening=pop.hidden;closeAll(pop);pop.hidden=!opening;
+   button.setAttribute('aria-expanded',String(opening));
+  });
+  document.addEventListener('click',event=>{
+   if(!pop.hidden&&!pop.contains(event.target)&&!button.contains(event.target)){
+    pop.hidden=true;button.setAttribute('aria-expanded','false');
+   }
+  });
+  document.addEventListener('keydown',event=>{
+   if(event.key==='Escape'){pop.hidden=true;button.setAttribute('aria-expanded','false')}
+  });
+ });
+})();
