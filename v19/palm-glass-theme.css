@@ -436,3 +436,509 @@ input:disabled,select:disabled,textarea:disabled{color:#64748b!important;backgro
 .budget-list-head{align-items:flex-end}.budget-filters{display:flex;align-items:flex-end;gap:9px;flex-wrap:wrap}.budget-filters label{min-width:105px}.budget-filters input{min-width:190px}.budget-table{min-width:850px}.budget-table td{vertical-align:middle}.budget-percent{display:inline-flex;padding:5px 9px;border-radius:99px;background:#effaf2;color:#166534;font-size:11px;font-weight:750}.budget-negative{color:#b91c1c!important;font-weight:750}.budget-positive{color:#166534!important}
 .journal-budget-panel{margin:18px 0 16px;padding:18px 19px;border:1px solid #d5e8dc;border-radius:14px;background:linear-gradient(120deg,#fbfefc,#f3faf5);box-shadow:0 5px 18px rgba(25,75,52,.045)}.journal-budget-heading{display:flex;align-items:center;gap:12px;margin-bottom:13px}.journal-budget-heading>div{min-width:0;flex:1}.journal-budget-heading h3{margin:0 0 4px;font-size:15px;color:#14532d}.journal-budget-heading p{margin:0;color:#64748b;font-size:11px;line-height:1.5}.journal-budget-icon{width:39px;height:39px;display:grid;place-items:center;border-radius:11px;background:#dcfce7;color:#166534;flex:0 0 39px}.journal-budget-icon svg{width:21px;height:21px}.budget-live-pill{padding:6px 9px;border:1px solid #cce8d5;border-radius:99px;background:#fff;color:#166534;font-size:9px;font-weight:850;white-space:nowrap}.budget-empty{padding:15px;border:1px dashed #cbded1;border-radius:10px;background:#fff;color:#64748b;font-size:12px;text-align:center;line-height:1.6}.journal-budget-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.journal-budget-card{padding:14px;border:1px solid #dcebe1;border-radius:11px;background:#fff;min-width:0}.journal-budget-card.warn{border-color:#f0d59b;background:#fffdf7}.journal-budget-card.over{border-color:#f2c4c4;background:#fffafa}.journal-budget-card-top{display:flex;justify-content:space-between;gap:9px}.journal-budget-card-top b{display:block;color:#17212f;font-size:13px}.journal-budget-card-top span{display:block;margin-top:3px;color:#64748b;font-size:11px}.budget-state{font-style:normal;font-size:9px;font-weight:800;padding:5px 7px;border-radius:99px;background:#dcfce7;color:#166534;white-space:nowrap}.budget-state.warn{background:#fef3c7;color:#92400e}.budget-state.over{background:#fee2e2;color:#991b1b}.journal-budget-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:13px 0}.journal-budget-metrics small{display:block;color:#64748b;font-size:10px}.journal-budget-metrics strong{display:block;margin-top:4px;color:#17212f;font-size:13px;overflow-wrap:anywhere}.journal-budget-metrics .remaining strong{color:#166534}.journal-budget-card.over .remaining strong{color:#b91c1c}.budget-progress{height:7px;border-radius:99px;background:#edf2ee;overflow:hidden}.budget-progress span{display:block;height:100%;border-radius:99px;background:#16a34a;transition:width .2s}.journal-budget-card.warn .budget-progress span{background:#d97706}.journal-budget-card.over .budget-progress span{background:#dc2626}.budget-usage,.budget-footnote{display:block;margin-top:7px;color:#64748b;font-size:10px;line-height:1.5}
 @media(max-width:900px){.budget-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.budget-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.budget-month-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:620px){.budget-hero{padding:17px!important}.budget-hero-icon{width:48px;height:48px;flex-basis:48px}.budget-summary{gap:8px}.budget-summary article{padding:13px}.budget-summary b{font-size:16px}.budget-form-grid{grid-template-columns:1fr}.budget-month-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.budget-month-head,.budget-list-head{align-items:stretch;flex-direction:column}.budget-month-head .btn{width:100%}.budget-filters{align-items:stretch;flex-direction:column}.budget-filters>*{width:100%}.journal-budget-panel{padding:14px}.journal-budget-heading{align-items:flex-start;flex-wrap:wrap}.budget-live-pill{margin-left:51px}.journal-budget-grid{grid-template-columns:1fr}.journal-budget-metrics{gap:8px}}
+
+/* REDESIGN PREVIEW V89 — premium minimal layout with stronger icon hierarchy */
+:root{--bg:#f6f8f6;--line:#e7ece8;--soft:#edf5ef;--shadow:0 8px 26px rgba(18,55,36,.045)}
+body{background:#f6f8f6;color:#17251d}
+.sidebar{width:248px;background:#fff;border-right:1px solid #e8eee9}
+.nav-item{min-height:47px;padding:10px 13px;gap:13px;font-size:13px;font-weight:650;border-radius:12px}
+.nav-item .nav-icon{width:34px;height:34px;min-width:34px;border-radius:11px;background:#f0f5f1;color:#176b49;display:grid;place-items:center}
+.nav-item .nav-icon svg{width:21px;height:21px;stroke-width:2.15}
+.nav-item.active .nav-icon{background:#dcefe3;color:#105d3d}
+.nav-item.active{background:#edf6ef;color:#105d3d}
+.quick-grid{gap:16px}
+.quick-card{min-height:132px;padding:19px;border-radius:17px;gap:8px}
+.quick-icon{width:56px;height:56px;border-radius:16px;font-size:27px;margin-bottom:5px;background:#edf5ef;color:#176b49}
+.quick-icon svg{width:29px;height:29px;stroke-width:2}
+.quick-card b{font-size:14px;font-weight:750}
+.quick-card small{font-size:10px}
+.welcome{border-radius:20px;min-height:180px}
+.welcome-icon{font-size:100px}
+.btn{min-height:40px;border-radius:11px;font-weight:650;gap:9px}
+.btn svg,.top-actions svg{width:20px;height:20px;stroke-width:2.1}
+.btn-primary svg{width:21px;height:21px}
+.import-center-grid{gap:16px}
+.import-center-card{border-radius:17px;padding:21px}
+.import-center-icon{width:58px;height:58px;border-radius:17px;font-size:27px}
+.import-center-icon svg{width:30px;height:30px}
+.budget-hero-icon{width:64px;height:64px;font-size:30px}
+.panel,.stat{border-radius:17px;box-shadow:0 5px 22px rgba(18,55,36,.035)}
+.panel{padding:22px}
+.panel-head p,.section-heading p{font-size:10px;color:#849188}
+.page h3{letter-spacing:-.25px}
+.topbar{min-height:78px}
+.top-actions{gap:10px}
+.guide-trigger{background:#f0f5f1;border-color:#e2ebe4;color:#175e40}
+.module-guide-backdrop{position:fixed;inset:0;z-index:12000;background:rgba(12,25,18,.48);backdrop-filter:blur(5px);display:grid;place-items:center;padding:20px}
+.module-guide-backdrop[hidden]{display:none}
+.module-guide-dialog{width:min(560px,100%);max-height:min(78vh,720px);overflow:auto;background:#fff;border:1px solid #e4ebe6;border-radius:20px;padding:25px;box-shadow:0 28px 90px rgba(0,0,0,.22)}
+.module-guide-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.module-guide-head h2{margin:8px 0 0;font-size:23px;letter-spacing:-.5px;color:#18271e}
+.module-guide-content p{color:#647269;font-size:13px;line-height:1.65}
+.module-guide-content ol{padding-left:22px;margin:14px 0}
+.module-guide-content li{padding:5px 0 5px 4px;color:#33443a;font-size:13px;line-height:1.55}
+.module-guide-content .guide-note{padding:12px 14px;border-radius:12px;background:#f0f6f1;color:#42624e;font-size:12px;line-height:1.6}
+@media(max-width:760px){.sidebar{width:76px}.nav-item{justify-content:center;padding:9px 5px}.nav-item .nav-icon{width:42px;height:42px}.nav-item .nav-icon svg{width:24px;height:24px}.quick-icon{width:52px;height:52px}.module-guide-dialog{padding:19px}}
+
+
+/* BUILD V90 — clean dashboard and calmer navigation */
+:root{
+ --background:#f7f9f7!important;--foreground:#18231d!important;
+ --border:#e7ece8!important;--muted:#f2f5f2!important;
+}
+body{background:#f7f9f7!important;color:#18231d!important}
+.shell{grid-template-columns:224px minmax(0,1fr)!important;background:#f7f9f7!important}
+.sidebar{padding:22px 13px!important;background:#fff!important;border-right:1px solid #e9eeea!important}
+.brand{padding:3px 8px 25px!important;gap:10px!important}
+.brand-mark{width:38px!important;height:38px!important}
+.brand b{font-size:14px!important;letter-spacing:-.2px}
+.brand small{font-size:10px!important;color:#98a39b!important}
+.side-label{margin:17px 10px 7px!important;font-size:9px!important;letter-spacing:1px!important;color:#a0aaa3!important}
+.nav-item{min-height:42px!important;padding:7px 9px!important;gap:10px!important;border-radius:10px!important;font-size:12px!important;font-weight:600!important;color:#58665d!important}
+.nav-item .nav-icon{width:31px!important;height:31px!important;min-width:31px!important;border-radius:9px!important;background:#f3f6f3!important;color:#668071!important}
+.nav-item .nav-icon svg{width:18px!important;height:18px!important;stroke-width:1.9!important}
+.nav-item.active{background:#edf5ef!important;color:#145b3b!important;box-shadow:inset 2px 0 #18734b!important}
+.nav-item.active .nav-icon{background:#dceee2!important;color:#176b49!important}
+.sidebar-foot{font-size:10px!important;color:#89968d!important;padding:14px 9px!important}
+.main{padding:0 30px 32px!important;max-width:100%!important}
+.topbar{min-height:76px!important;padding:0 0 14px!important;margin-bottom:22px!important;border-bottom:1px solid #e9eeea!important}
+.page-brand{font-size:9px!important;letter-spacing:1.3px!important;color:#829087!important}
+#page-title{font-size:23px!important;font-weight:750!important;letter-spacing:-.7px!important;color:#1c2b22!important}
+.top-actions{gap:8px!important}
+.top-actions .btn{min-height:37px!important;padding:8px 12px!important;border-radius:10px!important;font-size:11px!important}
+.local-pill{font-size:10px!important;padding:7px 10px!important;background:#f0f5f1!important;border:1px solid #e5ece6!important}
+.page{gap:18px!important}
+.welcome{min-height:148px!important;padding:26px 30px!important;border-radius:17px!important;background:linear-gradient(115deg,#145b3b 0%,#1c7650 100%)!important;box-shadow:none!important}
+.welcome h2{font-size:25px!important;line-height:1.22!important;letter-spacing:-.7px!important;margin:9px 0!important}
+.welcome p{font-size:12px!important;opacity:.82!important;margin:0!important}
+.welcome-icon{font-size:72px!important;opacity:.16!important}
+.stats{gap:12px!important;margin:0!important}
+.stat{padding:17px 19px!important;border:1px solid #e9eeea!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important}
+.stat span{font-size:11px!important;color:#829087!important}
+.stat strong{font-size:21px!important;letter-spacing:-.4px!important;color:#1c2b22!important}
+.stat small{font-size:10px!important;color:#a0aaa3!important}
+.section-heading{margin:2px 0 0!important}
+.section-heading h3{font-size:15px!important;font-weight:750!important;color:#26362c!important}
+.section-heading p{display:none!important}
+.quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+.quick-card{min-height:116px!important;padding:17px!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;border:1px solid #e8eee9!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important;text-align:left!important;transition:transform .16s ease,border-color .16s ease!important}
+.quick-card:hover{transform:translateY(-2px)!important;border-color:#cbded0!important;box-shadow:0 7px 20px rgba(25,75,52,.05)!important}
+.quick-icon{width:46px!important;height:46px!important;min-width:46px!important;margin:0 0 8px!important;border-radius:13px!important;background:#edf5ef!important;color:#176b49!important}
+.quick-icon svg{width:24px!important;height:24px!important;stroke-width:1.9!important}
+.quick-card b{font-size:12px!important;font-weight:700!important;color:#26362c!important}
+.quick-card small{display:none!important}
+.panel{padding:19px!important;border:1px solid #e8eee9!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important}
+.panel-head{margin-bottom:14px!important}
+.panel-head h3{font-size:14px!important;color:#26362c!important}
+.panel-head p{font-size:10px!important;color:#98a39b!important}
+.btn{box-shadow:none!important}
+.btn-primary{background:#176b49!important;border-color:#176b49!important}
+input,select,textarea{border-radius:9px!important}
+.table-wrap{border-radius:10px!important}
+@media(max-width:980px){
+ .shell{grid-template-columns:205px minmax(0,1fr)!important}
+ .main{padding:0 20px 26px!important}
+}
+@media(max-width:720px){
+ .shell{grid-template-columns:1fr!important}
+ .sidebar{position:relative!important;width:100%!important;height:auto!important;padding:10px 12px!important}
+ .sidebar .brand{padding:4px 7px 10px!important}
+ .sidebar #nav{display:flex!important;overflow-x:auto!important;gap:5px!important;padding-bottom:5px!important}
+ .sidebar #nav .side-label{display:none!important}
+ .sidebar .nav-item{flex:0 0 auto!important;min-height:40px!important;padding:6px 9px!important}
+ .sidebar-foot{display:none!important}
+ .main{padding:0 14px 22px!important}
+ .topbar{align-items:flex-start!important;gap:10px!important;flex-wrap:wrap!important;padding-top:14px!important}
+ .top-actions{flex-wrap:wrap!important}
+ .welcome{padding:21px!important;min-height:130px!important}
+ .welcome h2{font-size:21px!important}
+ .welcome-icon{display:none!important}
+ .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+
+/* BUILD V91 — remove on-page instructions; keep guidance inside the Panduan modal */
+.page .panel-head p,
+.page .section-heading p,
+.page .import-center-hero p,
+.page .import-center-card p,
+.page .budget-template-download .panel-head p,
+.page .budget-template-download-row p,
+.page .import-center-section-title p,
+.page .accounts-card-title p,
+.page .opening-import-head p,
+.page .validation-hero p,
+.page .footnote,
+.page .import-center-notes,
+.page .empty-state p,
+.page .welcome p,
+.page .panel > .intro-copy{display:none!important}
+.page .import-center-card{min-height:225px!important;padding:23px!important;gap:13px!important}
+.page .import-center-card h4{font-size:16px!important;margin:2px 0 6px!important}
+.page .import-center-card .btn{margin-top:auto!important;align-self:flex-start!important}
+.page .import-center-hero{min-height:76px!important;padding:18px 22px!important}
+.page .import-center-hero h3{margin:3px 0!important;font-size:19px!important}
+.page .budget-template-download{padding:20px!important}
+.page .budget-template-download-row{align-items:center!important}
+.page .import-center-section-title{margin:22px 0 10px!important}
+.page .import-center-section-title h3{font-size:16px!important;margin:0!important}
+.page .accounts-card-title{margin-bottom:12px!important}
+.page .opening-import-head{margin-bottom:12px!important}
+.page .bulk-journal-panel .panel-head{margin-bottom:12px!important}
+.page .inline-message{font-size:11px!important;padding:9px 12px!important}
+@media(max-width:720px){.page .import-center-card{min-height:190px!important;padding:17px!important}}
+
+
+/* BUILD V92 — professional dashboard identity */
+#page-dashboard .welcome{min-height:124px!important;padding:27px 32px!important;display:flex!important;align-items:center!important}
+#page-dashboard .welcome>div:first-child{display:flex!important;flex-direction:column!important;gap:10px!important}
+#page-dashboard .welcome .eyebrow.light{font-size:12px!important;font-weight:750!important;letter-spacing:2.1px!important;line-height:1.3!important;color:rgba(255,255,255,.78)!important}
+#page-dashboard .welcome .welcome-brandline{display:block!important;margin:0!important;font-size:clamp(25px,3vw,36px)!important;line-height:1.12!important;font-weight:800!important;letter-spacing:-.8px!important;color:#fff!important}
+#page-dashboard .welcome .welcome-icon{font-size:76px!important;opacity:.17!important}
+@media(max-width:720px){#page-dashboard .welcome{min-height:108px!important;padding:22px!important}#page-dashboard .welcome .eyebrow.light{font-size:10px!important;letter-spacing:1.6px!important}#page-dashboard .welcome .welcome-brandline{font-size:25px!important}}
+
+
+/* BUILD V93 — small question-mark help beside budget heading */
+.journal-budget-title-wrap{position:relative;min-width:0;flex:1}
+.journal-budget-title-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.journal-budget-title-line h3{margin:0!important}
+.budget-help-button{width:19px;height:19px;min-width:19px;padding:0!important;display:inline-grid;place-items:center;border:1px solid #a9cdb6!important;border-radius:50%!important;background:#fff!important;color:#176b49!important;font-size:12px!important;font-weight:800!important;line-height:1!important;box-shadow:none!important}
+.budget-help-button:hover,.budget-help-button[aria-expanded="true"]{background:#eaf5ed!important;border-color:#176b49!important}
+.budget-help-popover{position:absolute;z-index:30;top:calc(100% + 9px);left:0;width:min(330px,calc(100vw - 70px));padding:11px 13px;border:1px solid #d8e8dd;border-radius:10px;background:#fff;color:#52645a;font-size:11px;line-height:1.55;box-shadow:0 10px 28px rgba(20,55,35,.12)}
+.budget-help-popover[hidden]{display:none!important}
+
+
+/* BUILD V94 — hide legacy inline hint; show only the help control */
+#page-journal .journal-budget-heading p{display:none!important}
+#page-journal .journal-budget-title-line{display:flex;align-items:center;gap:8px}
+#page-journal .budget-help-button{flex:0 0 19px}
+
+
+/* BUILD V96 — consistent contextual help controls for all module headings */
+.page .panel-head,.page .section-heading,.page .budget-month-head,
+.page .budget-hero,.page .import-center-hero,.page .import-center-section-title,
+.page .accounts-card-title,.page .opening-import-head,.page .validation-hero,
+.page .debit-note-intro{position:relative}
+.sbp-context-help-button{margin-left:7px;vertical-align:middle}
+.sbp-context-help{position:absolute;z-index:100;top:calc(100% + 7px);left:0;max-width:min(360px,calc(100vw - 48px));width:max-content;white-space:normal}
+.sbp-context-help[hidden]{display:none!important}
+
+
+/* BUILD V97 — one aligned title + help marker system */
+.sbp-title-help-wrap{position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:7px!important;max-width:100%!important;vertical-align:middle!important}
+.sbp-title-help-wrap>h2,.sbp-title-help-wrap>h3,.sbp-title-help-wrap>h4{display:inline-block!important;flex:0 1 auto!important;min-width:0!important;margin:0!important}
+.sbp-title-help-button{flex:0 0 19px!important}
+.sbp-context-help-button{flex:0 0 19px!important;margin:0!important;vertical-align:middle!important}
+.sbp-title-help-wrap>.sbp-context-help{position:absolute!important;top:calc(100% + 9px)!important;left:0!important;right:auto!important;z-index:10050!important;width:min(350px,calc(100vw - 48px))!important;max-width:calc(100vw - 48px)!important;white-space:normal!important}
+.sbp-title-help-wrap>.sbp-context-help[hidden]{display:none!important}
+
+
+/* BUILD V98 — harmonize annual/monthly budget template area */
+#page-import-center .budget-template-download{
+ padding:22px!important;
+ border:1px solid #e5ece7!important;
+ border-radius:16px!important;
+ background:#fff!important;
+ box-shadow:0 5px 18px rgba(18,55,36,.035)!important;
+}
+#page-import-center .budget-template-download>.panel-head{
+ display:flex!important;
+ align-items:center!important;
+ justify-content:space-between!important;
+ gap:18px!important;
+ margin:0 0 17px!important;
+ padding:0 0 16px!important;
+ border-bottom:1px solid #edf1ee!important;
+}
+#page-import-center .budget-template-download>.panel-head>div{
+ display:flex!important;
+ flex:1 1 auto!important;
+ flex-direction:column!important;
+ align-items:flex-start!important;
+ gap:9px!important;
+ min-width:0!important;
+}
+#page-import-center .budget-template-download>.panel-head .tag{
+ display:inline-flex!important;
+ align-self:flex-start!important;
+ width:max-content!important;
+ margin:0!important;
+}
+#page-import-center .budget-template-download>.panel-head h3{
+ margin:0!important;
+ font-size:17px!important;
+ line-height:1.3!important;
+ font-weight:750!important;
+ color:#26362c!important;
+}
+#page-import-center .budget-template-download .sbp-title-help-wrap{
+ display:inline-flex!important;
+ flex-direction:row!important;
+ align-items:center!important;
+ gap:8px!important;
+}
+#page-import-center .budget-template-download .import-center-mark{
+ width:54px!important;
+ height:54px!important;
+ min-width:54px!important;
+ display:grid!important;
+ place-items:center!important;
+ border-radius:15px!important;
+ background:#e9f7ee!important;
+ color:#176b49!important;
+}
+#page-import-center .budget-template-download .import-center-mark svg{
+ width:27px!important;height:27px!important;
+}
+#page-import-center .budget-template-download-row{
+ display:flex!important;
+ align-items:center!important;
+ justify-content:space-between!important;
+ gap:16px!important;
+ padding:0!important;
+}
+#page-import-center .budget-template-download-row>div{
+ min-width:0!important;
+ flex:1 1 auto!important;
+}
+#page-import-center .budget-template-download-row>b,
+#page-import-center .budget-template-download-row>div>b{
+ display:block!important;
+ margin:0!important;
+ color:#26362c!important;
+ font-size:13px!important;
+ font-weight:700!important;
+}
+#page-import-center .budget-template-download-row .btn{
+ flex:0 0 auto!important;
+ min-height:43px!important;
+ padding:10px 16px!important;
+ border-radius:10px!important;
+ white-space:nowrap!important;
+}
+@media(max-width:620px){
+ #page-import-center .budget-template-download{padding:16px!important}
+ #page-import-center .budget-template-download>.panel-head{gap:10px!important}
+ #page-import-center .budget-template-download .import-center-mark{width:46px!important;height:46px!important;min-width:46px!important}
+ #page-import-center .budget-template-download-row{align-items:flex-start!important;flex-direction:column!important}
+ #page-import-center .budget-template-download-row .btn{width:100%!important;justify-content:center!important}
+}
+
+
+/* BUILD V99 — annual/monthly budget import follows Master Akun layout */
+#page-import-center .budget-import-account-style{margin:0 0 18px!important}
+#page-import-center .budget-import-account-style .accounts-card-title{align-items:center!important;margin:0 0 16px!important}
+#page-import-center .budget-import-account-style .accounts-card-title>div:last-child{display:flex!important;align-items:center!important;gap:8px!important}
+#page-import-center .budget-import-account-style .accounts-card-title h3{margin:0!important;font-size:17px!important;font-weight:750!important;color:#26362c!important}
+#page-import-center .budget-import-account-style .accounts-import-controls{display:flex!important;align-items:center!important;gap:12px!important;flex-wrap:wrap!important}
+#page-import-center .budget-import-account-style .accounts-template-actions{display:flex!important;gap:10px!important;flex:0 0 100%!important;margin-top:3px!important}
+#page-import-center .budget-import-account-style .accounts-template-actions .btn{min-height:42px!important}
+#page-import-center .budget-import-account-style .file-status{min-width:125px!important}
+#page-import-center .budget-import-account-style #budget-import-run{min-height:43px!important}
+@media(max-width:620px){
+ #page-import-center .budget-import-account-style .accounts-import-controls{align-items:stretch!important;flex-direction:column!important}
+ #page-import-center .budget-import-account-style .accounts-import-controls>*{width:100%!important}
+ #page-import-center .budget-import-account-style .accounts-template-actions{flex-direction:column!important}
+}
+
+
+/* BUILD V100 — remove duplicate import shortcuts and tighten center */
+#page-import-center .import-center-shortcuts{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:12px!important;
+ margin:0 0 18px!important;
+}
+#page-import-center .import-center-shortcuts .import-center-card{
+ min-height:0!important;
+ padding:14px 16px!important;
+ display:grid!important;
+ grid-template-columns:48px minmax(0,1fr) auto!important;
+ align-items:center!important;
+ gap:12px!important;
+ border-radius:14px!important;
+}
+#page-import-center .import-center-shortcuts .import-center-icon{
+ width:46px!important;height:46px!important;border-radius:13px!important;
+}
+#page-import-center .import-center-shortcut-copy{min-width:0!important}
+#page-import-center .import-center-shortcut-copy .tag{display:block!important;margin:0 0 4px!important}
+#page-import-center .import-center-shortcut-copy h4{margin:0!important;font-size:14px!important}
+#page-import-center .import-center-shortcuts .btn{
+ min-height:38px!important;padding:8px 12px!important;white-space:nowrap!important;
+}
+#page-import-center .budget-import-account-style{margin:0 0 14px!important}
+#page-import-center .accounts-import-card{margin-bottom:14px!important}
+#page-import-center .opening-import-panel{margin-bottom:14px!important}
+#page-import-center .bulk-journal-panel{margin-bottom:14px!important}
+@media(max-width:720px){
+ #page-import-center .import-center-shortcuts{grid-template-columns:1fr!important}
+ #page-import-center .import-center-shortcuts .import-center-card{
+  grid-template-columns:42px minmax(0,1fr)!important;
+ }
+ #page-import-center .import-center-shortcuts .btn{grid-column:1/-1!important;width:100%!important}
+}
+
+
+/* BUILD V101 — compact unified import cards */
+#page-import-center .import-center-work-grid{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:14px!important;
+ align-items:start!important;
+ margin:0 0 18px!important;
+}
+#page-import-center .import-center-work-grid>.accounts-card,
+#page-import-center .import-center-work-grid>.opening-import-panel,
+#page-import-center .import-center-work-grid>.bulk-journal-panel{
+ min-width:0!important;
+ width:100%!important;
+ min-height:0!important;
+ margin:0!important;
+ padding:16px!important;
+ border:1px solid #e3ebe5!important;
+ border-radius:15px!important;
+ background:#fff!important;
+ box-shadow:0 4px 15px rgba(24,56,39,.035)!important;
+}
+#page-import-center .import-center-work-grid .accounts-card-title,
+#page-import-center .import-center-work-grid .opening-import-head,
+#page-import-center .import-center-work-grid .panel-head{
+ display:flex!important;
+ align-items:center!important;
+ gap:10px!important;
+ margin:0 0 13px!important;
+ padding:0 0 12px!important;
+ border-bottom:1px solid #edf1ee!important;
+}
+#page-import-center .import-center-work-grid .accounts-card-title h3,
+#page-import-center .import-center-work-grid .opening-import-head h3,
+#page-import-center .import-center-work-grid .panel-head h3{
+ margin:0!important;
+ font-size:15px!important;
+ line-height:1.35!important;
+ font-weight:750!important;
+}
+#page-import-center .import-center-work-grid .accounts-card-title p,
+#page-import-center .import-center-work-grid .opening-import-head p,
+#page-import-center .import-center-work-grid .panel-head p{
+ display:none!important;
+}
+#page-import-center .import-center-work-grid .accounts-icon{
+ width:42px!important;height:42px!important;min-width:42px!important;
+ border-radius:12px!important;
+}
+#page-import-center .import-center-work-grid .accounts-import-controls,
+#page-import-center .import-center-work-grid .opening-import-controls,
+#page-import-center .import-center-work-grid .bulk-import-controls{
+ display:flex!important;
+ align-items:center!important;
+ flex-wrap:wrap!important;
+ gap:9px!important;
+}
+#page-import-center .import-center-work-grid .file-status{
+ flex:1 1 110px!important;
+ min-width:0!important;
+ font-size:12px!important;
+}
+#page-import-center .import-center-work-grid .file-btn,
+#page-import-center .import-center-work-grid .btn{
+ min-height:38px!important;
+ padding:8px 12px!important;
+ border-radius:9px!important;
+ font-size:12px!important;
+}
+#page-import-center .import-center-work-grid .accounts-template-actions{
+ display:flex!important;
+ flex:1 0 100%!important;
+ flex-wrap:wrap!important;
+ gap:8px!important;
+ margin-top:2px!important;
+}
+#page-import-center .import-center-work-grid .footnote,
+#page-import-center .import-center-work-grid .inline-message{
+ margin:10px 0 0!important;
+ padding:8px 10px!important;
+ font-size:11px!important;
+}
+#page-import-center .import-center-work-grid .budget-import-panel{
+ grid-column:1/-1!important;
+}
+#page-import-center .import-center-work-grid .bulk-review,
+#page-import-center .import-center-work-grid .opening-import-review{
+ margin-top:12px!important;
+}
+@media(max-width:760px){
+ #page-import-center .import-center-work-grid{grid-template-columns:1fr!important;gap:10px!important}
+ #page-import-center .import-center-work-grid>.accounts-card,
+ #page-import-center .import-center-work-grid>.opening-import-panel,
+ #page-import-center .import-center-work-grid>.bulk-journal-panel{padding:13px!important}
+}
+
+
+/* BUILD V102 — startup backup notice card */
+.startup-backup-overlay{
+ position:fixed!important;inset:0!important;z-index:20000!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ padding:22px!important;background:rgba(16,32,23,.48)!important;
+ backdrop-filter:blur(7px)!important;-webkit-backdrop-filter:blur(7px)!important;
+}
+.startup-backup-overlay[hidden]{display:none!important}
+.startup-backup-card{
+ width:min(620px,100%)!important;max-height:min(88vh,820px)!important;overflow:auto!important;
+ padding:26px!important;border:1px solid #e0e9e2!important;border-radius:20px!important;
+ background:#fff!important;box-shadow:0 24px 80px rgba(10,35,21,.2)!important;
+}
+.startup-backup-icon{
+ width:52px!important;height:52px!important;display:grid!important;place-items:center!important;
+ margin-bottom:15px!important;border-radius:15px!important;background:#e9f7ee!important;color:#176b49!important;
+}
+.startup-backup-icon svg{width:27px!important;height:27px!important}
+.startup-backup-card>.tag{display:inline-flex!important;margin-bottom:9px!important}
+.startup-backup-card h2{margin:0 0 10px!important;color:#25372c!important;font-size:23px!important;line-height:1.25!important;font-weight:800!important}
+.startup-backup-card p{margin:0!important;color:#617168!important;font-size:13px!important;line-height:1.6!important}
+.startup-backup-lead{margin-bottom:16px!important}
+.startup-backup-warning{
+ padding:14px 15px!important;margin:0 0 14px!important;border:1px solid #f1dfb9!important;
+ border-radius:13px!important;background:#fff9ec!important;
+}
+.startup-backup-warning>b{display:flex!important;align-items:center!important;gap:7px!important;margin-bottom:6px!important;color:#875a15!important;font-size:13px!important}
+.startup-backup-warning b svg{width:16px!important;height:16px!important}
+.startup-backup-warning p{color:#765d35!important}
+.startup-backup-points{display:grid!important;gap:7px!important;margin:0 0 18px!important;padding-left:19px!important;color:#46574d!important;font-size:13px!important;line-height:1.5!important}
+.startup-backup-actions{display:flex!important;flex-wrap:wrap!important;gap:9px!important}
+.startup-backup-actions .btn{min-height:42px!important}
+.startup-backup-footnote{margin-top:13px!important;padding-top:12px!important;border-top:1px solid #edf1ee!important;font-size:11px!important}
+@media(max-width:560px){
+ .startup-backup-overlay{padding:12px!important}
+ .startup-backup-card{padding:19px!important;border-radius:16px!important}
+ .startup-backup-card h2{font-size:20px!important}
+ .startup-backup-actions{flex-direction:column!important}
+ .startup-backup-actions .btn{width:100%!important;justify-content:center!important}
+}
+
+
+/* BUILD V103 — learning-module guide layout */
+.module-guide-dialog{width:min(820px,calc(100vw - 28px))!important;max-height:88vh!important}
+.module-guide-content{padding:18px 22px 24px!important;overflow-y:auto!important}
+.module-guide-content p{font-size:13px!important;line-height:1.75!important;color:#526258!important;margin:0!important}
+.guide-learning-intro{padding:16px 17px!important;border:1px solid #dcebe1!important;border-radius:14px!important;background:#f3faf5!important;margin-bottom:14px!important}
+.guide-section-kicker{display:block!important;font-size:10px!important;font-weight:800!important;letter-spacing:.09em!important;color:#167348!important;margin-bottom:7px!important}
+.guide-learning-section,.guide-learning-example,.guide-learning-warning{padding:15px 16px!important;border:1px solid #e7ede8!important;border-radius:13px!important;background:#fff!important;margin:0 0 12px!important}
+.guide-learning-section h3,.guide-learning-example h3,.guide-learning-warning h3{font-size:14px!important;line-height:1.4!important;font-weight:800!important;color:#26372d!important;margin:0 0 8px!important}
+.guide-learning-steps{display:grid!important;gap:13px!important;list-style:none!important;margin:0!important;padding:0!important}
+.guide-learning-steps>li{display:grid!important;grid-template-columns:28px minmax(0,1fr)!important;gap:10px!important;align-items:start!important}
+.guide-step-number{width:26px!important;height:26px!important;display:grid!important;place-items:center!important;border-radius:9px!important;background:#eaf6ee!important;color:#176b49!important;font-size:12px!important;font-weight:800!important}
+.guide-learning-steps b{display:block!important;color:#293a30!important;font-size:13px!important;margin:1px 0 4px!important}
+.guide-learning-steps p{font-size:12.5px!important}
+.guide-learning-example{background:#f7fafc!important;border-color:#e1eaf0!important}
+.guide-learning-warning{background:#fff9ef!important;border-color:#f1e1c3!important}
+.guide-learning-warning h3{display:flex!important;align-items:center!important;gap:7px!important;color:#895c18!important}
+.guide-learning-warning h3 svg{width:17px!important;height:17px!important}
+@media(max-width:600px){
+ .module-guide-content{padding:13px!important}
+ .guide-learning-intro,.guide-learning-section,.guide-learning-example,.guide-learning-warning{padding:13px!important}
+ .module-guide-dialog{max-height:92vh!important}
+}
+
+
+/* BUILD V104 — final release based on approved V103 preview */
