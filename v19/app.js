@@ -225,9 +225,37 @@ function renderBudgetImportPreview(result,fileName){
  $('budget-import-preview').innerHTML='<table><thead><tr><th>Tahun</th><th>SANDI</th><th>Nama Akun</th><th>Anggaran Tahunan</th><th>Total Bulanan</th><th>Status</th></tr></thead><tbody>'+result.items.map(x=>'<tr><td>'+x.year+'</td><td>'+esc(x.code)+'</td><td>'+esc((state.accounts.find(a=>a.code===x.code)||{}).name||'')+'</td><td class="num">'+money(x.annual)+'</td><td class="num">'+money(x.monthly.reduce((s,n)=>s+n,0))+'</td><td>'+(findBudget(x.year,x.code)?'Perbarui':'Baru')+'</td></tr>').join('')+(result.errors.length?'<tr><td colspan="6"><b>Temuan:</b><br>'+result.errors.map(esc).join('<br>')+'</td></tr>':'')+'</tbody></table>';
  $('budget-import-confirm').disabled=!result.items.length||result.errors.length>0;
 }
-$('budget-import-open').onclick=()=>{$('budget-import-panel').hidden=false;$('budget-import-file').click()};
-$('budget-import-cancel').onclick=()=>{$('budget-import-panel').hidden=true;pendingBudgetImport=null;$('budget-import-file').value='';$('budget-import-confirm').disabled=true};
-$('budget-import-file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{if(!window.XLSX)throw Error('Mesin Excel belum tersedia.');let wb;if(/\.csv$/i.test(f.name)){const rows=parseCSV(await f.text());const ws=XLSX.utils.aoa_to_sheet(rows);wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Anggaran_Tahunan');throw Error('Import CSV belum didukung untuk template gabungan. Gunakan file Excel (.xlsx).')}wb=XLSX.read(await f.arrayBuffer(),{type:'array'});renderBudgetImportPreview(parseBudgetWorkbook(wb),f.name)}catch(err){pendingBudgetImport=null;$('budget-import-confirm').disabled=true;$('budget-import-message').textContent='Gagal membaca template: '+err.message;$('budget-import-message').className='inline-message bad';$('budget-import-preview').hidden=true}};
+let selectedBudgetFile=null;
+$('budget-import-file').onchange=e=>{
+ selectedBudgetFile=e.target.files?.[0]||null;
+ pendingBudgetImport=null;
+ $('budget-import-run').disabled=!selectedBudgetFile;
+ $('budget-import-status').textContent=selectedBudgetFile?'File dipilih: '+selectedBudgetFile.name:'Belum ada file dipilih.';
+ $('budget-import-panel').hidden=true;
+};
+$('budget-import-run').onclick=async()=>{
+ const f=selectedBudgetFile;if(!f)return;
+ $('budget-import-run').disabled=true;
+ $('budget-import-panel').hidden=false;
+ $('budget-import-message').textContent='Sedang memeriksa file anggaran...';
+ try{
+  if(!window.XLSX)throw Error('Mesin Excel belum tersedia.');
+  if(/\.csv$/i.test(f.name))throw Error('Import anggaran menggunakan template Excel gabungan (.xlsx).');
+  const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+  renderBudgetImportPreview(parseBudgetWorkbook(wb),f.name);
+ }catch(err){
+  pendingBudgetImport=null;$('budget-import-confirm').disabled=true;
+  $('budget-import-message').textContent='Gagal membaca template: '+err.message;
+  $('budget-import-message').className='inline-message bad';
+  $('budget-import-preview').hidden=true;
+ }finally{$('budget-import-run').disabled=false;}
+};
+$('budget-import-cancel').onclick=()=>{
+ $('budget-import-panel').hidden=true;pendingBudgetImport=null;
+ $('budget-import-file').value='';selectedBudgetFile=null;
+ $('budget-import-status').textContent='Belum ada file dipilih.';
+ $('budget-import-run').disabled=true;$('budget-import-confirm').disabled=true;
+};
 $('budget-import-confirm').onclick=async()=>{const batch=pendingBudgetImport;if(!batch?.items?.length||batch.errors.length)return;if(!requireImportPassword('Import Anggaran'))return;const replacements=batch.items.filter(x=>findBudget(x.year,x.code));if(replacements.length&&!confirm(replacements.length+' anggaran sudah ada dan akan diperbarui. Lanjutkan import?'))return;try{const now=new Date().toISOString();for(const x of batch.items){const old=findBudget(x.year,x.code),item={...(old||{}),year:x.year,accountCode:x.code,annual:x.annual,monthly:x.monthly,createdAt:old?.createdAt||now,updatedAt:now,revisions:[...(old?.revisions||[]),...(old?[{at:now,before:{annual:old.annual,monthly:old.monthly},after:{annual:x.annual,monthly:x.monthly},source:'IMPORT'}]:[])]};state.annualBudgets=old?state.annualBudgets.map(z=>z===old?item:z):[...state.annualBudgets,item]}await persist();const years=[...new Set([new Date().getFullYear(),...state.annualBudgets.map(x=>Number(x.year))])].sort((a,b)=>b-a);$('budget-filter-year').innerHTML=years.map(y=>'<option value="'+y+'">'+y+'</option>').join('');$('budget-filter-year').value=String(batch.items[0].year);renderAnnualBudgets();updateJournalBudgetPreview();$('budget-import-message').textContent=batch.items.length+' anggaran berhasil diimpor dan disimpan ke database lokal.';$('budget-import-message').className='inline-message good';$('budget-import-confirm').disabled=true;pendingBudgetImport=null;toast('Import anggaran berhasil.')}catch(err){$('budget-import-message').textContent='Import gagal: '+err.message;$('budget-import-message').className='inline-message bad'}};
 function initAnnualBudget(){ $('budget-account').innerHTML='<option value="">Pilih SANDI akun</option>'+state.accounts.map(a=>'<option value="'+esc(a.code)+'">'+esc(a.code)+' — '+esc(a.name)+'</option>').join('');$('budget-account').onchange=()=>{$('budget-account-name').value=(state.accounts.find(a=>a.code===$('budget-account').value)||{}).name||'';budgetValidation()};$('budget-annual').oninput=budgetValidation;$('budget-distribute').onclick=()=>{const n=Number($('budget-annual').value||0);if(n<=0)return toast('Isi anggaran tahunan terlebih dahulu.');const q=Math.floor(n/12),r=n-q*12;renderBudgetMonths(Array.from({length:12},(_,i)=>q+(i<r?1:0)));budgetValidation()};$('budget-reset').onclick=resetBudget;$('budget-save').onclick=async()=>{const y=Number($('budget-year').value),code=$('budget-account').value,annual=Number($('budget-annual').value||0),monthly=budgetMonths(),sum=monthly.reduce((a,b)=>a+b,0);if(!code||!Number.isInteger(y)||y<2000||y>2100||annual<=0||monthly.some(x=>!Number.isFinite(x)||x<0)||Math.abs(sum-annual)>.005)return toast('Periksa SANDI, tahun, dan distribusi bulanan.');const old=findBudget(y,code);if(old&&!editingBudget)return toast('Anggaran sudah ada. Gunakan Edit.');const now=new Date().toISOString(),item={...(old||{}),year:y,accountCode:code,annual,monthly,createdAt:old?.createdAt||now,updatedAt:now,revisions:[...(old?.revisions||[]),...(old?[{at:now,before:{annual:old.annual,monthly:old.monthly},after:{annual,monthly}}]:[])]};state.annualBudgets=old?state.annualBudgets.map(x=>x===old?item:x):[...state.annualBudgets,item];await persist();if(![...$('budget-filter-year').options].some(o=>Number(o.value)===y))$('budget-filter-year').add(new Option(y,y));$('budget-filter-year').value=y;renderAnnualBudgets();resetBudget();updateJournalBudgetPreview();toast('Anggaran berhasil disimpan.')};$('budget-filter-year').innerHTML=[...new Set([new Date().getFullYear(),...(state.annualBudgets||[]).map(x=>Number(x.year))])].sort((a,b)=>b-a).map(y=>'<option value="'+y+'">'+y+'</option>').join('');$('budget-filter-year').onchange=renderAnnualBudgets;$('budget-search').oninput=renderAnnualBudgets;resetBudget();renderAnnualBudgets()}
 
@@ -933,6 +961,304 @@ $('ledger-print').onclick=printLedger;
 $('export-trial-xlsx').onclick=exportTrialBalanceXlsx;
 
 
+
+/* REDESIGN PREVIEW V89 — contextual module guide */
+const moduleGuides={
+ 'page-dashboard':{
+  title:'Dashboard',purpose:'Dashboard adalah halaman ringkasan untuk melihat kondisi pembukuan. Halaman ini membantu pengguna mengetahui gambaran umum tanpa harus membuka laporan satu per satu.',
+  prepare:'Pastikan data Master Akun, saldo awal, dan jurnal sudah dimasukkan dengan benar. Dashboard hanya dapat menampilkan informasi yang sudah tersimpan.',
+  steps:[
+   ['Periksa total debit dan kredit','Kartu Total Debit dan Total Kredit menunjukkan akumulasi nilai transaksi yang tercatat. Bandingkan keduanya untuk melihat apakah pembukuan seimbang.'],
+   ['Periksa jumlah transaksi','Jumlah transaksi memberi gambaran aktivitas yang sudah tersimpan. Jika angka tidak sesuai perkiraan, lanjutkan pemeriksaan melalui Daftar Jurnal.'],
+   ['Lihat jurnal terbaru','Gunakan daftar aktivitas atau jurnal terbaru untuk menemukan transaksi yang baru dimasukkan. Periksa tanggal, nomor bukti, uraian, dan statusnya.'],
+   ['Gunakan akses cepat','Pilih menu Input Jurnal untuk mencatat transaksi, Master Akun untuk memeriksa daftar akun, atau Laporan untuk melihat hasil pembukuan.']
+  ],
+  example:'Jika total debit Rp10.000.000 dan total kredit Rp10.000.000, jumlahnya seimbang. Jika berbeda, jangan langsung menganggap data benar; telusuri jurnal yang belum seimbang atau data yang belum lengkap.',
+  checks:'Dashboard adalah ringkasan, bukan tempat memperbaiki transaksi. Untuk mengetahui penyebab selisih, buka Daftar Jurnal, Validasi, atau Neraca Percobaan.',
+  note:'Angka dashboard mengikuti data yang tersimpan dan aturan perhitungan masing-masing kartu. Selalu gunakan laporan terkait untuk pemeriksaan resmi.'
+ },
+ 'page-journal':{
+  title:'Input Jurnal',purpose:'Menu ini digunakan untuk mencatat transaksi keuangan berdasarkan bukti yang sah, misalnya nota, faktur, kuitansi, bukti kas, atau dokumen transaksi perusahaan.',
+  prepare:'Siapkan dokumen sumber, tanggal transaksi, nomor bukti, uraian transaksi, serta SANDI akun yang benar. Pastikan akun sudah tersedia di Master Akun dan periode pembukuan sesuai.',
+  steps:[
+   ['Isi tanggal transaksi','Masukkan tanggal sesuai tanggal pada dokumen sumber, bukan tanggal ketika Anda kebetulan membuka aplikasi. Tanggal menentukan periode laporan dan dapat memengaruhi kontrol anggaran.'],
+   ['Isi nomor bukti','Gunakan nomor bukti yang mengikuti tata penomoran perusahaan. Nomor ini membantu pencarian dan mencegah transaksi tertukar. Jangan membuat nomor baru secara sembarangan jika sudah ada nomor resmi.'],
+   ['Tulis keterangan transaksi','Jelaskan transaksi secara singkat tetapi mudah dikenali. Sebutkan tujuan atau objek transaksi, bukan hanya menulis “biaya” atau “pembelian”.'],
+   ['Pilih SANDI akun pada setiap baris','Pilih kode akun dari daftar Master Akun. Pastikan nama akun yang tampil sesuai dengan jenis transaksi pada dokumen. Jangan memilih akun hanya karena namanya terdengar mirip.'],
+   ['Isi debit dan kredit','Masukkan nominal pada kolom yang sesuai. Satu baris umumnya diisi debit atau kredit sesuai sifat pencatatannya. Jangan mengisi kedua sisi pada satu baris kecuali aturan aplikasi dan transaksi memang mengharuskannya.'],
+   ['Tambahkan baris jika diperlukan','Satu transaksi dapat melibatkan lebih dari dua akun. Tambahkan baris untuk seluruh akun yang terpengaruh, lalu pastikan setiap baris memiliki SANDI dan nominal yang benar.'],
+   ['Periksa keseimbangan','Total debit harus sama dengan total kredit. Jika belum sama, periksa nominal, akun, atau baris yang tertinggal. Jangan mengubah angka hanya untuk memaksa selisih menjadi nol tanpa dasar dokumen.'],
+   ['Simpan sebagai Draft atau Posting','Draft digunakan untuk menyimpan pekerjaan yang masih perlu diperiksa. Posting digunakan setelah data benar dan siap menjadi transaksi resmi sesuai kewenangan perusahaan.']
+  ],
+  example:'Contoh sederhana: pembelian perlengkapan tunai Rp500.000. Berdasarkan kebijakan akun perusahaan, catat akun perlengkapan pada sisi debit Rp500.000 dan akun kas pada sisi kredit Rp500.000. Total kedua sisi harus sama.',
+  checks:'Periksa kembali tanggal, nomor bukti, SANDI, uraian, dan nominal sebelum Posting. Jurnal berstatus POSTED digunakan dalam perhitungan mutasi laporan; Draft tidak diperlakukan sebagai transaksi Posted.',
+  note:'Jangan membuat jurnal berdasarkan perkiraan jika bukti belum tersedia. Jika salah setelah Posting, ikuti prosedur koreksi atau pembatalan yang berlaku; jangan menghapus jejak transaksi secara sembarangan.'
+ },
+ 'page-journal-list':{
+  title:'Daftar Jurnal',purpose:'Menu ini merupakan tempat melihat dan menelusuri jurnal yang sudah disimpan, termasuk memeriksa status Draft, Posted, atau status lain yang ditampilkan aplikasi.',
+  prepare:'Ketahui nomor bukti, tanggal, periode, atau kata kunci uraian transaksi yang ingin dicari.',
+  steps:[
+   ['Tentukan periode atau tanggal','Gunakan filter periode untuk mempersempit daftar. Pastikan rentang tanggal sesuai dengan dokumen yang sedang diperiksa.'],
+   ['Gunakan kolom pencarian','Ketik nomor bukti, uraian, atau kata kunci yang mudah dikenali. Hapus kata kunci jika hasil tidak ditemukan.'],
+   ['Periksa status jurnal','Draft berarti masih berupa catatan yang belum diposting. Posted berarti sudah masuk ke perhitungan mutasi laporan. Baca status yang ditampilkan sebelum melakukan tindakan.'],
+   ['Buka rincian jurnal','Periksa seluruh baris akun, SANDI, debit, kredit, dan keterangan. Jangan hanya melihat total karena kesalahan akun bisa terjadi walaupun total tetap seimbang.'],
+   ['Lakukan tindakan sesuai kewenangan','Gunakan tombol tindakan yang tersedia berdasarkan status jurnal. Jika perlu koreksi, ikuti prosedur perusahaan dan simpan bukti pendukungnya.']
+  ],
+  example:'Jika mencari transaksi pembelian tanggal 15, pilih periode yang mencakup tanggal tersebut lalu cari nomor bukti pada kolom pencarian. Buka detail untuk memastikan akun dan nominalnya.',
+  checks:'Pastikan jurnal yang diharapkan sudah muncul dan statusnya benar. Jika transaksi tidak masuk laporan, periksa apakah jurnal masih Draft atau tanggalnya berada di periode lain.',
+  note:'Jurnal POSTED menjadi sumber mutasi Neraca Percobaan dan realisasi anggaran. Jangan mengubah atau membatalkan jurnal tanpa persetujuan yang berwenang.'
+ },
+ 'page-debit-notes':{
+  title:'Nota Debet',purpose:'Nota Debet digunakan untuk mendokumentasikan penyesuaian atau koreksi yang memerlukan catatan tersendiri dan dapat dihubungkan dengan transaksi sumber.',
+  prepare:'Siapkan dokumen pendukung, tanggal, pihak terkait, alasan nota, nomor referensi, serta rincian akun dan nominal yang akan dicatat.',
+  steps:[
+   ['Isi identitas nota','Masukkan tanggal, pihak atau unit terkait, nomor referensi, dan uraian alasan. Gunakan keterangan yang menjelaskan mengapa nota dibuat.'],
+   ['Cari transaksi sumber bila ada','Jika nota berhubungan dengan transaksi yang sudah diposting, cari transaksi tersebut melalui pencarian sumber. Periksa nomor bukti dan nilainya sebelum memilih.'],
+   ['Masukkan rincian akun','Tambahkan akun yang diperlukan berdasarkan dokumen koreksi. Pastikan SANDI berasal dari Master Akun yang benar.'],
+   ['Masukkan nominal debit dan kredit','Catat nilai sesuai dasar koreksi. Jangan menentukan sisi debit/kredit hanya berdasarkan dugaan; ikuti sifat akun dan kebijakan akuntansi perusahaan.'],
+   ['Periksa total dan alasan','Pastikan total debit sama dengan kredit dan uraian menjelaskan hubungan antara nota dan transaksi sumber.'],
+   ['Simpan Draft atau Posting','Simpan Draft bila masih menunggu pemeriksaan. Posting hanya setelah nota, sumber, dan nominal disetujui.']
+  ],
+  example:'Misalnya terdapat koreksi biaya berdasarkan dokumen tambahan. Nota harus menjelaskan transaksi asal, alasan koreksi, akun yang terpengaruh, dan nilai koreksinya.',
+  checks:'Periksa apakah nota tidak menggandakan koreksi yang sudah pernah dibuat. Pastikan transaksi sumber yang dipilih benar.',
+  note:'Pembuatan Nota Debet tidak berarti jurnal asal otomatis berubah. Perlakukan nota sebagai dokumen dan pencatatan koreksi tersendiri sesuai alur aplikasi.'
+ },
+ 'page-accounts':{
+  title:'Master Akun',purpose:'Master Akun adalah daftar utama kode atau SANDI dan nama akun. Modul lain menggunakan daftar ini sebagai acuan agar transaksi dicatat pada akun yang konsisten.',
+  prepare:'Siapkan daftar akun resmi perusahaan yang memuat kode/SANDI dan nama akun. Jika melakukan import, gunakan file yang sesuai dengan format yang didukung.',
+  steps:[
+   ['Cari akun yang sudah ada','Gunakan pencarian berdasarkan SANDI atau nama. Periksa dahulu sebelum menambahkan akun baru agar tidak terjadi duplikasi.'],
+   ['Tambahkan akun bila diperlukan','Masukkan SANDI dan nama akun sesuai daftar resmi. Pastikan tidak ada spasi, salah ketik, atau kode yang tertukar.'],
+   ['Perbarui data dengan hati-hati','Jika nama akun berubah, pastikan perubahan tersebut memang disetujui dan tidak mengubah arti kode akun. Jangan mengganti SANDI hanya untuk merapikan tampilan.'],
+   ['Periksa keunikan SANDI','Setiap akun harus memiliki kode yang dapat dibedakan. Kode yang sama untuk dua akun dapat menyebabkan transaksi salah klasifikasi.'],
+   ['Gunakan Master Akun sebagai acuan','Saat menginput jurnal, saldo awal, atau anggaran, pilih akun dari daftar ini. Hindari mengetik kode berbeda di file sumber.']
+  ],
+  example:'Jika SANDI 510101 adalah Biaya Pemeliharaan Mesin, seluruh jurnal dan anggaran untuk akun tersebut harus merujuk pada kode yang sama.',
+  checks:'Sebelum import, cocokkan jumlah baris, SANDI, dan nama akun dengan file sumber. Setelah import, cari beberapa akun secara acak untuk memastikan hasilnya benar.',
+  note:'Master Akun merupakan sumber referensi akun. Saldo Awal ACC & Program menyimpan nilai saldo dengan mengacu pada SANDI Master Akun, bukan membuat akun duplikat.'
+ },
+ 'page-opening-balances':{
+  title:'Saldo Awal ACC & Program',purpose:'Modul ini menyimpan posisi saldo pembukaan setiap akun pada periode tertentu. Saldo awal menjadi titik awal perhitungan saldo dan laporan periode berjalan.',
+  prepare:'Pastikan Master Akun sudah benar. Siapkan neraca saldo atau daftar saldo pembukaan yang telah diperiksa dan disetujui, lengkap dengan periode serta nilai debit/kredit.',
+  steps:[
+   ['Pilih periode saldo','Tentukan bulan dan tahun saldo awal yang sedang dimasukkan. Periode harus sesuai dokumen pembukaan dan tidak boleh tertukar dengan periode transaksi berjalan.'],
+   ['Pilih SANDI akun','Gunakan SANDI dari Master Akun. Pastikan nama akun yang tampil cocok dengan dokumen saldo awal.'],
+   ['Masukkan saldo pada sisi yang benar','Isi debit awal atau kredit awal sesuai posisi saldo pada dokumen. Jangan memasukkan nilai yang sama ke kedua sisi.'],
+   ['Periksa akun yang belum terdaftar','Jika SANDI tidak ditemukan, hentikan proses untuk memeriksa Master Akun atau file sumber. Jangan mengganti kode secara asal agar import lolos.'],
+   ['Periksa keseimbangan','Jumlah saldo debit dan kredit harus seimbang sesuai neraca saldo pembukaan. Selisih harus ditelusuri ke dokumen sumber.'],
+   ['Simpan atau import setelah pemeriksaan','Periksa ringkasan dan validasi sebelum konfirmasi. Jika aplikasi melaporkan duplikasi, baca baris mana yang dilewati dan jangan menganggap seluruh file otomatis masuk.']
+  ],
+  example:'Jika akun Kas memiliki saldo debit awal Rp2.000.000, masukkan Rp2.000.000 pada Debit Awal dan nol pada Kredit Awal. Akun dengan saldo kredit diisi pada sisi Kredit Awal.',
+  checks:'Pastikan periode, SANDI, nominal, dan total debit/kredit benar. Cocokkan hasilnya dengan neraca saldo pembukaan yang disetujui.',
+  note:'Saldo awal menjadi dasar perhitungan Neraca Percobaan. Data saldo awal yang keliru dapat membuat saldo akhir periode ikut keliru.'
+ },
+ 'page-annual-budget':{
+  title:'Anggaran Tahunan',purpose:'Modul ini digunakan untuk menetapkan pagu anggaran per SANDI akun dalam satu tahun dan membagi pagu tersebut ke dalam anggaran bulanan.',
+  prepare:'Siapkan rencana anggaran yang sudah disetujui, tahun anggaran, daftar SANDI, total pagu per akun, dan pembagian per bulan.',
+  steps:[
+   ['Pilih tahun anggaran','Pastikan tahun sesuai dokumen rencana kerja. Jangan memasukkan pagu tahun berikutnya ke tahun yang sedang berjalan.'],
+   ['Pilih SANDI akun','Tentukan akun yang akan diberi anggaran. Gunakan SANDI Master Akun agar anggaran dapat dibandingkan dengan transaksi.'],
+   ['Masukkan pagu tahunan','Isi jumlah total anggaran untuk akun tersebut sesuai persetujuan. Periksa satuan dan jumlah digit agar tidak salah menambahkan nol.'],
+   ['Bagi pagu ke Januari sampai Desember','Masukkan alokasi masing-masing bulan. Jumlah seluruh bulan harus sama dengan pagu tahunan, kecuali kebijakan anggaran yang berlaku menyatakan lain.'],
+   ['Simpan dan periksa kembali','Pastikan tahun, SANDI, pagu tahunan, dan total bulanan sesuai. Jika menggunakan import, gunakan template resmi dari Pusat Import Data.'],
+   ['Pantau realisasi','Bandingkan nilai anggaran dengan jurnal yang telah POSTED pada periode terkait. Perhatikan sisa anggaran dan kemungkinan kelebihan pemakaian.']
+  ],
+  example:'Pagu tahunan Rp120.000.000 dapat dibagi Rp10.000.000 per bulan. Jika Januari menggunakan Rp8.000.000 dari transaksi Posted, sisa anggaran Januari adalah Rp2.000.000, sesuai aturan perhitungan aplikasi.',
+  checks:'Jangan sampai total alokasi bulanan lebih besar atau lebih kecil dari pagu tahunan. Pastikan SANDI dan tahun anggaran benar sebelum import.',
+  note:'Realisasi anggaran harus dibaca berdasarkan aturan status transaksi aplikasi. Draft bukan transaksi Posted. Tampilan kontrol anggaran pada Input Jurnal dapat berupa pratinjau dan bukan bukti bahwa transaksi sudah diposting.'
+ },
+ 'page-periods':{
+  title:'Periode Akuntansi',purpose:'Modul ini mengatur periode pembukuan yang sedang digunakan dan membantu mengendalikan apakah suatu periode masih dapat menerima transaksi.',
+  prepare:'Pastikan kalender pembukuan perusahaan, daftar transaksi yang belum selesai, serta persetujuan penanggung jawab periode tersedia.',
+  steps:[
+   ['Pilih periode yang akan diperiksa','Tentukan bulan dan tahun yang ingin dibuka atau ditutup. Periksa kembali agar tidak memilih periode yang salah.'],
+   ['Periksa transaksi dalam periode','Tinjau jurnal Draft, Posted, dan transaksi yang belum lengkap. Pastikan dokumen sumber sudah diterima dan dicatat.'],
+   ['Lakukan rekonsiliasi','Bandingkan catatan dengan dokumen pendukung dan laporan. Selesaikan selisih sebelum periode ditutup.'],
+   ['Gunakan tindakan buka atau tutup sesuai hak','Ikuti tombol dan konfirmasi yang tersedia. Jika tidak berwenang, minta persetujuan administrator atau penanggung jawab akuntansi.'],
+   ['Catat keputusan periode','Simpan informasi atau bukti persetujuan sesuai prosedur perusahaan agar perubahan status dapat ditelusuri.']
+  ],
+  example:'Sebelum menutup periode Oktober, pastikan transaksi Oktober sudah diperiksa, saldo akun direkonsiliasi, dan tidak ada dokumen penting yang tertinggal.',
+  checks:'Jangan menutup periode hanya karena bulan telah berganti. Pastikan proses pemeriksaan dan persetujuan sudah dilakukan.',
+  note:'Perubahan status periode dapat memengaruhi kemampuan pengguna mencatat transaksi pada periode tersebut. Ikuti kebijakan perusahaan.'
+ },
+ 'page-ledger':{
+  title:'Buku Besar per Akun',purpose:'Buku Besar menampilkan riwayat mutasi satu akun sehingga pengguna dapat melihat dari mana saldo akun berasal dan bagaimana saldo berubah.',
+  prepare:'Pastikan saldo awal dan jurnal sudah dimasukkan. Ketahui periode serta SANDI akun yang ingin ditelusuri.',
+  steps:[
+   ['Pilih periode','Tentukan rentang waktu yang ingin diperiksa. Pastikan tanggal awal dan akhir sesuai kebutuhan laporan.'],
+   ['Pilih akun atau SANDI','Pilih satu akun dari Master Akun. Periksa nama akun agar tidak tertukar dengan akun yang kodenya mirip.'],
+   ['Tampilkan Buku Besar','Jalankan tampilan laporan sesuai tombol yang tersedia. Aplikasi akan menyusun saldo awal dan mutasi akun untuk periode tersebut.'],
+   ['Baca saldo awal','Saldo awal menunjukkan posisi akun sebelum mutasi periode yang dipilih. Cocokkan dengan saldo pembukaan atau saldo akhir periode sebelumnya.'],
+   ['Telusuri mutasi transaksi','Periksa tanggal, nomor bukti, uraian, debit, dan kredit. Jika ada angka yang tidak dikenali, buka jurnal sumbernya.'],
+   ['Periksa saldo berjalan dan akhir','Saldo berjalan memperlihatkan perubahan setelah setiap transaksi. Saldo akhir merupakan posisi setelah seluruh mutasi yang dihitung.']
+  ],
+  example:'Jika saldo awal debit Rp5.000.000, kemudian ada mutasi debit Rp1.000.000 dan kredit Rp500.000, saldo akhir normal debit menjadi Rp5.500.000.',
+  checks:'Pastikan filter periode dan SANDI benar. Mutasi laporan mengikuti transaksi yang memenuhi status perhitungan, terutama jurnal POSTED.',
+  note:'Buku Besar membantu penelusuran, tetapi tetap cocokkan transaksi dengan bukti sumber jika menemukan perbedaan.'
+ },
+ 'page-reports':{
+  title:'Neraca Percobaan & Laporan',purpose:'Neraca Percobaan merangkum saldo setiap akun untuk membantu memeriksa apakah total debit dan kredit seimbang pada periode tertentu.',
+  prepare:'Pastikan Master Akun, saldo awal, dan jurnal periode telah dimasukkan serta diperiksa.',
+  steps:[
+   ['Pilih periode laporan','Tentukan periode yang ingin ditampilkan. Jangan membandingkan laporan dengan periode yang berbeda.'],
+   ['Tampilkan Neraca Percobaan','Jalankan laporan agar aplikasi menghitung saldo awal, mutasi, dan saldo akhir per SANDI akun.'],
+   ['Periksa kolom saldo awal','Cocokkan nilai saldo awal dengan Daftar Saldo Awal ACC & Program pada periode yang sesuai.'],
+   ['Periksa kolom mutasi','Mutasi berasal dari jurnal yang memenuhi status perhitungan pada periode tersebut. Draft tidak dihitung sebagai mutasi Posted.'],
+   ['Periksa saldo akhir setiap akun','Pastikan perhitungan per SANDI masuk akal dan tidak ada akun yang hilang atau salah kelompok.'],
+   ['Bandingkan total debit dan kredit','Total saldo akhir debit harus sama dengan total saldo akhir kredit. Jika tidak sama, lakukan penelusuran sebelum laporan digunakan.'],
+   ['Cetak atau ekspor','Setelah diperiksa, gunakan fungsi ekspor atau cetak untuk menyimpan hasil sesuai kebutuhan kerja.']
+  ],
+  example:'Saldo akhir suatu akun dihitung dari saldo awal ditambah atau dikurangi mutasi sesuai sifat akun. Jangan hanya melihat total keseluruhan; periksa juga saldo setiap SANDI.',
+  checks:'Jika total tidak seimbang, periksa saldo awal, jurnal Posted, periode transaksi, dan akun yang tidak terdaftar. Jangan mengubah angka laporan secara manual untuk menutupi selisih.',
+  note:'Laporan adalah hasil dari data sumber. Ketepatan laporan bergantung pada kelengkapan dan kebenaran Master Akun, saldo awal, serta jurnal.'
+ },
+ 'page-import-center':{
+  title:'Pusat Import Data',purpose:'Pusat Import Data digunakan untuk memasukkan banyak data dari file Excel, CSV, atau DBF sesuai jenis import yang disediakan. Import membantu mempercepat pekerjaan, tetapi file tetap harus diperiksa sebelum disimpan.',
+  prepare:'Simpan salinan file asli. Pastikan format file sesuai template, kolom wajib tersedia, periode benar, dan Master Akun sudah siap jika data menggunakan SANDI.',
+  steps:[
+   ['Pilih kartu jenis data','Tentukan apakah Anda akan mengimpor Anggaran, Master Akun, Saldo Awal, Jurnal Massal, atau NPTRANS. Jangan memilih jenis import hanya berdasarkan ekstensi file.'],
+   ['Unduh template resmi bila tersedia','Gunakan tombol Unduh Format Excel atau CSV pada kartu terkait. Template menunjukkan nama sheet dan kolom yang dikenali aplikasi.'],
+   ['Isi file tanpa mengubah struktur penting','Isi data pada kolom yang disediakan. Jangan menghapus nama sheet, mengganti judul kolom wajib, atau menggabungkan sel jika template tidak mengizinkan.'],
+   ['Pilih file','Tekan Pilih File pada kartu yang sesuai dan pilih file dari komputer. Periksa nama file yang tampil sebelum melanjutkan.'],
+   ['Jalankan pemeriksaan atau pratinjau','Aplikasi membaca file dan menampilkan ringkasan data, baris valid, atau kesalahan. Baca seluruh pesan, jangan langsung menekan konfirmasi.'],
+   ['Perbaiki kesalahan pada file sumber','Jika SANDI tidak ditemukan, periksa Master Akun. Jika tanggal atau nominal salah, perbaiki file asli lalu pilih kembali file yang sudah diperbaiki.'],
+   ['Konfirmasi import','Lakukan hanya setelah ringkasan, jumlah baris, periode, dan nominal sesuai. Tunggu sampai aplikasi memberi pesan hasil.'],
+   ['Verifikasi hasil import','Cari beberapa data yang baru masuk di modul tujuan. Bandingkan jumlah baris dan total nominal dengan file sumber.']
+  ],
+  example:'Jika mengimpor saldo awal, pastikan periode dan SANDI ada di Master Akun. Jika mengimpor anggaran, gunakan template gabungan dengan sheet Anggaran_Tahunan dan Anggaran_Bulanan.',
+  checks:'Jangan import file yang sama berulang kali tanpa memeriksa apakah data sebelumnya sudah masuk. Perhatikan pesan duplikat, baris dilewati, atau gagal validasi.',
+  note:'Import bukan pengganti pemeriksaan akuntansi. Simpan file sumber dan backup sebelum melakukan import dalam jumlah besar. Restore Backup berbeda dari import biasa karena dapat mengganti seluruh database lokal.'
+ },
+ 'page-nptrans':{
+  title:'NPTRANS / DBF',purpose:'Modul ini digunakan untuk membaca dan mengelola data NPTRANS dengan tetap memperhatikan struktur data lama yang digunakan sistem terdahulu.',
+  prepare:'Siapkan backup sebelum mengubah data. Pastikan file DBF/Excel/CSV berasal dari sumber yang benar dan merupakan salinan yang dapat diperiksa. Ketahui apakah tujuan proses adalah menambah, menggabungkan, atau mengganti data.',
+  steps:[
+   ['Kenali sumber file','Periksa nama file, periode, dan asal data. Jangan menggunakan file dari folder yang tidak diketahui atau file yang belum dipastikan versi terbarunya.'],
+   ['Periksa struktur kolom','Pastikan kolom wajib seperti kode akun/SANDI, tanggal, nomor bukti, uraian, debit, dan kredit tersedia sesuai struktur yang diminta aplikasi.'],
+   ['Pilih cara penggabungan','Jika tersedia pilihan gabung tanpa duplikat, tambah semua baris, atau ganti seluruh data, pahami dampaknya sebelum memilih.'],
+   ['Jalankan pratinjau','Periksa jumlah baris yang akan ditambahkan, dilewati, atau ditolak. Perhatikan pesan SANDI tidak ditemukan dan nilai debit/kredit tidak valid.'],
+   ['Cocokkan dengan sumber','Bandingkan jumlah record dan beberapa transaksi sampel dengan file asal. Pastikan tanggal dan nominal tidak berubah akibat format.'],
+   ['Konfirmasi proses','Lakukan setelah backup tersedia dan hasil pratinjau dipahami. Tunggu sampai proses selesai dan baca ringkasan hasil.'],
+   ['Periksa data setelah import','Cari beberapa nomor bukti dan SANDI pada daftar NPTRANS. Pastikan data yang diharapkan benar-benar ada.']
+  ],
+  example:'Jika file sumber berisi 1.000 baris dan pratinjau menunjukkan 950 valid, 30 duplikat, dan 20 gagal, jangan langsung menyetujui. Periksa alasan 20 baris gagal dan pastikan 30 duplikat memang sudah ada.',
+  checks:'Pastikan pilihan “ganti seluruh data” tidak digunakan jika tujuan Anda hanya menambahkan transaksi baru. Simpan backup sebelum perubahan besar.',
+  note:'Struktur NPTRANS lama perlu dijaga agar kompatibilitas tetap baik. Jangan mengubah nama atau tipe kolom DBF tanpa memahami kebutuhan sistem.'
+ },
+ 'page-journal-admin':{
+  title:'Administrasi Jurnal',purpose:'Menu ini menyediakan tindakan administratif khusus terhadap data jurnal. Karena dampaknya dapat memengaruhi laporan, menu ini harus digunakan oleh petugas yang berwenang.',
+  prepare:'Pastikan tujuan tindakan jelas, periode dan rentang tanggal sudah diketahui, persetujuan tersedia, dan backup terbaru sudah berhasil dibuat.',
+  steps:[
+   ['Tentukan cakupan tindakan','Pilih tanggal, bulan, atau tahun sesuai kebutuhan. Periksa kembali periode agar tidak mencakup transaksi di luar tujuan.'],
+   ['Baca ringkasan sebelum tindakan','Perhatikan jumlah jurnal dan rentang data yang akan terpengaruh. Jika ringkasan tidak sesuai, batalkan dan periksa pilihan.'],
+   ['Pahami dampaknya','Penghapusan atau perubahan administratif dapat mengubah mutasi laporan dan saldo terkait. Pastikan dokumen sumber serta alasan tindakan tercatat.'],
+   ['Lakukan verifikasi otorisasi','Masukkan kredensial atau persetujuan yang diminta sesuai prosedur. Jangan membagikan password kepada pengguna lain.'],
+   ['Konfirmasi hanya jika benar','Baca peringatan terakhir sebelum menyetujui. Jika ragu, batalkan dan minta pemeriksaan administrator.'],
+   ['Periksa laporan setelah tindakan','Jalankan kembali validasi dan Neraca Percobaan. Cocokkan hasil dengan backup atau dokumen yang menjadi dasar tindakan.']
+  ],
+  example:'Jika tindakan ditujukan untuk satu bulan, pastikan pilihan bulan dan tahun benar. Jangan memilih “seluruh tahun” jika hanya satu bulan yang perlu ditangani.',
+  checks:'Backup harus dapat dibaca dan berasal dari database yang benar. Simpan catatan alasan, waktu, dan pihak yang menyetujui tindakan.',
+  note:'Tindakan administratif dapat berdampak luas dan mungkin sulit dibatalkan. Gunakan hanya sesuai otorisasi perusahaan.'
+ },
+ 'page-print-settings':{
+  title:'Pengaturan Template Cetak',purpose:'Menu ini mengatur tampilan hasil cetak agar laporan dan dokumen memiliki format yang konsisten, rapi, serta sesuai kebutuhan kertas.',
+  prepare:'Ketahui ukuran kertas yang digunakan kantor, misalnya A4 atau F4, orientasi dokumen, dan elemen tanda tangan yang diperlukan.',
+  steps:[
+   ['Pilih ukuran kertas','Pilih ukuran yang sesuai dengan kertas printer. F4/Folio dan A4 memiliki panjang berbeda, jadi jangan memilih hanya berdasarkan kebiasaan.'],
+   ['Tentukan orientasi','Portrait cocok untuk laporan yang memanjang ke bawah. Landscape cocok untuk tabel dengan banyak kolom. Gunakan otomatis jika aplikasi menyediakan penyesuaian.'],
+   ['Atur margin dan ukuran huruf','Gunakan margin yang cukup agar isi tidak terpotong. Huruf harus tetap terbaca setelah dicetak.'],
+   ['Atur identitas dan elemen dokumen','Pilih apakah identitas SBP Accounting, tanggal cetak, footer, ringkasan, tanda tangan, dan garis tabel perlu ditampilkan.'],
+   ['Simpan pengaturan','Tekan Simpan Pengaturan setelah selesai. Pengaturan disimpan pada browser dan perangkat yang sedang digunakan.'],
+   ['Gunakan pratinjau','Lihat halaman sebelum mencetak. Periksa nomor halaman, kop, tanda tangan, tabel, dan bagian bawah dokumen.']
+  ],
+  example:'Laporan Neraca Percobaan dengan banyak kolom biasanya lebih nyaman dicetak Landscape, sedangkan surat atau dokumen ringkas dapat menggunakan Portrait.',
+  checks:'Periksa pratinjau sebelum mencetak banyak salinan. Pastikan printer memakai ukuran kertas yang sama dengan pengaturan aplikasi.',
+  note:'Pengaturan cetak tersimpan pada browser/perangkat ini dan tidak otomatis berpindah ke perangkat lain. Pengaturan cetak tidak mengubah data akuntansi.'
+ },
+ 'page-audit':{
+  title:'Riwayat Aktivitas / Audit Log',purpose:'Audit Log membantu menelusuri aktivitas perubahan data, misalnya penambahan, perubahan, atau penghapusan pada modul yang dicatat aplikasi.',
+  prepare:'Ketahui perkiraan waktu, jenis aktivitas, nama modul, nomor bukti, atau SANDI yang ingin ditelusuri.',
+  steps:[
+   ['Buka daftar aktivitas','Tunggu sampai catatan dimuat. Perhatikan urutan waktu dan jumlah aktivitas yang tersedia.'],
+   ['Cari aktivitas tertentu','Gunakan kolom pencarian untuk memasukkan nomor bukti, akun, uraian, atau kata kunci.'],
+   ['Gunakan filter tindakan','Pilih jenis aksi seperti Tambah, Ubah, atau Hapus untuk mempersempit hasil.'],
+   ['Baca rincian catatan','Periksa waktu, modul, ID data, ringkasan, dan detail perubahan yang ditampilkan. Cocokkan dengan dokumen pendukung.'],
+   ['Ekspor bila diperlukan','Gunakan ekspor CSV untuk menyimpan catatan pemeriksaan atau menyampaikan temuan kepada penanggung jawab.']
+  ],
+  example:'Jika nama akun berubah, cari SANDI akun tersebut lalu periksa waktu dan rincian aktivitas untuk mengetahui perubahan yang tercatat.',
+  checks:'Log yang tersedia bergantung pada tindakan yang memang dicatat aplikasi. Jika ada perubahan yang tidak tercatat, lakukan pemeriksaan melalui backup dan sumber dokumen.',
+  note:'Audit Log membantu penelusuran, tetapi bukan sistem keamanan anti-manipulasi yang mutlak. Lindungi perangkat, browser, dan file database.'
+ },
+ 'page-archive':{
+  title:'Arsip 5 Tahunan',purpose:'Modul ini digunakan untuk membuat arsip data dalam rentang tahun tertentu agar catatan lama dapat disimpan dan diperiksa tanpa harus selalu berada dalam database aktif.',
+  prepare:'Pastikan backup database aktif sudah dibuat. Tentukan rentang tahun yang akan diarsipkan dan lokasi penyimpanan arsip.',
+  steps:[
+   ['Tentukan rentang tahun','Isi tahun awal dan akhir sesuai kebijakan pengarsipan. Pastikan tidak ada tahun yang terlewat atau salah ketik.'],
+   ['Buat arsip','Jalankan proses pembuatan arsip dan tunggu hingga aplikasi menampilkan hasil. Jangan menutup aplikasi saat proses berjalan.'],
+   ['Simpan file arsip','Simpan arsip pada lokasi yang aman dan buat salinan terpisah. Gunakan nama file yang mudah dikenali berdasarkan periode.'],
+   ['Jalankan verifikasi','Gunakan fitur verifikasi checksum atau pemeriksaan yang tersedia untuk memastikan file arsip tidak berubah atau rusak.'],
+   ['Catat lokasi arsip','Catat nama file, rentang tahun, tanggal pembuatan, dan lokasi penyimpanan agar mudah ditemukan saat diperlukan.']
+  ],
+  example:'Arsip 2021–2025 berarti rentang data yang dipilih mencakup lima tahun tersebut. Pastikan periode dan isi arsip sesuai sebelum menyimpannya sebagai arsip resmi.',
+  checks:'Jangan menghapus database aktif hanya karena arsip berhasil dibuat. Pastikan file arsip dapat dibaca kembali.',
+  note:'Pembuatan arsip tidak otomatis memindahkan atau menghapus data aktif. Arsip dan backup rutin memiliki tujuan yang berbeda; simpan keduanya sesuai kebijakan.'
+ },
+ 'page-archive-reader':{
+  title:'Pembaca Arsip',purpose:'Pembaca Arsip digunakan untuk melihat isi file arsip secara terpisah. Tujuannya agar pengguna dapat mencari data lama tanpa mengganti database aktif.',
+  prepare:'Siapkan file arsip yang berasal dari aplikasi dan pastikan file tersebut tidak rusak. Jangan memilih file backup biasa jika modul meminta format arsip khusus.',
+  steps:[
+   ['Pilih file arsip','Gunakan tombol pilih file dan arahkan ke arsip yang ingin dibaca. Periksa nama serta rentang tahun pada file.'],
+   ['Tentukan jenis data','Pilih jurnal, akun, saldo, atau jenis informasi lain yang tersedia pada pembaca arsip.'],
+   ['Gunakan filter pencarian','Masukkan periode, SANDI, nomor bukti, atau kata kunci untuk menemukan catatan yang dibutuhkan.'],
+   ['Baca hasil secara teliti','Periksa tanggal, akun, uraian, dan nilai. Jika digunakan sebagai dasar koreksi, cocokkan dengan dokumen resmi.'],
+   ['Tutup pembacaan setelah selesai','Kembali ke modul aktif tanpa melakukan restore. Database aktif tidak perlu diganti hanya untuk melihat data arsip.']
+  ],
+  example:'Untuk mencari jurnal tahun 2022, pilih arsip yang mencakup 2022, pilih jenis data jurnal, lalu gunakan filter tahun atau nomor bukti.',
+  checks:'Pastikan file arsip yang dibuka mencakup tahun yang dicari. Jika data tidak muncul, periksa rentang arsip dan filter.',
+  note:'Modul ini bersifat baca saja. Membaca arsip tidak sama dengan memulihkan backup ke database aktif.'
+ },
+ 'page-backup':{
+  title:'Backup & Restore',purpose:'Backup membuat salinan database agar data dapat dipulihkan jika perangkat rusak, browser bermasalah, atau pengguna berpindah komputer. Restore mengembalikan database dari file backup.',
+  prepare:'Tentukan lokasi penyimpanan yang aman, misalnya folder server kantor atau media penyimpanan lain. Pastikan folder dapat diakses dan pengguna memiliki izin tulis.',
+  steps:[
+   ['Hubungkan folder backup','Tekan Pilih Folder Server lalu pilih folder tujuan. Berikan izin baca/tulis kepada browser. Gunakan folder khusus SBP Accounting agar file tidak bercampur dengan dokumen lain.'],
+   ['Buat backup pertama','Setelah folder terhubung, aplikasi akan mencoba membuat backup pertama. Periksa pesan status untuk memastikan proses berhasil. Jangan menganggap folder terhubung berarti backup sudah berhasil jika belum ada pesan sukses.'],
+   ['Pahami struktur backup','Aplikasi menyimpan salinan terbaru dan arsip harian pada folder yang disiapkan. Jangan mengubah nama atau isi file secara manual jika tidak memahami formatnya.'],
+   ['Simpan salinan tambahan','Unduh backup JSON atau salin file backup ke media terpisah sesuai kebijakan kantor. Satu lokasi backup saja tidak cukup jika lokasi tersebut ikut rusak.'],
+   ['Saat berpindah perangkat, pulihkan data lama terlebih dahulu','Pada perangkat baru, ambil backup terbaru yang sudah dipastikan benar dari perangkat sebelumnya. Buka menu Backup & Restore, pilih file JSON, baca ringkasan akun, jurnal, NPTRANS, dan saldo awal, lalu lakukan restore hanya jika file memang berasal dari database yang ingin dilanjutkan.'],
+   ['Periksa hasil pemulihan','Setelah restore, periksa Master Akun, beberapa jurnal, saldo awal, NPTRANS, dan laporan. Pastikan periode dan jumlah data sesuai dengan perangkat sebelumnya.'],
+   ['Hubungkan lokasi backup perangkat baru','Setelah data lama berhasil dipulihkan dan diverifikasi, tentukan folder backup yang akan digunakan perangkat baru. Buat backup baru sebelum mulai bekerja.']
+  ],
+  example:'Jika komputer lama berisi transaksi sampai 31 Oktober, jangan mulai menginput transaksi baru pada komputer baru dengan database kosong. Ambil backup terbaru komputer lama, pulihkan ke komputer baru, periksa hasilnya, lalu lanjutkan pencatatan dari database yang sama.',
+  checks:'Jangan menjalankan dua database terpisah pada dua perangkat lalu menggabungkannya dengan menyalin file secara acak. Backup bukan sinkronisasi langsung. Hindari input bersamaan pada dua perangkat karena transaksi dapat berbeda atau tertinggal.',
+  note:'Restore mengganti seluruh database lokal pada perangkat yang sedang digunakan. Selalu buat backup kondisi perangkat tujuan sebelum restore, periksa nama dan ringkasan file, dan jangan memulihkan file yang tidak diketahui asalnya.'
+ }
+};
+function openModuleGuide(){
+ const active=document.querySelector('.page.active'),guide=moduleGuides[active?.id];
+ const content=$('module-guide-content');
+ if(!guide){
+  $('module-guide-title').textContent=$('page-title')?.textContent||'Panduan';
+  content.innerHTML='<p>Panduan rinci untuk menu ini sedang disiapkan.</p>';
+ }else{
+  $('module-guide-title').textContent=guide.title;
+  const escText=v=>esc(String(v??''));
+  content.innerHTML=
+   '<div class="guide-learning-intro"><span class="guide-section-kicker">MENGENAL MODUL</span><p>'+escText(guide.purpose)+'</p></div>'+
+   '<section class="guide-learning-section"><h3>Persiapan sebelum mulai</h3><p>'+escText(guide.prepare)+'</p></section>'+
+   '<section class="guide-learning-section"><h3>Langkah penggunaan</h3><ol class="guide-learning-steps">'+guide.steps.map((step,i)=>'<li><span class="guide-step-number">'+(i+1)+'</span><div><b>'+escText(step[0])+'</b><p>'+escText(step[1])+'</p></div></li>').join('')+'</ol></section>'+
+   '<section class="guide-learning-example"><h3>Contoh sederhana</h3><p>'+escText(guide.example)+'</p></section>'+
+   '<section class="guide-learning-section"><h3>Hal yang perlu diperiksa</h3><p>'+escText(guide.checks)+'</p></section>'+
+   '<section class="guide-learning-warning"><h3><i data-lucide="alert-triangle"></i> Peringatan penting</h3><p>'+escText(guide.note)+'</p></section>';
+ }
+ $('module-guide-modal').hidden=false;
+ if(window.lucide?.createIcons)window.lucide.createIcons();
+}
+$('module-guide-open').onclick=openModuleGuide;
+$('module-guide-close').onclick=()=>$('module-guide-modal').hidden=true;
+$('module-guide-modal').addEventListener('click',e=>{if(e.target===$('module-guide-modal'))$('module-guide-modal').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('module-guide-modal')&&!$('module-guide-modal').hidden)$('module-guide-modal').hidden=true});
+
 /* BUILD V66 — read-only validation and data integrity checks. */
 function runDataValidation(){
  const issues=[],accounts=Array.isArray(state.accounts)?state.accounts:[],journals=Array.isArray(state.journals)?state.journals:[],openings=Array.isArray(state.openingBalances)?state.openingBalances:[],npRows=Array.isArray(state.nptrans)?state.nptrans:[];
@@ -1010,5 +1336,122 @@ let pendingBackupRestore=null;
  $('backup-import-confirm').onclick=async()=>{const b=pendingBackupRestore;if(!b)return;if(!requireImportPassword('Pemulihan / Import Backup'))return;if(!confirm('PERINGATAN AKHIR: Ganti seluruh database lokal dengan backup '+b.fileName+'?'))return;try{const candidate=b.candidate,prior=Array.isArray(state.auditLogs)?state.auditLogs:[];state={...emptyState(),...candidate};state.auditLogs=[...new Map([...prior,...(Array.isArray(candidate.auditLogs)?candidate.auditLogs:[])].map(x=>[x.id||JSON.stringify(x),x])).values()].sort((x,y)=>String(y.at).localeCompare(String(x.at)));if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();pendingBackupRestore=null;$('backup-import-review').hidden=true;$('backup-file').value='';renderDashboard();renderAccounts();renderNptrans();renderJournals();renderOpeningBalances();renderPeriodControl();setMessage('backup-message','Backup '+b.fileName+' berhasil dipulihkan. Database aktif telah diganti.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}};
 
 
-async function init(){await loadState();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();resetJournalForm();initAnnualBudget();renderDashboard();renderAccounts();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
+async function init(){await loadState();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();resetJournalForm();initAnnualBudget();renderDashboard();renderAccounts();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}
+ const startupNotice=$('startup-backup-notice');if(startupNotice)startupNotice.hidden=false;
+ if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
 init();
+
+/* BUILD V95 — single click handler for budget help */
+(()=>{
+ const heading=document.querySelector('#page-journal .journal-budget-heading');
+ if(!heading)return;
+ const title=heading.querySelector('h3');
+ if(!title)return;
+ const oldHint=heading.querySelector('p');
+ if(oldHint)oldHint.hidden=true;
+ let button=document.getElementById('journal-budget-help');
+ let popover=document.getElementById('journal-budget-help-popover');
+ const wrapper=title.closest('.journal-budget-title-wrap')||title.parentElement;
+ if(!button){
+  button=document.createElement('button');
+  button.type='button';button.id='journal-budget-help';button.className='budget-help-button';
+  button.setAttribute('aria-label','Keterangan kontrol anggaran');
+  button.setAttribute('aria-expanded','false');
+  button.setAttribute('aria-controls','journal-budget-help-popover');
+  button.textContent='?';
+  title.insertAdjacentElement('afterend',button);
+ }
+ if(!popover){
+  popover=document.createElement('div');
+  popover.id='journal-budget-help-popover';popover.className='budget-help-popover';
+  popover.hidden=true;
+  popover.textContent='Anggaran mengikuti tanggal dan SANDI yang dipilih. Nilai transaksi masih berupa simulasi.';
+  wrapper.appendChild(popover);
+ }
+ if(button.dataset.bound==='1')return;
+ button.dataset.bound='1';
+ const close=()=>{popover.hidden=true;button.setAttribute('aria-expanded','false')};
+ button.addEventListener('click',event=>{
+  event.stopPropagation();const opening=popover.hidden;
+  popover.hidden=!opening;button.setAttribute('aria-expanded',String(opening));
+ });
+ document.addEventListener('click',event=>{
+  if(!popover.hidden&&!popover.contains(event.target)&&!button.contains(event.target))close();
+ });
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
+})();
+
+
+/* BUILD V97 — align every help marker directly beside its heading */
+(()=>{
+ const selectors=[
+  '.page .panel-head','.page .section-heading','.page .budget-month-head',
+  '.page .budget-hero','.page .import-center-hero','.page .import-center-section-title',
+  '.page .accounts-card-title','.page .opening-import-head','.page .validation-hero',
+  '.page .debit-note-intro'
+ ];
+ const closeAll=(except)=>{
+  document.querySelectorAll('.sbp-context-help').forEach(pop=>{
+   if(pop!==except){
+    pop.hidden=true;
+    pop.closest('.sbp-title-help-wrap')?.querySelector('.sbp-context-help-button')?.setAttribute('aria-expanded','false');
+   }
+  });
+ };
+ document.querySelectorAll(selectors.join(',')).forEach((block,index)=>{
+  if(block.dataset.contextHelpReady==='1')return;
+  const heading=block.querySelector('h2,h3,h4');
+  if(!heading)return;
+  const paras=[...block.querySelectorAll('p')].filter(p=>!p.closest('.sbp-context-help'));
+  const message=paras.map(p=>p.textContent.trim()).filter(Boolean).join(' ');
+  if(!message)return;
+  block.dataset.contextHelpReady='1';
+  paras.forEach(p=>{p.hidden=true;p.setAttribute('aria-hidden','true')});
+  const wrap=document.createElement('span');
+  wrap.className='sbp-title-help-wrap';
+  heading.parentNode.insertBefore(wrap,heading);
+  wrap.appendChild(heading);
+  const button=document.createElement('button');
+  button.type='button';button.className='budget-help-button sbp-context-help-button';
+  button.setAttribute('aria-label','Lihat keterangan bagian');
+  button.setAttribute('aria-expanded','false');
+  const pop=document.createElement('span');
+  pop.className='budget-help-popover sbp-context-help';pop.hidden=true;
+  pop.textContent=message;
+  const id='sbp-context-help-'+index;
+  pop.id=id;button.setAttribute('aria-controls',id);button.textContent='?';
+  wrap.appendChild(button);
+  wrap.appendChild(pop);
+  button.addEventListener('click',event=>{
+   event.stopPropagation();
+   const opening=pop.hidden;closeAll(pop);pop.hidden=!opening;
+   button.setAttribute('aria-expanded',String(opening));
+  });
+  document.addEventListener('click',event=>{
+   if(!pop.hidden&&!pop.contains(event.target)&&!button.contains(event.target)){
+    pop.hidden=true;button.setAttribute('aria-expanded','false');
+   }
+  });
+  document.addEventListener('keydown',event=>{
+   if(event.key==='Escape'){pop.hidden=true;button.setAttribute('aria-expanded','false')}
+  });
+ });
+})();
+
+
+/* BUILD V103 — detailed beginner-friendly module learning guides */
+(()=>{
+ const modal=$('startup-backup-notice');
+ if(!modal)return;
+ const close=()=>{modal.hidden=true};
+ $('startup-continue')?.addEventListener('click',close);
+ $('startup-go-backup')?.addEventListener('click',()=>{
+  close();go('backup');
+  $('backup-connect-folder')?.focus();
+ });
+ modal.addEventListener('click',event=>{if(event.target===modal)close()});
+ document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&!modal.hidden)close();
+ });
+ if(window.lucide?.createIcons)window.lucide.createIcons();
+})();
