@@ -915,3 +915,27 @@ input,select,textarea{border-radius:9px!important}
  .startup-backup-actions{flex-direction:column!important}
  .startup-backup-actions .btn{width:100%!important;justify-content:center!important}
 }
+
+
+/* BUILD V103 — learning-module guide layout */
+.module-guide-dialog{width:min(820px,calc(100vw - 28px))!important;max-height:88vh!important}
+.module-guide-content{padding:18px 22px 24px!important;overflow-y:auto!important}
+.module-guide-content p{font-size:13px!important;line-height:1.75!important;color:#526258!important;margin:0!important}
+.guide-learning-intro{padding:16px 17px!important;border:1px solid #dcebe1!important;border-radius:14px!important;background:#f3faf5!important;margin-bottom:14px!important}
+.guide-section-kicker{display:block!important;font-size:10px!important;font-weight:800!important;letter-spacing:.09em!important;color:#167348!important;margin-bottom:7px!important}
+.guide-learning-section,.guide-learning-example,.guide-learning-warning{padding:15px 16px!important;border:1px solid #e7ede8!important;border-radius:13px!important;background:#fff!important;margin:0 0 12px!important}
+.guide-learning-section h3,.guide-learning-example h3,.guide-learning-warning h3{font-size:14px!important;line-height:1.4!important;font-weight:800!important;color:#26372d!important;margin:0 0 8px!important}
+.guide-learning-steps{display:grid!important;gap:13px!important;list-style:none!important;margin:0!important;padding:0!important}
+.guide-learning-steps>li{display:grid!important;grid-template-columns:28px minmax(0,1fr)!important;gap:10px!important;align-items:start!important}
+.guide-step-number{width:26px!important;height:26px!important;display:grid!important;place-items:center!important;border-radius:9px!important;background:#eaf6ee!important;color:#176b49!important;font-size:12px!important;font-weight:800!important}
+.guide-learning-steps b{display:block!important;color:#293a30!important;font-size:13px!important;margin:1px 0 4px!important}
+.guide-learning-steps p{font-size:12.5px!important}
+.guide-learning-example{background:#f7fafc!important;border-color:#e1eaf0!important}
+.guide-learning-warning{background:#fff9ef!important;border-color:#f1e1c3!important}
+.guide-learning-warning h3{display:flex!important;align-items:center!important;gap:7px!important;color:#895c18!important}
+.guide-learning-warning h3 svg{width:17px!important;height:17px!important}
+@media(max-width:600px){
+ .module-guide-content{padding:13px!important}
+ .guide-learning-intro,.guide-learning-section,.guide-learning-example,.guide-learning-warning{padding:13px!important}
+ .module-guide-dialog{max-height:92vh!important}
+}
