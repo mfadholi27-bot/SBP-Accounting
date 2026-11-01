@@ -873,3 +873,45 @@ input,select,textarea{border-radius:9px!important}
  #page-import-center .import-center-work-grid>.opening-import-panel,
  #page-import-center .import-center-work-grid>.bulk-journal-panel{padding:13px!important}
 }
+
+
+/* BUILD V102 — startup backup notice card */
+.startup-backup-overlay{
+ position:fixed!important;inset:0!important;z-index:20000!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ padding:22px!important;background:rgba(16,32,23,.48)!important;
+ backdrop-filter:blur(7px)!important;-webkit-backdrop-filter:blur(7px)!important;
+}
+.startup-backup-overlay[hidden]{display:none!important}
+.startup-backup-card{
+ width:min(620px,100%)!important;max-height:min(88vh,820px)!important;overflow:auto!important;
+ padding:26px!important;border:1px solid #e0e9e2!important;border-radius:20px!important;
+ background:#fff!important;box-shadow:0 24px 80px rgba(10,35,21,.2)!important;
+}
+.startup-backup-icon{
+ width:52px!important;height:52px!important;display:grid!important;place-items:center!important;
+ margin-bottom:15px!important;border-radius:15px!important;background:#e9f7ee!important;color:#176b49!important;
+}
+.startup-backup-icon svg{width:27px!important;height:27px!important}
+.startup-backup-card>.tag{display:inline-flex!important;margin-bottom:9px!important}
+.startup-backup-card h2{margin:0 0 10px!important;color:#25372c!important;font-size:23px!important;line-height:1.25!important;font-weight:800!important}
+.startup-backup-card p{margin:0!important;color:#617168!important;font-size:13px!important;line-height:1.6!important}
+.startup-backup-lead{margin-bottom:16px!important}
+.startup-backup-warning{
+ padding:14px 15px!important;margin:0 0 14px!important;border:1px solid #f1dfb9!important;
+ border-radius:13px!important;background:#fff9ec!important;
+}
+.startup-backup-warning>b{display:flex!important;align-items:center!important;gap:7px!important;margin-bottom:6px!important;color:#875a15!important;font-size:13px!important}
+.startup-backup-warning b svg{width:16px!important;height:16px!important}
+.startup-backup-warning p{color:#765d35!important}
+.startup-backup-points{display:grid!important;gap:7px!important;margin:0 0 18px!important;padding-left:19px!important;color:#46574d!important;font-size:13px!important;line-height:1.5!important}
+.startup-backup-actions{display:flex!important;flex-wrap:wrap!important;gap:9px!important}
+.startup-backup-actions .btn{min-height:42px!important}
+.startup-backup-footnote{margin-top:13px!important;padding-top:12px!important;border-top:1px solid #edf1ee!important;font-size:11px!important}
+@media(max-width:560px){
+ .startup-backup-overlay{padding:12px!important}
+ .startup-backup-card{padding:19px!important;border-radius:16px!important}
+ .startup-backup-card h2{font-size:20px!important}
+ .startup-backup-actions{flex-direction:column!important}
+ .startup-backup-actions .btn{width:100%!important;justify-content:center!important}
+}
