@@ -964,29 +964,293 @@ $('export-trial-xlsx').onclick=exportTrialBalanceXlsx;
 
 /* REDESIGN PREVIEW V89 — contextual module guide */
 const moduleGuides={
- 'page-dashboard':{title:'Dashboard',intro:'Ringkasan kondisi pembukuan dan akses cepat ke modul utama.',steps:['Periksa total debit dan kredit pada kartu ringkasan.','Gunakan akses cepat untuk membuka Input Jurnal, Master Akun, atau Laporan.','Lihat jurnal terbaru untuk memantau aktivitas terakhir.'],note:'Dashboard hanya menampilkan ringkasan. Pengelolaan transaksi dilakukan pada modul masing-masing.'},
- 'page-journal':{title:'Input Jurnal',intro:'Mencatat transaksi debit dan kredit berdasarkan bukti transaksi.',steps:['Isi tanggal, nomor bukti, dan keterangan transaksi.','Pilih SANDI akun pada setiap baris.','Isi nilai debit atau kredit sesuai dokumen.','Pastikan total debit dan kredit seimbang.','Simpan sebagai Draft atau Posting Jurnal setelah diperiksa.'],note:'Kontrol anggaran bulanan ditampilkan sebagai pratinjau dan tidak mengubah pagu anggaran.'},
- 'page-journal-list':{title:'Daftar Jurnal',intro:'Menelusuri, memeriksa, dan mengelola jurnal yang sudah disimpan.',steps:['Gunakan pencarian dan filter periode/status.','Buka detail jurnal untuk memeriksa baris akun.','Gunakan tindakan yang tersedia sesuai status jurnal.'],note:'Jurnal POSTED menjadi sumber mutasi laporan dan realisasi anggaran.'},
- 'page-debit-notes':{title:'Nota Debet',intro:'Membuat dokumen nota debet dan jurnal koreksi yang terhubung.',steps:['Isi tanggal, pihak, referensi, dan alasan nota.','Cari transaksi POSTED bila nota terkait transaksi sebelumnya.','Masukkan rincian akun serta nominal debit/kredit.','Simpan Draft atau Posting setelah total seimbang.'],note:'Jurnal asal tidak diubah oleh pembuatan nota debet.'},
- 'page-accounts':{title:'Master Akun',intro:'Mengelola daftar SANDI dan nama akun sebagai referensi transaksi.',steps:['Cari akun menggunakan SANDI atau nama.','Tambahkan atau perbarui data sesuai daftar akun resmi.','Pastikan kode akun unik dan konsisten.'],note:'Master Akun menjadi sumber referensi untuk jurnal, saldo awal, dan anggaran.'},
- 'page-opening-balances':{title:'Saldo Awal ACC & Program',intro:'Mengelola saldo pembukaan per akun dan periode.',steps:['Pilih periode saldo awal.','Pilih SANDI akun dari Master Akun.','Masukkan nilai debit atau kredit.','Periksa keseimbangan total sebelum menyimpan atau mengimpor.'],note:'Saldo awal digunakan sebagai dasar perhitungan Neraca Percobaan.'},
- 'page-annual-budget':{title:'Anggaran Tahunan',intro:'Mengelola pagu tahunan per SANDI dan distribusi anggaran bulanan.',steps:['Pilih tahun anggaran dan SANDI akun.','Isi total anggaran tahunan.','Distribusikan anggaran ke Januari–Desember.','Pastikan jumlah bulanan sama dengan pagu tahunan.','Pantau realisasi dan sisa anggaran dari jurnal POSTED.'],note:'Import Excel tersedia di Pusat Import Data.'},
- 'page-periods':{title:'Periode Akuntansi',intro:'Mengendalikan status buka dan tutup periode pembukuan.',steps:['Pilih periode yang akan diperiksa.','Tinjau status dan transaksi dalam periode.','Gunakan tindakan buka/tutup sesuai otorisasi perusahaan.'],note:'Pastikan seluruh transaksi periode telah diperiksa sebelum periode ditutup.'},
- 'page-ledger':{title:'Buku Besar per Akun',intro:'Melihat pergerakan saldo suatu SANDI dalam periode tertentu.',steps:['Pilih periode.','Pilih akun/SANDI.','Tekan Tampilkan Buku Besar.','Tinjau saldo awal, mutasi, dan saldo berjalan.'],note:'Mutasi jurnal mengikuti status POSTED.'},
- 'page-reports':{title:'Neraca Percobaan / Laporan',intro:'Memeriksa saldo akun dan keseimbangan pembukuan.',steps:['Pilih periode laporan.','Tampilkan Neraca Percobaan.','Periksa total debit dan kredit serta saldo setiap akun.','Ekspor Excel atau cetak bila diperlukan.'],note:'Saldo akhir dihitung dari saldo awal ditambah mutasi jurnal POSTED.'},
- 'page-import-center':{title:'Pusat Import Data',intro:'Tempat terpusat untuk memasukkan data dari file eksternal.',steps:['Pilih jenis data yang akan diimpor.','Pilih file sesuai format yang didukung.','Periksa pratinjau, kesalahan, dan ringkasan validasi.','Lakukan konfirmasi hanya jika seluruh data sudah benar.'],note:'Import Anggaran menggunakan template Excel dengan sheet Anggaran_Tahunan dan Anggaran_Bulanan.'},
- 'page-validation':{title:'Validasi & Integritas Data',intro:'Memeriksa konsistensi dan kualitas data pembukuan.',steps:['Jalankan pemeriksaan.','Pilih filter status temuan.','Telusuri lokasi data dan saran pemeriksaan.','Koreksi sumber data setelah verifikasi dokumen.'],note:'Hasil validasi adalah alat bantu pemeriksaan, bukan pengganti rekonsiliasi.'},
- 'page-journal-admin':{title:'Administrasi Jurnal',intro:'Fitur administratif untuk tindakan khusus terhadap jurnal.',steps:['Tentukan cakupan tanggal, bulan, atau tahun.','Baca ringkasan dampak sebelum menyetujui tindakan.','Pastikan backup tersedia sebelum tindakan permanen.'],note:'Gunakan dengan sangat hati-hati karena penghapusan paksa dapat memengaruhi laporan.'},
- 'page-print-settings':{title:'Template Cetak',intro:'Mengatur identitas dan tata letak dokumen cetak.',steps:['Atur ukuran kertas dan orientasi.','Pilih elemen kop, tanda tangan, ringkasan, dan nomor halaman.','Gunakan pratinjau sebelum mencetak.'],note:'Pengaturan cetak tidak mengubah data transaksi.'},
- 'page-audit':{title:'Riwayat Aktivitas',intro:'Menelusuri perubahan yang tercatat pada aplikasi.',steps:['Gunakan pencarian untuk menemukan aktivitas.','Filter berdasarkan jenis tindakan.','Buka rincian untuk melihat perubahan sebelum dan sesudah.'],note:'Log audit membantu penelusuran aktivitas pengguna.'},
- 'page-archive':{title:'Arsip 5 Tahunan',intro:'Membuat dan memeriksa snapshot arsip database.',steps:['Tentukan tahun awal dan tahun akhir.','Buat arsip setelah backup tersedia.','Jalankan verifikasi checksum.','Simpan salinan arsip pada media terpisah.'],note:'Pembuatan arsip tidak memindahkan atau menghapus database aktif.'},
- 'page-archive-reader':{title:'Pembaca Arsip',intro:'Membaca file arsip secara terpisah tanpa mengubah database aktif.',steps:['Pilih file arsip JSON.','Pilih jenis data yang ingin ditampilkan.','Gunakan filter periode atau akun bila tersedia.'],note:'Modul ini bersifat read-only.'},
- 'page-backup':{title:'Backup & Restore',intro:'Membuat salinan database dan memulihkan data dari file backup.',steps:['Unduh backup JSON secara berkala.','Simpan salinan pada media lain.','Sebelum restore, periksa nama file dan ringkasan data.','Konfirmasi restore hanya jika yakin.'],note:'Restore mengganti seluruh database lokal yang sedang digunakan.'}
+ 'page-dashboard':{
+  title:'Dashboard',purpose:'Dashboard adalah halaman ringkasan untuk melihat kondisi pembukuan. Halaman ini membantu pengguna mengetahui gambaran umum tanpa harus membuka laporan satu per satu.',
+  prepare:'Pastikan data Master Akun, saldo awal, dan jurnal sudah dimasukkan dengan benar. Dashboard hanya dapat menampilkan informasi yang sudah tersimpan.',
+  steps:[
+   ['Periksa total debit dan kredit','Kartu Total Debit dan Total Kredit menunjukkan akumulasi nilai transaksi yang tercatat. Bandingkan keduanya untuk melihat apakah pembukuan seimbang.'],
+   ['Periksa jumlah transaksi','Jumlah transaksi memberi gambaran aktivitas yang sudah tersimpan. Jika angka tidak sesuai perkiraan, lanjutkan pemeriksaan melalui Daftar Jurnal.'],
+   ['Lihat jurnal terbaru','Gunakan daftar aktivitas atau jurnal terbaru untuk menemukan transaksi yang baru dimasukkan. Periksa tanggal, nomor bukti, uraian, dan statusnya.'],
+   ['Gunakan akses cepat','Pilih menu Input Jurnal untuk mencatat transaksi, Master Akun untuk memeriksa daftar akun, atau Laporan untuk melihat hasil pembukuan.']
+  ],
+  example:'Jika total debit Rp10.000.000 dan total kredit Rp10.000.000, jumlahnya seimbang. Jika berbeda, jangan langsung menganggap data benar; telusuri jurnal yang belum seimbang atau data yang belum lengkap.',
+  checks:'Dashboard adalah ringkasan, bukan tempat memperbaiki transaksi. Untuk mengetahui penyebab selisih, buka Daftar Jurnal, Validasi, atau Neraca Percobaan.',
+  note:'Angka dashboard mengikuti data yang tersimpan dan aturan perhitungan masing-masing kartu. Selalu gunakan laporan terkait untuk pemeriksaan resmi.'
+ },
+ 'page-journal':{
+  title:'Input Jurnal',purpose:'Menu ini digunakan untuk mencatat transaksi keuangan berdasarkan bukti yang sah, misalnya nota, faktur, kuitansi, bukti kas, atau dokumen transaksi perusahaan.',
+  prepare:'Siapkan dokumen sumber, tanggal transaksi, nomor bukti, uraian transaksi, serta SANDI akun yang benar. Pastikan akun sudah tersedia di Master Akun dan periode pembukuan sesuai.',
+  steps:[
+   ['Isi tanggal transaksi','Masukkan tanggal sesuai tanggal pada dokumen sumber, bukan tanggal ketika Anda kebetulan membuka aplikasi. Tanggal menentukan periode laporan dan dapat memengaruhi kontrol anggaran.'],
+   ['Isi nomor bukti','Gunakan nomor bukti yang mengikuti tata penomoran perusahaan. Nomor ini membantu pencarian dan mencegah transaksi tertukar. Jangan membuat nomor baru secara sembarangan jika sudah ada nomor resmi.'],
+   ['Tulis keterangan transaksi','Jelaskan transaksi secara singkat tetapi mudah dikenali. Sebutkan tujuan atau objek transaksi, bukan hanya menulis “biaya” atau “pembelian”.'],
+   ['Pilih SANDI akun pada setiap baris','Pilih kode akun dari daftar Master Akun. Pastikan nama akun yang tampil sesuai dengan jenis transaksi pada dokumen. Jangan memilih akun hanya karena namanya terdengar mirip.'],
+   ['Isi debit dan kredit','Masukkan nominal pada kolom yang sesuai. Satu baris umumnya diisi debit atau kredit sesuai sifat pencatatannya. Jangan mengisi kedua sisi pada satu baris kecuali aturan aplikasi dan transaksi memang mengharuskannya.'],
+   ['Tambahkan baris jika diperlukan','Satu transaksi dapat melibatkan lebih dari dua akun. Tambahkan baris untuk seluruh akun yang terpengaruh, lalu pastikan setiap baris memiliki SANDI dan nominal yang benar.'],
+   ['Periksa keseimbangan','Total debit harus sama dengan total kredit. Jika belum sama, periksa nominal, akun, atau baris yang tertinggal. Jangan mengubah angka hanya untuk memaksa selisih menjadi nol tanpa dasar dokumen.'],
+   ['Simpan sebagai Draft atau Posting','Draft digunakan untuk menyimpan pekerjaan yang masih perlu diperiksa. Posting digunakan setelah data benar dan siap menjadi transaksi resmi sesuai kewenangan perusahaan.']
+  ],
+  example:'Contoh sederhana: pembelian perlengkapan tunai Rp500.000. Berdasarkan kebijakan akun perusahaan, catat akun perlengkapan pada sisi debit Rp500.000 dan akun kas pada sisi kredit Rp500.000. Total kedua sisi harus sama.',
+  checks:'Periksa kembali tanggal, nomor bukti, SANDI, uraian, dan nominal sebelum Posting. Jurnal berstatus POSTED digunakan dalam perhitungan mutasi laporan; Draft tidak diperlakukan sebagai transaksi Posted.',
+  note:'Jangan membuat jurnal berdasarkan perkiraan jika bukti belum tersedia. Jika salah setelah Posting, ikuti prosedur koreksi atau pembatalan yang berlaku; jangan menghapus jejak transaksi secara sembarangan.'
+ },
+ 'page-journal-list':{
+  title:'Daftar Jurnal',purpose:'Menu ini merupakan tempat melihat dan menelusuri jurnal yang sudah disimpan, termasuk memeriksa status Draft, Posted, atau status lain yang ditampilkan aplikasi.',
+  prepare:'Ketahui nomor bukti, tanggal, periode, atau kata kunci uraian transaksi yang ingin dicari.',
+  steps:[
+   ['Tentukan periode atau tanggal','Gunakan filter periode untuk mempersempit daftar. Pastikan rentang tanggal sesuai dengan dokumen yang sedang diperiksa.'],
+   ['Gunakan kolom pencarian','Ketik nomor bukti, uraian, atau kata kunci yang mudah dikenali. Hapus kata kunci jika hasil tidak ditemukan.'],
+   ['Periksa status jurnal','Draft berarti masih berupa catatan yang belum diposting. Posted berarti sudah masuk ke perhitungan mutasi laporan. Baca status yang ditampilkan sebelum melakukan tindakan.'],
+   ['Buka rincian jurnal','Periksa seluruh baris akun, SANDI, debit, kredit, dan keterangan. Jangan hanya melihat total karena kesalahan akun bisa terjadi walaupun total tetap seimbang.'],
+   ['Lakukan tindakan sesuai kewenangan','Gunakan tombol tindakan yang tersedia berdasarkan status jurnal. Jika perlu koreksi, ikuti prosedur perusahaan dan simpan bukti pendukungnya.']
+  ],
+  example:'Jika mencari transaksi pembelian tanggal 15, pilih periode yang mencakup tanggal tersebut lalu cari nomor bukti pada kolom pencarian. Buka detail untuk memastikan akun dan nominalnya.',
+  checks:'Pastikan jurnal yang diharapkan sudah muncul dan statusnya benar. Jika transaksi tidak masuk laporan, periksa apakah jurnal masih Draft atau tanggalnya berada di periode lain.',
+  note:'Jurnal POSTED menjadi sumber mutasi Neraca Percobaan dan realisasi anggaran. Jangan mengubah atau membatalkan jurnal tanpa persetujuan yang berwenang.'
+ },
+ 'page-debit-notes':{
+  title:'Nota Debet',purpose:'Nota Debet digunakan untuk mendokumentasikan penyesuaian atau koreksi yang memerlukan catatan tersendiri dan dapat dihubungkan dengan transaksi sumber.',
+  prepare:'Siapkan dokumen pendukung, tanggal, pihak terkait, alasan nota, nomor referensi, serta rincian akun dan nominal yang akan dicatat.',
+  steps:[
+   ['Isi identitas nota','Masukkan tanggal, pihak atau unit terkait, nomor referensi, dan uraian alasan. Gunakan keterangan yang menjelaskan mengapa nota dibuat.'],
+   ['Cari transaksi sumber bila ada','Jika nota berhubungan dengan transaksi yang sudah diposting, cari transaksi tersebut melalui pencarian sumber. Periksa nomor bukti dan nilainya sebelum memilih.'],
+   ['Masukkan rincian akun','Tambahkan akun yang diperlukan berdasarkan dokumen koreksi. Pastikan SANDI berasal dari Master Akun yang benar.'],
+   ['Masukkan nominal debit dan kredit','Catat nilai sesuai dasar koreksi. Jangan menentukan sisi debit/kredit hanya berdasarkan dugaan; ikuti sifat akun dan kebijakan akuntansi perusahaan.'],
+   ['Periksa total dan alasan','Pastikan total debit sama dengan kredit dan uraian menjelaskan hubungan antara nota dan transaksi sumber.'],
+   ['Simpan Draft atau Posting','Simpan Draft bila masih menunggu pemeriksaan. Posting hanya setelah nota, sumber, dan nominal disetujui.']
+  ],
+  example:'Misalnya terdapat koreksi biaya berdasarkan dokumen tambahan. Nota harus menjelaskan transaksi asal, alasan koreksi, akun yang terpengaruh, dan nilai koreksinya.',
+  checks:'Periksa apakah nota tidak menggandakan koreksi yang sudah pernah dibuat. Pastikan transaksi sumber yang dipilih benar.',
+  note:'Pembuatan Nota Debet tidak berarti jurnal asal otomatis berubah. Perlakukan nota sebagai dokumen dan pencatatan koreksi tersendiri sesuai alur aplikasi.'
+ },
+ 'page-accounts':{
+  title:'Master Akun',purpose:'Master Akun adalah daftar utama kode atau SANDI dan nama akun. Modul lain menggunakan daftar ini sebagai acuan agar transaksi dicatat pada akun yang konsisten.',
+  prepare:'Siapkan daftar akun resmi perusahaan yang memuat kode/SANDI dan nama akun. Jika melakukan import, gunakan file yang sesuai dengan format yang didukung.',
+  steps:[
+   ['Cari akun yang sudah ada','Gunakan pencarian berdasarkan SANDI atau nama. Periksa dahulu sebelum menambahkan akun baru agar tidak terjadi duplikasi.'],
+   ['Tambahkan akun bila diperlukan','Masukkan SANDI dan nama akun sesuai daftar resmi. Pastikan tidak ada spasi, salah ketik, atau kode yang tertukar.'],
+   ['Perbarui data dengan hati-hati','Jika nama akun berubah, pastikan perubahan tersebut memang disetujui dan tidak mengubah arti kode akun. Jangan mengganti SANDI hanya untuk merapikan tampilan.'],
+   ['Periksa keunikan SANDI','Setiap akun harus memiliki kode yang dapat dibedakan. Kode yang sama untuk dua akun dapat menyebabkan transaksi salah klasifikasi.'],
+   ['Gunakan Master Akun sebagai acuan','Saat menginput jurnal, saldo awal, atau anggaran, pilih akun dari daftar ini. Hindari mengetik kode berbeda di file sumber.']
+  ],
+  example:'Jika SANDI 510101 adalah Biaya Pemeliharaan Mesin, seluruh jurnal dan anggaran untuk akun tersebut harus merujuk pada kode yang sama.',
+  checks:'Sebelum import, cocokkan jumlah baris, SANDI, dan nama akun dengan file sumber. Setelah import, cari beberapa akun secara acak untuk memastikan hasilnya benar.',
+  note:'Master Akun merupakan sumber referensi akun. Saldo Awal ACC & Program menyimpan nilai saldo dengan mengacu pada SANDI Master Akun, bukan membuat akun duplikat.'
+ },
+ 'page-opening-balances':{
+  title:'Saldo Awal ACC & Program',purpose:'Modul ini menyimpan posisi saldo pembukaan setiap akun pada periode tertentu. Saldo awal menjadi titik awal perhitungan saldo dan laporan periode berjalan.',
+  prepare:'Pastikan Master Akun sudah benar. Siapkan neraca saldo atau daftar saldo pembukaan yang telah diperiksa dan disetujui, lengkap dengan periode serta nilai debit/kredit.',
+  steps:[
+   ['Pilih periode saldo','Tentukan bulan dan tahun saldo awal yang sedang dimasukkan. Periode harus sesuai dokumen pembukaan dan tidak boleh tertukar dengan periode transaksi berjalan.'],
+   ['Pilih SANDI akun','Gunakan SANDI dari Master Akun. Pastikan nama akun yang tampil cocok dengan dokumen saldo awal.'],
+   ['Masukkan saldo pada sisi yang benar','Isi debit awal atau kredit awal sesuai posisi saldo pada dokumen. Jangan memasukkan nilai yang sama ke kedua sisi.'],
+   ['Periksa akun yang belum terdaftar','Jika SANDI tidak ditemukan, hentikan proses untuk memeriksa Master Akun atau file sumber. Jangan mengganti kode secara asal agar import lolos.'],
+   ['Periksa keseimbangan','Jumlah saldo debit dan kredit harus seimbang sesuai neraca saldo pembukaan. Selisih harus ditelusuri ke dokumen sumber.'],
+   ['Simpan atau import setelah pemeriksaan','Periksa ringkasan dan validasi sebelum konfirmasi. Jika aplikasi melaporkan duplikasi, baca baris mana yang dilewati dan jangan menganggap seluruh file otomatis masuk.']
+  ],
+  example:'Jika akun Kas memiliki saldo debit awal Rp2.000.000, masukkan Rp2.000.000 pada Debit Awal dan nol pada Kredit Awal. Akun dengan saldo kredit diisi pada sisi Kredit Awal.',
+  checks:'Pastikan periode, SANDI, nominal, dan total debit/kredit benar. Cocokkan hasilnya dengan neraca saldo pembukaan yang disetujui.',
+  note:'Saldo awal menjadi dasar perhitungan Neraca Percobaan. Data saldo awal yang keliru dapat membuat saldo akhir periode ikut keliru.'
+ },
+ 'page-annual-budget':{
+  title:'Anggaran Tahunan',purpose:'Modul ini digunakan untuk menetapkan pagu anggaran per SANDI akun dalam satu tahun dan membagi pagu tersebut ke dalam anggaran bulanan.',
+  prepare:'Siapkan rencana anggaran yang sudah disetujui, tahun anggaran, daftar SANDI, total pagu per akun, dan pembagian per bulan.',
+  steps:[
+   ['Pilih tahun anggaran','Pastikan tahun sesuai dokumen rencana kerja. Jangan memasukkan pagu tahun berikutnya ke tahun yang sedang berjalan.'],
+   ['Pilih SANDI akun','Tentukan akun yang akan diberi anggaran. Gunakan SANDI Master Akun agar anggaran dapat dibandingkan dengan transaksi.'],
+   ['Masukkan pagu tahunan','Isi jumlah total anggaran untuk akun tersebut sesuai persetujuan. Periksa satuan dan jumlah digit agar tidak salah menambahkan nol.'],
+   ['Bagi pagu ke Januari sampai Desember','Masukkan alokasi masing-masing bulan. Jumlah seluruh bulan harus sama dengan pagu tahunan, kecuali kebijakan anggaran yang berlaku menyatakan lain.'],
+   ['Simpan dan periksa kembali','Pastikan tahun, SANDI, pagu tahunan, dan total bulanan sesuai. Jika menggunakan import, gunakan template resmi dari Pusat Import Data.'],
+   ['Pantau realisasi','Bandingkan nilai anggaran dengan jurnal yang telah POSTED pada periode terkait. Perhatikan sisa anggaran dan kemungkinan kelebihan pemakaian.']
+  ],
+  example:'Pagu tahunan Rp120.000.000 dapat dibagi Rp10.000.000 per bulan. Jika Januari menggunakan Rp8.000.000 dari transaksi Posted, sisa anggaran Januari adalah Rp2.000.000, sesuai aturan perhitungan aplikasi.',
+  checks:'Jangan sampai total alokasi bulanan lebih besar atau lebih kecil dari pagu tahunan. Pastikan SANDI dan tahun anggaran benar sebelum import.',
+  note:'Realisasi anggaran harus dibaca berdasarkan aturan status transaksi aplikasi. Draft bukan transaksi Posted. Tampilan kontrol anggaran pada Input Jurnal dapat berupa pratinjau dan bukan bukti bahwa transaksi sudah diposting.'
+ },
+ 'page-periods':{
+  title:'Periode Akuntansi',purpose:'Modul ini mengatur periode pembukuan yang sedang digunakan dan membantu mengendalikan apakah suatu periode masih dapat menerima transaksi.',
+  prepare:'Pastikan kalender pembukuan perusahaan, daftar transaksi yang belum selesai, serta persetujuan penanggung jawab periode tersedia.',
+  steps:[
+   ['Pilih periode yang akan diperiksa','Tentukan bulan dan tahun yang ingin dibuka atau ditutup. Periksa kembali agar tidak memilih periode yang salah.'],
+   ['Periksa transaksi dalam periode','Tinjau jurnal Draft, Posted, dan transaksi yang belum lengkap. Pastikan dokumen sumber sudah diterima dan dicatat.'],
+   ['Lakukan rekonsiliasi','Bandingkan catatan dengan dokumen pendukung dan laporan. Selesaikan selisih sebelum periode ditutup.'],
+   ['Gunakan tindakan buka atau tutup sesuai hak','Ikuti tombol dan konfirmasi yang tersedia. Jika tidak berwenang, minta persetujuan administrator atau penanggung jawab akuntansi.'],
+   ['Catat keputusan periode','Simpan informasi atau bukti persetujuan sesuai prosedur perusahaan agar perubahan status dapat ditelusuri.']
+  ],
+  example:'Sebelum menutup periode Oktober, pastikan transaksi Oktober sudah diperiksa, saldo akun direkonsiliasi, dan tidak ada dokumen penting yang tertinggal.',
+  checks:'Jangan menutup periode hanya karena bulan telah berganti. Pastikan proses pemeriksaan dan persetujuan sudah dilakukan.',
+  note:'Perubahan status periode dapat memengaruhi kemampuan pengguna mencatat transaksi pada periode tersebut. Ikuti kebijakan perusahaan.'
+ },
+ 'page-ledger':{
+  title:'Buku Besar per Akun',purpose:'Buku Besar menampilkan riwayat mutasi satu akun sehingga pengguna dapat melihat dari mana saldo akun berasal dan bagaimana saldo berubah.',
+  prepare:'Pastikan saldo awal dan jurnal sudah dimasukkan. Ketahui periode serta SANDI akun yang ingin ditelusuri.',
+  steps:[
+   ['Pilih periode','Tentukan rentang waktu yang ingin diperiksa. Pastikan tanggal awal dan akhir sesuai kebutuhan laporan.'],
+   ['Pilih akun atau SANDI','Pilih satu akun dari Master Akun. Periksa nama akun agar tidak tertukar dengan akun yang kodenya mirip.'],
+   ['Tampilkan Buku Besar','Jalankan tampilan laporan sesuai tombol yang tersedia. Aplikasi akan menyusun saldo awal dan mutasi akun untuk periode tersebut.'],
+   ['Baca saldo awal','Saldo awal menunjukkan posisi akun sebelum mutasi periode yang dipilih. Cocokkan dengan saldo pembukaan atau saldo akhir periode sebelumnya.'],
+   ['Telusuri mutasi transaksi','Periksa tanggal, nomor bukti, uraian, debit, dan kredit. Jika ada angka yang tidak dikenali, buka jurnal sumbernya.'],
+   ['Periksa saldo berjalan dan akhir','Saldo berjalan memperlihatkan perubahan setelah setiap transaksi. Saldo akhir merupakan posisi setelah seluruh mutasi yang dihitung.']
+  ],
+  example:'Jika saldo awal debit Rp5.000.000, kemudian ada mutasi debit Rp1.000.000 dan kredit Rp500.000, saldo akhir normal debit menjadi Rp5.500.000.',
+  checks:'Pastikan filter periode dan SANDI benar. Mutasi laporan mengikuti transaksi yang memenuhi status perhitungan, terutama jurnal POSTED.',
+  note:'Buku Besar membantu penelusuran, tetapi tetap cocokkan transaksi dengan bukti sumber jika menemukan perbedaan.'
+ },
+ 'page-reports':{
+  title:'Neraca Percobaan & Laporan',purpose:'Neraca Percobaan merangkum saldo setiap akun untuk membantu memeriksa apakah total debit dan kredit seimbang pada periode tertentu.',
+  prepare:'Pastikan Master Akun, saldo awal, dan jurnal periode telah dimasukkan serta diperiksa.',
+  steps:[
+   ['Pilih periode laporan','Tentukan periode yang ingin ditampilkan. Jangan membandingkan laporan dengan periode yang berbeda.'],
+   ['Tampilkan Neraca Percobaan','Jalankan laporan agar aplikasi menghitung saldo awal, mutasi, dan saldo akhir per SANDI akun.'],
+   ['Periksa kolom saldo awal','Cocokkan nilai saldo awal dengan Daftar Saldo Awal ACC & Program pada periode yang sesuai.'],
+   ['Periksa kolom mutasi','Mutasi berasal dari jurnal yang memenuhi status perhitungan pada periode tersebut. Draft tidak dihitung sebagai mutasi Posted.'],
+   ['Periksa saldo akhir setiap akun','Pastikan perhitungan per SANDI masuk akal dan tidak ada akun yang hilang atau salah kelompok.'],
+   ['Bandingkan total debit dan kredit','Total saldo akhir debit harus sama dengan total saldo akhir kredit. Jika tidak sama, lakukan penelusuran sebelum laporan digunakan.'],
+   ['Cetak atau ekspor','Setelah diperiksa, gunakan fungsi ekspor atau cetak untuk menyimpan hasil sesuai kebutuhan kerja.']
+  ],
+  example:'Saldo akhir suatu akun dihitung dari saldo awal ditambah atau dikurangi mutasi sesuai sifat akun. Jangan hanya melihat total keseluruhan; periksa juga saldo setiap SANDI.',
+  checks:'Jika total tidak seimbang, periksa saldo awal, jurnal Posted, periode transaksi, dan akun yang tidak terdaftar. Jangan mengubah angka laporan secara manual untuk menutupi selisih.',
+  note:'Laporan adalah hasil dari data sumber. Ketepatan laporan bergantung pada kelengkapan dan kebenaran Master Akun, saldo awal, serta jurnal.'
+ },
+ 'page-import-center':{
+  title:'Pusat Import Data',purpose:'Pusat Import Data digunakan untuk memasukkan banyak data dari file Excel, CSV, atau DBF sesuai jenis import yang disediakan. Import membantu mempercepat pekerjaan, tetapi file tetap harus diperiksa sebelum disimpan.',
+  prepare:'Simpan salinan file asli. Pastikan format file sesuai template, kolom wajib tersedia, periode benar, dan Master Akun sudah siap jika data menggunakan SANDI.',
+  steps:[
+   ['Pilih kartu jenis data','Tentukan apakah Anda akan mengimpor Anggaran, Master Akun, Saldo Awal, Jurnal Massal, atau NPTRANS. Jangan memilih jenis import hanya berdasarkan ekstensi file.'],
+   ['Unduh template resmi bila tersedia','Gunakan tombol Unduh Format Excel atau CSV pada kartu terkait. Template menunjukkan nama sheet dan kolom yang dikenali aplikasi.'],
+   ['Isi file tanpa mengubah struktur penting','Isi data pada kolom yang disediakan. Jangan menghapus nama sheet, mengganti judul kolom wajib, atau menggabungkan sel jika template tidak mengizinkan.'],
+   ['Pilih file','Tekan Pilih File pada kartu yang sesuai dan pilih file dari komputer. Periksa nama file yang tampil sebelum melanjutkan.'],
+   ['Jalankan pemeriksaan atau pratinjau','Aplikasi membaca file dan menampilkan ringkasan data, baris valid, atau kesalahan. Baca seluruh pesan, jangan langsung menekan konfirmasi.'],
+   ['Perbaiki kesalahan pada file sumber','Jika SANDI tidak ditemukan, periksa Master Akun. Jika tanggal atau nominal salah, perbaiki file asli lalu pilih kembali file yang sudah diperbaiki.'],
+   ['Konfirmasi import','Lakukan hanya setelah ringkasan, jumlah baris, periode, dan nominal sesuai. Tunggu sampai aplikasi memberi pesan hasil.'],
+   ['Verifikasi hasil import','Cari beberapa data yang baru masuk di modul tujuan. Bandingkan jumlah baris dan total nominal dengan file sumber.']
+  ],
+  example:'Jika mengimpor saldo awal, pastikan periode dan SANDI ada di Master Akun. Jika mengimpor anggaran, gunakan template gabungan dengan sheet Anggaran_Tahunan dan Anggaran_Bulanan.',
+  checks:'Jangan import file yang sama berulang kali tanpa memeriksa apakah data sebelumnya sudah masuk. Perhatikan pesan duplikat, baris dilewati, atau gagal validasi.',
+  note:'Import bukan pengganti pemeriksaan akuntansi. Simpan file sumber dan backup sebelum melakukan import dalam jumlah besar. Restore Backup berbeda dari import biasa karena dapat mengganti seluruh database lokal.'
+ },
+ 'page-nptrans':{
+  title:'NPTRANS / DBF',purpose:'Modul ini digunakan untuk membaca dan mengelola data NPTRANS dengan tetap memperhatikan struktur data lama yang digunakan sistem terdahulu.',
+  prepare:'Siapkan backup sebelum mengubah data. Pastikan file DBF/Excel/CSV berasal dari sumber yang benar dan merupakan salinan yang dapat diperiksa. Ketahui apakah tujuan proses adalah menambah, menggabungkan, atau mengganti data.',
+  steps:[
+   ['Kenali sumber file','Periksa nama file, periode, dan asal data. Jangan menggunakan file dari folder yang tidak diketahui atau file yang belum dipastikan versi terbarunya.'],
+   ['Periksa struktur kolom','Pastikan kolom wajib seperti kode akun/SANDI, tanggal, nomor bukti, uraian, debit, dan kredit tersedia sesuai struktur yang diminta aplikasi.'],
+   ['Pilih cara penggabungan','Jika tersedia pilihan gabung tanpa duplikat, tambah semua baris, atau ganti seluruh data, pahami dampaknya sebelum memilih.'],
+   ['Jalankan pratinjau','Periksa jumlah baris yang akan ditambahkan, dilewati, atau ditolak. Perhatikan pesan SANDI tidak ditemukan dan nilai debit/kredit tidak valid.'],
+   ['Cocokkan dengan sumber','Bandingkan jumlah record dan beberapa transaksi sampel dengan file asal. Pastikan tanggal dan nominal tidak berubah akibat format.'],
+   ['Konfirmasi proses','Lakukan setelah backup tersedia dan hasil pratinjau dipahami. Tunggu sampai proses selesai dan baca ringkasan hasil.'],
+   ['Periksa data setelah import','Cari beberapa nomor bukti dan SANDI pada daftar NPTRANS. Pastikan data yang diharapkan benar-benar ada.']
+  ],
+  example:'Jika file sumber berisi 1.000 baris dan pratinjau menunjukkan 950 valid, 30 duplikat, dan 20 gagal, jangan langsung menyetujui. Periksa alasan 20 baris gagal dan pastikan 30 duplikat memang sudah ada.',
+  checks:'Pastikan pilihan “ganti seluruh data” tidak digunakan jika tujuan Anda hanya menambahkan transaksi baru. Simpan backup sebelum perubahan besar.',
+  note:'Struktur NPTRANS lama perlu dijaga agar kompatibilitas tetap baik. Jangan mengubah nama atau tipe kolom DBF tanpa memahami kebutuhan sistem.'
+ },
+ 'page-journal-admin':{
+  title:'Administrasi Jurnal',purpose:'Menu ini menyediakan tindakan administratif khusus terhadap data jurnal. Karena dampaknya dapat memengaruhi laporan, menu ini harus digunakan oleh petugas yang berwenang.',
+  prepare:'Pastikan tujuan tindakan jelas, periode dan rentang tanggal sudah diketahui, persetujuan tersedia, dan backup terbaru sudah berhasil dibuat.',
+  steps:[
+   ['Tentukan cakupan tindakan','Pilih tanggal, bulan, atau tahun sesuai kebutuhan. Periksa kembali periode agar tidak mencakup transaksi di luar tujuan.'],
+   ['Baca ringkasan sebelum tindakan','Perhatikan jumlah jurnal dan rentang data yang akan terpengaruh. Jika ringkasan tidak sesuai, batalkan dan periksa pilihan.'],
+   ['Pahami dampaknya','Penghapusan atau perubahan administratif dapat mengubah mutasi laporan dan saldo terkait. Pastikan dokumen sumber serta alasan tindakan tercatat.'],
+   ['Lakukan verifikasi otorisasi','Masukkan kredensial atau persetujuan yang diminta sesuai prosedur. Jangan membagikan password kepada pengguna lain.'],
+   ['Konfirmasi hanya jika benar','Baca peringatan terakhir sebelum menyetujui. Jika ragu, batalkan dan minta pemeriksaan administrator.'],
+   ['Periksa laporan setelah tindakan','Jalankan kembali validasi dan Neraca Percobaan. Cocokkan hasil dengan backup atau dokumen yang menjadi dasar tindakan.']
+  ],
+  example:'Jika tindakan ditujukan untuk satu bulan, pastikan pilihan bulan dan tahun benar. Jangan memilih “seluruh tahun” jika hanya satu bulan yang perlu ditangani.',
+  checks:'Backup harus dapat dibaca dan berasal dari database yang benar. Simpan catatan alasan, waktu, dan pihak yang menyetujui tindakan.',
+  note:'Tindakan administratif dapat berdampak luas dan mungkin sulit dibatalkan. Gunakan hanya sesuai otorisasi perusahaan.'
+ },
+ 'page-print-settings':{
+  title:'Pengaturan Template Cetak',purpose:'Menu ini mengatur tampilan hasil cetak agar laporan dan dokumen memiliki format yang konsisten, rapi, serta sesuai kebutuhan kertas.',
+  prepare:'Ketahui ukuran kertas yang digunakan kantor, misalnya A4 atau F4, orientasi dokumen, dan elemen tanda tangan yang diperlukan.',
+  steps:[
+   ['Pilih ukuran kertas','Pilih ukuran yang sesuai dengan kertas printer. F4/Folio dan A4 memiliki panjang berbeda, jadi jangan memilih hanya berdasarkan kebiasaan.'],
+   ['Tentukan orientasi','Portrait cocok untuk laporan yang memanjang ke bawah. Landscape cocok untuk tabel dengan banyak kolom. Gunakan otomatis jika aplikasi menyediakan penyesuaian.'],
+   ['Atur margin dan ukuran huruf','Gunakan margin yang cukup agar isi tidak terpotong. Huruf harus tetap terbaca setelah dicetak.'],
+   ['Atur identitas dan elemen dokumen','Pilih apakah identitas SBP Accounting, tanggal cetak, footer, ringkasan, tanda tangan, dan garis tabel perlu ditampilkan.'],
+   ['Simpan pengaturan','Tekan Simpan Pengaturan setelah selesai. Pengaturan disimpan pada browser dan perangkat yang sedang digunakan.'],
+   ['Gunakan pratinjau','Lihat halaman sebelum mencetak. Periksa nomor halaman, kop, tanda tangan, tabel, dan bagian bawah dokumen.']
+  ],
+  example:'Laporan Neraca Percobaan dengan banyak kolom biasanya lebih nyaman dicetak Landscape, sedangkan surat atau dokumen ringkas dapat menggunakan Portrait.',
+  checks:'Periksa pratinjau sebelum mencetak banyak salinan. Pastikan printer memakai ukuran kertas yang sama dengan pengaturan aplikasi.',
+  note:'Pengaturan cetak tersimpan pada browser/perangkat ini dan tidak otomatis berpindah ke perangkat lain. Pengaturan cetak tidak mengubah data akuntansi.'
+ },
+ 'page-audit':{
+  title:'Riwayat Aktivitas / Audit Log',purpose:'Audit Log membantu menelusuri aktivitas perubahan data, misalnya penambahan, perubahan, atau penghapusan pada modul yang dicatat aplikasi.',
+  prepare:'Ketahui perkiraan waktu, jenis aktivitas, nama modul, nomor bukti, atau SANDI yang ingin ditelusuri.',
+  steps:[
+   ['Buka daftar aktivitas','Tunggu sampai catatan dimuat. Perhatikan urutan waktu dan jumlah aktivitas yang tersedia.'],
+   ['Cari aktivitas tertentu','Gunakan kolom pencarian untuk memasukkan nomor bukti, akun, uraian, atau kata kunci.'],
+   ['Gunakan filter tindakan','Pilih jenis aksi seperti Tambah, Ubah, atau Hapus untuk mempersempit hasil.'],
+   ['Baca rincian catatan','Periksa waktu, modul, ID data, ringkasan, dan detail perubahan yang ditampilkan. Cocokkan dengan dokumen pendukung.'],
+   ['Ekspor bila diperlukan','Gunakan ekspor CSV untuk menyimpan catatan pemeriksaan atau menyampaikan temuan kepada penanggung jawab.']
+  ],
+  example:'Jika nama akun berubah, cari SANDI akun tersebut lalu periksa waktu dan rincian aktivitas untuk mengetahui perubahan yang tercatat.',
+  checks:'Log yang tersedia bergantung pada tindakan yang memang dicatat aplikasi. Jika ada perubahan yang tidak tercatat, lakukan pemeriksaan melalui backup dan sumber dokumen.',
+  note:'Audit Log membantu penelusuran, tetapi bukan sistem keamanan anti-manipulasi yang mutlak. Lindungi perangkat, browser, dan file database.'
+ },
+ 'page-archive':{
+  title:'Arsip 5 Tahunan',purpose:'Modul ini digunakan untuk membuat arsip data dalam rentang tahun tertentu agar catatan lama dapat disimpan dan diperiksa tanpa harus selalu berada dalam database aktif.',
+  prepare:'Pastikan backup database aktif sudah dibuat. Tentukan rentang tahun yang akan diarsipkan dan lokasi penyimpanan arsip.',
+  steps:[
+   ['Tentukan rentang tahun','Isi tahun awal dan akhir sesuai kebijakan pengarsipan. Pastikan tidak ada tahun yang terlewat atau salah ketik.'],
+   ['Buat arsip','Jalankan proses pembuatan arsip dan tunggu hingga aplikasi menampilkan hasil. Jangan menutup aplikasi saat proses berjalan.'],
+   ['Simpan file arsip','Simpan arsip pada lokasi yang aman dan buat salinan terpisah. Gunakan nama file yang mudah dikenali berdasarkan periode.'],
+   ['Jalankan verifikasi','Gunakan fitur verifikasi checksum atau pemeriksaan yang tersedia untuk memastikan file arsip tidak berubah atau rusak.'],
+   ['Catat lokasi arsip','Catat nama file, rentang tahun, tanggal pembuatan, dan lokasi penyimpanan agar mudah ditemukan saat diperlukan.']
+  ],
+  example:'Arsip 2021–2025 berarti rentang data yang dipilih mencakup lima tahun tersebut. Pastikan periode dan isi arsip sesuai sebelum menyimpannya sebagai arsip resmi.',
+  checks:'Jangan menghapus database aktif hanya karena arsip berhasil dibuat. Pastikan file arsip dapat dibaca kembali.',
+  note:'Pembuatan arsip tidak otomatis memindahkan atau menghapus data aktif. Arsip dan backup rutin memiliki tujuan yang berbeda; simpan keduanya sesuai kebijakan.'
+ },
+ 'page-archive-reader':{
+  title:'Pembaca Arsip',purpose:'Pembaca Arsip digunakan untuk melihat isi file arsip secara terpisah. Tujuannya agar pengguna dapat mencari data lama tanpa mengganti database aktif.',
+  prepare:'Siapkan file arsip yang berasal dari aplikasi dan pastikan file tersebut tidak rusak. Jangan memilih file backup biasa jika modul meminta format arsip khusus.',
+  steps:[
+   ['Pilih file arsip','Gunakan tombol pilih file dan arahkan ke arsip yang ingin dibaca. Periksa nama serta rentang tahun pada file.'],
+   ['Tentukan jenis data','Pilih jurnal, akun, saldo, atau jenis informasi lain yang tersedia pada pembaca arsip.'],
+   ['Gunakan filter pencarian','Masukkan periode, SANDI, nomor bukti, atau kata kunci untuk menemukan catatan yang dibutuhkan.'],
+   ['Baca hasil secara teliti','Periksa tanggal, akun, uraian, dan nilai. Jika digunakan sebagai dasar koreksi, cocokkan dengan dokumen resmi.'],
+   ['Tutup pembacaan setelah selesai','Kembali ke modul aktif tanpa melakukan restore. Database aktif tidak perlu diganti hanya untuk melihat data arsip.']
+  ],
+  example:'Untuk mencari jurnal tahun 2022, pilih arsip yang mencakup 2022, pilih jenis data jurnal, lalu gunakan filter tahun atau nomor bukti.',
+  checks:'Pastikan file arsip yang dibuka mencakup tahun yang dicari. Jika data tidak muncul, periksa rentang arsip dan filter.',
+  note:'Modul ini bersifat baca saja. Membaca arsip tidak sama dengan memulihkan backup ke database aktif.'
+ },
+ 'page-backup':{
+  title:'Backup & Restore',purpose:'Backup membuat salinan database agar data dapat dipulihkan jika perangkat rusak, browser bermasalah, atau pengguna berpindah komputer. Restore mengembalikan database dari file backup.',
+  prepare:'Tentukan lokasi penyimpanan yang aman, misalnya folder server kantor atau media penyimpanan lain. Pastikan folder dapat diakses dan pengguna memiliki izin tulis.',
+  steps:[
+   ['Hubungkan folder backup','Tekan Pilih Folder Server lalu pilih folder tujuan. Berikan izin baca/tulis kepada browser. Gunakan folder khusus SBP Accounting agar file tidak bercampur dengan dokumen lain.'],
+   ['Buat backup pertama','Setelah folder terhubung, aplikasi akan mencoba membuat backup pertama. Periksa pesan status untuk memastikan proses berhasil. Jangan menganggap folder terhubung berarti backup sudah berhasil jika belum ada pesan sukses.'],
+   ['Pahami struktur backup','Aplikasi menyimpan salinan terbaru dan arsip harian pada folder yang disiapkan. Jangan mengubah nama atau isi file secara manual jika tidak memahami formatnya.'],
+   ['Simpan salinan tambahan','Unduh backup JSON atau salin file backup ke media terpisah sesuai kebijakan kantor. Satu lokasi backup saja tidak cukup jika lokasi tersebut ikut rusak.'],
+   ['Saat berpindah perangkat, pulihkan data lama terlebih dahulu','Pada perangkat baru, ambil backup terbaru yang sudah dipastikan benar dari perangkat sebelumnya. Buka menu Backup & Restore, pilih file JSON, baca ringkasan akun, jurnal, NPTRANS, dan saldo awal, lalu lakukan restore hanya jika file memang berasal dari database yang ingin dilanjutkan.'],
+   ['Periksa hasil pemulihan','Setelah restore, periksa Master Akun, beberapa jurnal, saldo awal, NPTRANS, dan laporan. Pastikan periode dan jumlah data sesuai dengan perangkat sebelumnya.'],
+   ['Hubungkan lokasi backup perangkat baru','Setelah data lama berhasil dipulihkan dan diverifikasi, tentukan folder backup yang akan digunakan perangkat baru. Buat backup baru sebelum mulai bekerja.']
+  ],
+  example:'Jika komputer lama berisi transaksi sampai 31 Oktober, jangan mulai menginput transaksi baru pada komputer baru dengan database kosong. Ambil backup terbaru komputer lama, pulihkan ke komputer baru, periksa hasilnya, lalu lanjutkan pencatatan dari database yang sama.',
+  checks:'Jangan menjalankan dua database terpisah pada dua perangkat lalu menggabungkannya dengan menyalin file secara acak. Backup bukan sinkronisasi langsung. Hindari input bersamaan pada dua perangkat karena transaksi dapat berbeda atau tertinggal.',
+  note:'Restore mengganti seluruh database lokal pada perangkat yang sedang digunakan. Selalu buat backup kondisi perangkat tujuan sebelum restore, periksa nama dan ringkasan file, dan jangan memulihkan file yang tidak diketahui asalnya.'
+ }
 };
 function openModuleGuide(){
- const active=document.querySelector('.page.active'),guide=moduleGuides[active?.id]||{title:$('page-title')?.textContent||'Panduan',intro:'Panduan penggunaan modul ini belum dilengkapi.',steps:['Gunakan tombol dan filter yang tersedia pada halaman.','Periksa data sebelum menyimpan perubahan.'],note:'Hubungi administrator jika membutuhkan penjelasan prosedur.'};
- $('module-guide-title').textContent=guide.title;
- $('module-guide-content').innerHTML='<p>'+esc(guide.intro)+'</p><ol>'+guide.steps.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol><div class="guide-note">'+esc(guide.note)+'</div>';
+ const active=document.querySelector('.page.active'),guide=moduleGuides[active?.id];
+ const content=$('module-guide-content');
+ if(!guide){
+  $('module-guide-title').textContent=$('page-title')?.textContent||'Panduan';
+  content.innerHTML='<p>Panduan rinci untuk menu ini sedang disiapkan.</p>';
+ }else{
+  $('module-guide-title').textContent=guide.title;
+  const escText=v=>esc(String(v??''));
+  content.innerHTML=
+   '<div class="guide-learning-intro"><span class="guide-section-kicker">MENGENAL MODUL</span><p>'+escText(guide.purpose)+'</p></div>'+
+   '<section class="guide-learning-section"><h3>Persiapan sebelum mulai</h3><p>'+escText(guide.prepare)+'</p></section>'+
+   '<section class="guide-learning-section"><h3>Langkah penggunaan</h3><ol class="guide-learning-steps">'+guide.steps.map((step,i)=>'<li><span class="guide-step-number">'+(i+1)+'</span><div><b>'+escText(step[0])+'</b><p>'+escText(step[1])+'</p></div></li>').join('')+'</ol></section>'+
+   '<section class="guide-learning-example"><h3>Contoh sederhana</h3><p>'+escText(guide.example)+'</p></section>'+
+   '<section class="guide-learning-section"><h3>Hal yang perlu diperiksa</h3><p>'+escText(guide.checks)+'</p></section>'+
+   '<section class="guide-learning-warning"><h3><i data-lucide="alert-triangle"></i> Peringatan penting</h3><p>'+escText(guide.note)+'</p></section>';
+ }
  $('module-guide-modal').hidden=false;
  if(window.lucide?.createIcons)window.lucide.createIcons();
 }
@@ -1175,7 +1439,7 @@ init();
 })();
 
 
-/* BUILD V102 — startup data protection and backup setup prompt */
+/* BUILD V103 — detailed beginner-friendly module learning guides */
 (()=>{
  const modal=$('startup-backup-notice');
  if(!modal)return;
