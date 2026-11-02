@@ -389,6 +389,7 @@ function renderSplitUI(){
  document.querySelectorAll('[data-f]').forEach(el=>el.oninput=()=>{let g=splitGroups.find(x=>x.id===el.dataset.id);if(g)g[el.dataset.f]=el.value});
  document.querySelectorAll('[data-rm]').forEach(el=>el.onclick=()=>{splitGroups=splitGroups.filter(g=>g.id!==el.dataset.rm);renderSplitUI()});
  if(j.lines.length===2){
+  $('split-lines').closest('table').querySelector('thead').innerHTML='<tr><th>Jurnal hasil</th><th>Akun Debit</th><th>Akun Kredit</th><th>Nominal (Debit = Kredit)</th></tr>';
   const debitLine=j.lines.find(l=>Number(l.debit||0)>0),creditLine=j.lines.find(l=>Number(l.credit||0)>0);
   const debitName=(state.accounts.find(a=>String(a.code)===String(debitLine?.code))||{}).name||'';
   const creditName=(state.accounts.find(a=>String(a.code)===String(creditLine?.code))||{}).name||'';
@@ -396,6 +397,7 @@ function renderSplitUI(){
   $('split-lines').innerHTML=splitGroups.map((g,i)=>'<tr><td><b>Jurnal '+(i+1)+'</b><small>'+esc(g.number)+'</small></td><td><b>'+esc(debitLine?.code||'')+'</b><small>'+esc(debitName)+'</small></td><td><b>'+esc(creditLine?.code||'')+'</b><small>'+esc(creditName)+'</small></td><td><input class="split-amount-input" type="number" min="0" step="0.01" inputmode="decimal" data-amount="'+g.id+'" value="'+Number(g.amount||0).toFixed(2)+'" aria-label="Nominal jurnal '+(i+1)+'"></td></tr>').join('');
   $('split-lines').querySelectorAll('[data-amount]').forEach(el=>el.oninput=()=>{const g=splitGroups.find(x=>x.id===el.dataset.amount);if(g)g.amount=el.value===''?'':Number(el.value);const total=splitGroups.reduce((n,x)=>n+Math.round(Number(x.amount||0)*100),0)/100;$('split-check').textContent='Total nominal yang dialokasikan: '+money(total)+' · Total jurnal asal: '+money(j.lines.reduce((n,l)=>n+Number(l.debit||0),0));});
  }else{
+  $('split-lines').closest('table').querySelector('thead').innerHTML='<tr><th>Akun</th><th>Keterangan</th><th>Debit</th><th>Kredit</th><th>Nomor bukti tujuan</th></tr>';
   const opts=splitGroups.map((g,i)=>'<option value="'+g.id+'">Jurnal '+(i+1)+' · '+esc(g.number)+'</option>').join('');
   $('split-note').textContent='Setiap baris akun dipindahkan utuh ke satu jurnal hasil. Setiap jurnal hasil wajib memiliki minimal 2 baris dan seimbang.';
   $('split-lines').innerHTML=j.lines.map((l,i)=>'<tr><td><b>'+esc(l.code)+'</b><small>'+esc((state.accounts.find(a=>String(a.code)===String(l.code))||{}).name||'')+'</small></td><td>'+esc(l.note||'—')+'</td><td>'+money(l.debit)+'</td><td>'+money(l.credit)+'</td><td><select class="split-target" data-i="'+i+'">'+opts+'</select></td></tr>').join('');
