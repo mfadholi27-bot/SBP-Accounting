@@ -378,7 +378,7 @@ function openJournalSplit(id){
  const j=state.journals.find(x=>x.id===id);
  if(!j||!isPostedJournal(j)||j.reversedBy||j.splitInto?.length)return toast('Hanya jurnal POSTED aktif yang dapat di-split.');
  if(isPeriodLocked(String(j.date||'').slice(0,7)))return toast('Periode jurnal sudah ditutup. Buka periode dengan otorisasi terlebih dahulu.');
- if(!Array.isArray(j.lines)||j.lines.length<4)return toast('Minimal 4 baris akun diperlukan untuk membagi menjadi dua jurnal seimbang.');
+ if(!Array.isArray(j.lines)||j.lines.length<4)return toast('Untuk membagi menjadi 2 jurnal, masing-masing jurnal hasil harus memiliki minimal 2 baris akun yang seimbang (total minimal 4 baris).');
  splitUI();splitSourceId=id;splitGroups=[1,2].map(n=>({id:crypto.randomUUID(),number:j.number+'-'+String(n).padStart(2,'0'),date:j.date,description:j.description+' — Bagian '+n}));
  $('split-reason').value='';$('split-origin').innerHTML='<div><small>Nomor bukti asal</small><b>'+esc(j.number)+'</b></div><div><small>Tanggal</small><b>'+esc(fmtDate(j.date))+'</b></div><div><small>Total debit</small><b>'+money(j.lines.reduce((n,l)=>n+Number(l.debit||0),0))+'</b></div><div><small>Total kredit</small><b>'+money(j.lines.reduce((n,l)=>n+Number(l.credit||0),0))+'</b></div>';
  renderSplitUI();$('split-modal').hidden=false;
@@ -398,7 +398,7 @@ function reviewSplit(){
  splitGroups.forEach((g,i)=>{if(!g.number.trim()||!g.date||!g.description.trim())errors.push('Nomor bukti, tanggal, dan keterangan jurnal '+(i+1)+' wajib diisi.');if(state.journals.some(x=>String(x.number).trim()===g.number.trim()))errors.push('Nomor bukti '+g.number+' sudah digunakan.');if(g.date&&isPeriodLocked(g.date.slice(0,7)))errors.push('Tanggal jurnal '+(i+1)+' berada pada periode yang sudah ditutup.')});
  if(new Set(splitGroups.map(g=>g.number.trim())).size!==splitGroups.length)errors.push('Nomor bukti hasil tidak boleh sama.');
  const allocations=[...$('split-lines').querySelectorAll('select')].map(el=>splitGroups.find(g=>g.id===el.value)),chunks=splitGroups.map(g=>({group:g,lines:j.lines.filter((l,i)=>allocations[i]?.id===g.id)}));
- chunks.forEach((x,i)=>{let d=x.lines.reduce((n,l)=>n+Number(l.debit||0),0),c=x.lines.reduce((n,l)=>n+Number(l.credit||0),0);if(x.lines.length<2)errors.push('Jurnal '+(i+1)+' minimal dua baris.');if(Math.abs(d-c)>.005)errors.push('Jurnal '+(i+1)+' tidak seimbang: '+money(d)+' vs '+money(c)+'.')});
+ chunks.forEach((x,i)=>{let d=x.lines.reduce((n,l)=>n+Number(l.debit||0),0),c=x.lines.reduce((n,l)=>n+Number(l.credit||0),0);if(x.lines.length<2)errors.push('Jurnal hasil '+(i+1)+' wajib memiliki minimal 2 baris akun.');if(Math.abs(d-c)>.005)errors.push('Jurnal '+(i+1)+' tidak seimbang: '+money(d)+' vs '+money(c)+'.')});
  if(errors.length){$('split-check').className='split-check bad';$('split-check').innerHTML=errors.map(esc).join('<br>');return}
  const sumD=j.lines.reduce((n,l)=>n+Number(l.debit||0),0),sumC=j.lines.reduce((n,l)=>n+Number(l.credit||0),0);
  if(Math.abs(sumD-chunks.reduce((n,x)=>n+x.lines.reduce((a,l)=>a+Number(l.debit||0),0),0))>.005||Math.abs(sumC-chunks.reduce((n,x)=>n+x.lines.reduce((a,l)=>a+Number(l.credit||0),0),0))>.005)return toast('Total hasil split tidak sama dengan jurnal asal.');
