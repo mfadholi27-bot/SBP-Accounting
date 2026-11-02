@@ -1,5 +1,5 @@
 /* SBP Accounting V19 — safe same-origin offline cache */
-const CACHE='sbp-accounting-v19-final-v104';
+const CACHE='sbp-accounting-v19-release-v02';
 const FILES=[
  './','./index.html','./styles.css','./app.js?v=97',
  './vendor/xlsx.full.min.js','./manifest.webmanifest',
