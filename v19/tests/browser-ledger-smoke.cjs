@@ -105,9 +105,9 @@ const server = http.createServer((req,res)=>{
   const previewCheck=await preview.evaluate(async()=>{
     const response=await fetch('./app.js?v=109',{cache:'no-store'});
     const js=await response.text();
-    return {scriptStatus:response.status,rangeEngine:js.includes('function getLedgerTransactionsRange('),afterPrintGuard:js.includes('async function readPersistedAccountingState('),buildStamp:document.body.innerText.includes('SBP ACCOUNTING')};
+    return {scriptStatus:response.status,rangeEngine:js.includes('function getLedgerTransactionsRange('),afterPrintGuard:js.includes('async function readPersistedAccountingState('),buildStamp:document.getElementById('build-stamp')?.innerText.includes('SBP-V19-LEDGER-PRINT-004')};
   });
-  if(previewCheck.scriptStatus!==200||!previewCheck.rangeEngine||!previewCheck.afterPrintGuard)throw new Error('GitHub Pages preview loaded, but the expected ledger build assets are incomplete: '+JSON.stringify(previewCheck));
+  if(previewCheck.scriptStatus!==200||!previewCheck.rangeEngine||!previewCheck.afterPrintGuard||!previewCheck.buildStamp)throw new Error('GitHub Pages preview loaded, but the expected ledger build assets are incomplete: '+JSON.stringify(previewCheck));
   console.log('PASS: actual browser IndexedDB read, monthly/year/range rendering, posted-only filtering, print callback, exact persisted-state equality, and live GitHub Pages preview HTTP/assets.');
  } catch(err) {
   console.error(err);process.exitCode=1;
