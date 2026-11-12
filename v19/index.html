@@ -198,7 +198,16 @@
 <section class="page" id="page-ledger" hidden>
  <div class="panel">
   <div class="panel-head"><div><h3>Buku Besar per Akun</h3><p>Rincian saldo awal, mutasi debit/kredit, dan saldo berjalan untuk satu akun pada periode terpilih.</p></div><span class="tag">BUKU BESAR</span></div>
-  <div class="ledger-filters"><label class="ledger-field">Periode<input type="month" id="ledger-period"></label><label class="ledger-field ledger-account-field">Akun / SANDI<select id="ledger-account"><option value="">Pilih akun</option></select></label><button class="btn btn-primary ledger-submit" id="ledger-refresh" type="button"><i data-lucide="search"></i><span>Tampilkan Buku Besar</span></button><div class="ledger-actions"><button class="btn" id="ledger-print" type="button"><i data-lucide="printer"></i><span>Cetak / PDF</span></button><button class="btn" id="ledger-export" type="button"><i data-lucide="file-spreadsheet"></i><span>Ekspor Excel</span></button></div></div>
+  <div class="ledger-filters ledger-period-filters">
+   <label class="ledger-field">Jenis periode<select id="ledger-mode"><option value="month">Bulanan</option><option value="year">Tahunan</option><option value="range">Rentang tanggal</option></select></label>
+   <label class="ledger-field" id="ledger-month-wrap">Bulan<input type="month" id="ledger-period"></label>
+   <label class="ledger-field" id="ledger-year-wrap" hidden>Tahun<input type="number" id="ledger-year" min="1900" max="2200" step="1"></label>
+   <label class="ledger-field" id="ledger-from-wrap" hidden>Dari tanggal<input type="date" id="ledger-from"></label>
+   <label class="ledger-field" id="ledger-to-wrap" hidden>Sampai tanggal<input type="date" id="ledger-to"></label>
+   <label class="ledger-field ledger-account-field">Akun / SANDI<select id="ledger-account"><option value="">Pilih akun</option></select></label>
+   <button class="btn btn-primary ledger-submit" id="ledger-refresh" type="button"><i data-lucide="search"></i><span>Tampilkan Buku Besar</span></button>
+   <div class="ledger-actions"><button class="btn" id="ledger-print" type="button"><i data-lucide="printer"></i><span>Cetak / PDF</span></button><button class="btn" id="ledger-export" type="button"><i data-lucide="file-spreadsheet"></i><span>Ekspor Excel</span></button></div>
+  </div>
   <div id="ledger-summary" class="opening-summary"></div>
   <div class="panel-head"><div><h3>Status Transaksi Akun</h3><p>Seluruh jurnal yang memuat SANDI akun terpilih, termasuk Draft dan Posted.</p></div><label class="ledger-field">Filter status<select id="ledger-status-filter"><option value="all">Semua status</option><option value="posted">POSTED</option><option value="draft">DRAFT</option><option value="cancelled">DIBATALKAN</option></select></label></div>
   <div id="ledger-status-summary" class="opening-summary"></div>
