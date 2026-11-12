@@ -196,7 +196,7 @@ function terbilangRupiah(value){
   if(x<1000000000000)return say(Math.floor(x/1000000000))+' miliar'+(x%1000000000?' '+say(x%1000000000):'');
   return say(Math.floor(x/1000000000000))+' triliun'+(x%1000000000000?' '+say(x%1000000000000):'');
  }
- return say(n).replace(/\\s+/g,' ').trim()+' rupiah';
+ return say(n).replace(/\s+/g,' ').trim()+' rupiah';
 }
 function printDebitNote(id){
  const n=(state.debitNotes||[]).find(x=>x.id===id);if(!n)return;
