@@ -739,18 +739,26 @@ function getAccountJournalStatus(from,to,code){
  return rows.sort((a,b)=>a.date.localeCompare(b.date)||a.number.localeCompare(b.number));
 }
 function getLedgerAccountCodes(){
- const select=$('ledger-account');
- return Array.from(select.selectedOptions||[]).map(o=>String(o.value||'').trim()).filter(Boolean);
+ return Array.from(document.querySelectorAll('#ledger-account-checklist input[type="checkbox"]:checked')).map(input=>String(input.value||'').trim()).filter(Boolean);
 }
 function updateLedgerSelectedCount(){
  const count=getLedgerAccountCodes().length,host=$('ledger-selected-count');
  if(host)host.textContent=count+' akun dipilih';
 }
-function renderLedger(){
- const selection=getLedgerSelection(),select=$('ledger-account'),current=getLedgerAccountCodes();
+function renderLedgerAccountChecklist(currentCodes){
+ const host=$('ledger-account-checklist'),search=$('ledger-account-search');
+ if(!host)return;
+ const query=String(search?.value||'').trim().toLowerCase();
  const accounts=state.accounts.slice().sort((a,b)=>String(a.code).localeCompare(String(b.code)));
- select.innerHTML=accounts.map(a=>'<option value="'+esc(a.code)+'">'+esc(a.code)+' · '+esc(a.name||'(Tanpa nama)')+'</option>').join('');
- current.forEach(code=>{const option=Array.from(select.options).find(o=>o.value===code);if(option)option.selected=true});
+ host.innerHTML=accounts.map(a=>{
+  const code=String(a.code??''),name=String(a.name||'(Tanpa nama)'),haystack=(code+' '+name).toLowerCase();
+  return '<label class="ledger-account-option"'+(query&&!haystack.includes(query)?' hidden':'')+'><input type="checkbox" value="'+esc(code)+'" '+(currentCodes.includes(code)?'checked':'')+'><span><b>'+esc(code)+'</b><small>'+esc(name)+'</small></span></label>';
+ }).join('')||'<div class="empty">Master akun belum tersedia.</div>';
+ host.querySelectorAll('input[type="checkbox"]').forEach(input=>input.addEventListener('change',renderLedger));
+}
+function renderLedger(){
+ const selection=getLedgerSelection(),current=getLedgerAccountCodes();
+ renderLedgerAccountChecklist(current);
  const codes=getLedgerAccountCodes();updateLedgerSelectedCount();
  if(!selection||!codes.length){
   $('ledger-summary').innerHTML='';
@@ -800,9 +808,9 @@ $('ledger-period').addEventListener('change',renderLedger);
 $('ledger-year').addEventListener('change',renderLedger);
 $('ledger-from').addEventListener('change',renderLedger);
 $('ledger-to').addEventListener('change',renderLedger);
-$('ledger-account').addEventListener('change',renderLedger);
-$('ledger-select-all').addEventListener('click',()=>{Array.from($('ledger-account').options).forEach(o=>o.selected=true);renderLedger()});
-$('ledger-clear-selection').addEventListener('click',()=>{Array.from($('ledger-account').options).forEach(o=>o.selected=false);renderLedger()});
+$('ledger-account-search').addEventListener('input',()=>{const q=$('ledger-account-search').value.trim().toLowerCase();$('ledger-account-checklist').querySelectorAll('.ledger-account-option').forEach(row=>{row.hidden=!row.textContent.toLowerCase().includes(q)})});
+$('ledger-select-all').addEventListener('click',()=>{document.querySelectorAll('#ledger-account-checklist input[type="checkbox"]').forEach(input=>input.checked=true);renderLedger()});
+$('ledger-clear-selection').addEventListener('click',()=>{document.querySelectorAll('#ledger-account-checklist input[type="checkbox"]').forEach(input=>input.checked=false);renderLedger()});
 $('ledger-status-filter').addEventListener('change',()=>{const s=getLedgerSelection();renderAccountJournalStatusMulti(s?.from,s?.to,getLedgerAccountCodes())});
 $('ledger-refresh').onclick=renderLedger;
 $('ledger-export').onclick=exportLedgerXlsx;
