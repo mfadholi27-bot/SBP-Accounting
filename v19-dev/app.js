@@ -756,6 +756,10 @@ function renderLedgerAccountChecklist(currentCodes){
  }).join('')||'<div class="empty">Master akun belum tersedia.</div>';
  host.querySelectorAll('input[type="checkbox"]').forEach(input=>input.addEventListener('change',renderLedger));
 }
+function ledgerNetDisplay(value){
+ const n=Number(value||0);
+ return Math.abs(n)<0.005?'0':(n<0?'-':'')+money(Math.abs(n));
+}
 function renderLedger(){
  const selection=getLedgerSelection(),current=getLedgerAccountCodes();
  renderLedgerAccountChecklist(current);
@@ -773,7 +777,7 @@ function renderLedger(){
  $('ledger-summary').innerHTML='<div><span>Jumlah akun</span><b>'+results.length+'</b></div><div><span>Periode</span><b>'+esc(selection.label)+'</b></div><div><span>Total mutasi debit</span><b>'+money(totalDebit)+'</b></div><div><span>Total mutasi kredit</span><b>'+money(totalCredit)+'</b></div><div><span>Akumulasi saldo akhir bersih</span><b>'+money(ending)+'</b></div>';
  $('ledger-content').innerHTML=results.map(result=>{
   const movements=result.rows.filter(r=>r.kind==='movement'),debit=movements.reduce((n,r)=>n+r.debit,0),credit=movements.reduce((n,r)=>n+r.credit,0);
-  return '<section class="ledger-account-result"><div class="panel-head"><div><h3>'+esc(result.account.code)+' · '+esc(result.account.name)+'</h3><p>Saldo awal '+money(result.openingNet)+' · Mutasi debit '+money(debit)+' · Mutasi kredit '+money(credit)+' · Saldo akhir '+money(result.endingNet)+'</p></div></div><table><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan</th><th>Debit</th><th>Kredit</th><th>Saldo Debit</th><th>Saldo Kredit</th></tr></thead><tbody>'+result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td><b>'+esc(r.number)+'</b></td><td>'+esc(r.description)+'</td><td class="num">'+(r.debit?money(r.debit):'—')+'</td><td class="num">'+(r.credit?money(r.credit):'—')+'</td><td class="num">'+(r.balanceDebit?money(r.balanceDebit):'—')+'</td><td class="num">'+(r.balanceCredit?money(r.balanceCredit):'—')+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="3">TOTAL MUTASI</th><th>'+money(debit)+'</th><th>'+money(credit)+'</th><th colspan="2">Saldo akhir: '+money(result.endingNet)+'</th></tr></tfoot></table></section>';
+  return '<section class="ledger-account-result"><div class="panel-head"><div><h3>'+esc(result.account.code)+' · '+esc(result.account.name)+'</h3><p>Saldo awal '+ledgerNetDisplay(result.openingNet)+' · Mutasi debit '+money(debit)+' · Mutasi kredit '+money(credit)+' · Saldo akhir '+ledgerNetDisplay(result.endingNet)+'</p></div></div><table><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan</th><th>Debit</th><th>Kredit</th><th>Saldo</th></tr></thead><tbody>'+result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td><b>'+esc(r.number)+'</b></td><td>'+esc(r.description)+'</td><td class="num">'+(r.debit?money(r.debit):'—')+'</td><td class="num">'+(r.credit?money(r.credit):'—')+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="3">TOTAL MUTASI</th><th>'+money(debit)+'</th><th>'+money(credit)+'</th><th>Saldo akhir: '+ledgerNetDisplay(result.endingNet)+'</th></tr></tfoot></table></section>';
  }).join('<div class="ledger-account-separator"></div>');
  renderAccountJournalStatusMulti(selection.from,selection.to,codes);
 }
@@ -1088,8 +1092,8 @@ async function printLedger(){
  results.forEach(result=>{
   const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),c=moves.reduce((n,r)=>n+r.credit,0);
   body+='<h2 style="margin:18px 0 6px;font-size:14px">'+esc(result.account.code)+' · '+esc(result.account.name)+'</h2>';
-  body+=printSummary([['Saldo awal rentang',printMoney(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',printMoney(result.endingNet)]]);
-  body+=printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+printMoney(r.balanceDebit)+'</td><td class="num">'+printMoney(r.balanceCredit)+'</td></tr>'));
+  body+=printSummary([['Saldo awal rentang',ledgerNetDisplay(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',ledgerNetDisplay(result.endingNet)]]);
+  body+=printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>'));
  });
  const verify=async()=>{
   const memoryUnchanged=JSON.stringify(state)===memoryBefore;
