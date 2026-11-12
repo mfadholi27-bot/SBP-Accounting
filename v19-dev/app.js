@@ -480,6 +480,8 @@ function reviewSplit(){
  else{const allocations=[...$('split-lines').querySelectorAll('select')].map(el=>splitGroups.find(g=>g.id===el.value));chunks=splitGroups.map(g=>({group:g,lines:j.lines.filter((l,i)=>allocations[i]?.id===g.id)}))}
  chunks.forEach((x,i)=>{let d=x.lines.reduce((n,l)=>n+Number(l.debit||0),0),c=x.lines.reduce((n,l)=>n+Number(l.credit||0),0);if(x.lines.length<2)errors.push('Jurnal hasil '+(i+1)+' wajib memiliki minimal 2 baris akun.');if(Math.abs(d-c)>.005)errors.push('Jurnal '+(i+1)+' tidak seimbang: '+money(d)+' vs '+money(c)+'.')});
  if(errors.length){$('split-check').className='split-check bad';$('split-check').innerHTML=errors.map(esc).join('<br>');return}
+ const otherPeriods=[...new Set(splitGroups.map(g=>String(g.date||'').slice(0,7)).filter(p=>p!==state.periodControl.activePeriod))];
+ if(otherPeriods.length&&!confirm('Tanggal satu atau beberapa jurnal hasil berbeda dari periode kerja aktif ('+periodLabel(state.periodControl.activePeriod)+'): '+otherPeriods.map(periodLabel).join(', ')+'. Periode tujuan tetap harus terbuka. Lanjutkan split?'))return;
  const sumD=j.lines.reduce((n,l)=>n+Number(l.debit||0),0),sumC=j.lines.reduce((n,l)=>n+Number(l.credit||0),0);
  if(Math.abs(sumD-chunks.reduce((n,x)=>n+x.lines.reduce((a,l)=>a+Number(l.debit||0),0),0))>.005||Math.abs(sumC-chunks.reduce((n,x)=>n+x.lines.reduce((a,l)=>a+Number(l.credit||0),0),0))>.005)return toast('Total hasil split tidak sama dengan jurnal asal.');
  const summary=chunks.map((x,i)=>(i+1)+'. '+x.group.number+' ('+x.lines.length+' baris)').join('\n');
