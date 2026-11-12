@@ -60,6 +60,26 @@
 @media(max-width:1100px){#page-ledger .ledger-account-checklist{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 @media(max-width:760px){#page-ledger .ledger-filters.ledger-period-filters{grid-template-columns:repeat(2,minmax(0,1fr))!important}#page-ledger .ledger-account-checklist{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:520px){#page-ledger .ledger-filters.ledger-period-filters{grid-template-columns:minmax(0,1fr)!important}#page-ledger .ledger-account-checklist{grid-template-columns:minmax(0,1fr)!important}#page-ledger .ledger-account-toolbar{align-items:flex-start!important;flex-direction:column!important}}
+</style><style id="sbp-trial-balance-compact">
+#page-reports #trial-balance{display:flex!important;flex-direction:column!important;gap:14px!important}
+#page-reports .trial-period-note{margin:0!important;padding:10px 13px!important;border:1px solid #e2e9e4!important;border-radius:9px!important;background:#f8faf9!important;color:#64746a!important;font-size:11px!important;line-height:1.5!important}
+#page-reports .trial-summary-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;width:100%!important}
+#page-reports .trial-summary-card{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:7px!important;min-width:0!important;min-height:84px!important;padding:13px 15px!important;border:1px solid #e1e9e3!important;border-radius:11px!important;background:#f8fafb!important}
+#page-reports .trial-summary-card>span{font-size:11px!important;color:#64748b!important}
+#page-reports .trial-summary-card>b{font-size:14px!important;line-height:1.4!important;color:#172b21!important;overflow-wrap:anywhere!important;font-variant-numeric:tabular-nums!important}
+#page-reports .trial-summary-card>small{font-size:9px!important;font-weight:800!important;letter-spacing:.3px!important}
+#page-reports .trial-table-wrap{width:100%!important;overflow:auto!important;border:1px solid #e2e8f0!important;border-radius:10px!important}
+#page-reports .trial-compact-table{width:100%!important;min-width:850px!important;border-collapse:separate!important;border-spacing:0!important;font-variant-numeric:tabular-nums!important}
+#page-reports .trial-compact-table thead th{padding:10px 9px!important;background:#f1f6f2!important;color:#365344!important;font-size:10px!important;font-weight:800!important;text-align:center!important;white-space:nowrap!important;border-bottom:1px solid #dfe8e1!important}
+#page-reports .trial-compact-table tbody td{padding:8px 9px!important;font-size:11px!important;border-bottom:1px solid #edf1ee!important;white-space:nowrap!important}
+#page-reports .trial-compact-table tbody tr:hover td{background:#f8fbf9!important}
+#page-reports .trial-compact-table tbody td:nth-child(2){white-space:normal!important;min-width:160px!important}
+#page-reports .trial-compact-table .num{text-align:right!important}
+#page-reports .trial-compact-table tfoot th{padding:10px 9px!important;background:#f3f7f4!important;color:#1f3d2d!important;font-size:11px!important;text-align:right!important;border-top:1px solid #dfe8e1!important;white-space:nowrap!important}
+#page-reports .trial-compact-table tfoot th:first-child{text-align:left!important}
+#page-reports .trial-balance-check{margin:0!important;padding:11px 13px!important;border:1px solid #e2e9e4!important;border-radius:9px!important;background:#fbfdfb!important;color:#526458!important;font-size:11px!important;line-height:1.5!important}
+@media(max-width:900px){#page-reports .trial-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:520px){#page-reports .trial-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}#page-reports .trial-summary-card{min-height:76px!important;padding:11px!important}}
 </style></head>
 <body>
 <div class="shell">
@@ -325,7 +345,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-LEDGER-MULTI-ACCOUNT-005</span><span>12-11-2026 · Monthly, annual & date-range ledger print</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-TRIAL-COMPACT-009</span><span>12-11-2026 · Monthly, annual & date-range ledger print</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=110"></script>
+<script src="app.js?v=113"></script>
 </body></html>
