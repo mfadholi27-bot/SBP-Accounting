@@ -705,7 +705,7 @@ function getTrialBalanceRows(period){
 function ledgerOpeningNet(period,account){const record=(state.openingBalances||[]).find(x=>x.period===period&&String(x.accountCode)===String(account.code));return record?Number(record.debit||0)-Number(record.credit||0):0}
 function getLedgerTransactionsRange(from,to,code){
  const account=state.accounts.find(a=>String(a.code)===String(code));if(!account)return null;
- if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)return null;
+ const validDate=value=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;const parsed=new Date(value+'T00:00:00Z');return !Number.isNaN(parsed.getTime())&&parsed.toISOString().slice(0,10)===value};\n if(!validDate(from)||!validDate(to)||from>to)return null;
  const firstMonth=from.slice(0,7),openingNet=ledgerOpeningNet(firstMonth,account);
  let carried=openingNet;
  (Array.isArray(state.journals)?state.journals:[]).filter(j=>isPostedJournal(j)&&String(j.date||'')>=firstMonth+'-01'&&String(j.date||'')<from).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).filter(l=>String(l.code)===String(code)).forEach(l=>{carried+=Number(l.debit||0)-Number(l.credit||0)}));
