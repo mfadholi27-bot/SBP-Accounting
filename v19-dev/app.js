@@ -111,7 +111,7 @@ function debitNoteNextNumber(date=$('dn-date')?.value||new Date().toISOString().
 
 let debitNoteSelectedSources=[];
 function debitNoteGroupOptions(){
- const groups=[...new Set(state.accounts.map(a=>String(a.code||'').match(/^(\d{3})\\.\d{3}$/)?.[1]).filter(Boolean))].sort();
+ const groups=[...new Set(state.accounts.map(a=>String(a.code||'').match(/^(\d{3})\.\d{3}$/)?.[1]).filter(Boolean))].sort();
  $('dn-source-group').innerHTML=groups.map(g=>'<option value="'+g+'.000">'+g+'.000 s.d. '+g+'.800</option>').join('');
  if(groups.includes('719'))$('dn-source-group').value='719.000';
 }
@@ -119,7 +119,7 @@ function debitNoteSourceMatches(){
  const base=$('dn-source-group').value, prefix=base.split('.')[0];
  const rows=[];
  (state.journals||[]).filter(j=>j.status==='posted').forEach(j=>(j.lines||[]).forEach((l,index)=>{
-  const code=String(l.code||''),m=code.match(/^\d{3}\\.(\d{3})$/);
+  const code=String(l.code||''),m=code.match(/^\d{3}\.(\d{3})$/);
   if(!m||code.split('.')[0]!==prefix||Number(m[1])>800)return;
   const account=state.accounts.find(a=>a.code===code)||{};
   rows.push({key:j.id+'::'+index,journalId:j.id,lineIndex:index,journalNumber:j.number||'',date:j.date||'',accountCode:code,accountName:account.name||'',description:j.description||'',note:l.note||'',debit:Number(l.debit)||0,credit:Number(l.credit)||0});
