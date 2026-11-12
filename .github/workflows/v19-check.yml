@@ -1,7 +1,7 @@
 name: SBP V19 validation
 on:
   push:
-    branches: [v19-html-js-nptrans, main]
+    branches: [v19-html-js-nptrans, main, feature/v19-periodic-ledger-print]
     paths:
       - "v19/**"
       - ".github/workflows/v19-check.yml"
@@ -19,6 +19,8 @@ jobs:
           node-version: 22
       - name: Check JavaScript syntax
         run: node --check v19/app.js
+      - name: Test ledger period calculations
+        run: node --test v19/tests/*.test.cjs
       - name: Check required app files
         run: |
           test -s v19/index.html
