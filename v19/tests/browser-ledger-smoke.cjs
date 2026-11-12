@@ -28,7 +28,7 @@ const server = http.createServer((req,res)=>{
     Node.prototype.appendChild=function(node){
       const result=append.call(this,node);
       if(node&&node.id==='sbp-print-frame'){
-        try{node.contentWindow.print=()=>node.contentWindow.dispatchEvent(new Event('afterprint'))}catch(e){}
+        try{node.contentWindow.print=()=>{window.__lastPrintBody=node.contentDocument?.body?.innerText||'';node.contentWindow.dispatchEvent(new Event('afterprint'))}}catch(e){}
       }
       return result;
     };
@@ -90,6 +90,8 @@ const server = http.createServer((req,res)=>{
   if(!table.includes('1.065'))throw new Error('Expected ending balance Rp 1.065 not found in ledger');
   const before=await page.evaluate(async()=>JSON.stringify(await readPersistedAccountingState()));
   await page.locator('#ledger-print').click();
+  const printed=await page.evaluate(()=>window.__lastPrintBody||'');
+  if(!printed.includes('1000 · Kas')||!printed.includes('2000 · Piutang Usaha'))throw new Error('Multi-account print output did not include every selected account');
   await page.waitForFunction(()=>document.getElementById('toast')?.textContent.includes('Validasi lulus'),{timeout:10000});
   const after=await page.evaluate(async()=>JSON.stringify(await readPersistedAccountingState()));
   if(before!==after)throw new Error('IndexedDB state changed after print');
