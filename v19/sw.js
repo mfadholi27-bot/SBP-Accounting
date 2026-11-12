@@ -1,7 +1,7 @@
 /* SBP Accounting V19 — safe same-origin offline cache */
-const CACHE='sbp-accounting-v19-release-v02d';
+const CACHE='sbp-accounting-v19-release-v02e';
 const FILES=[
- './','./index.html','./styles.css','./app.js?v=109',
+ './','./index.html','./styles.css','./app.js?v=110',
  './vendor/xlsx.full.min.js','./manifest.webmanifest',
  './assets/sbp-app-icon.svg','./lucide-local.js',
  './palm-glass-theme.css?v=45','./assets/palm-wallpaper.svg',
