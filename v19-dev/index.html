@@ -159,9 +159,9 @@
   <div class="form-actions end"><button class="btn" id="dn-source-add" type="button">Masukkan Transaksi Terpilih</button></div>
   <div class="dn-selected-wrap"><h4>Transaksi Referensi Nota Debet</h4><div id="dn-source-selected" class="dn-selected-list"><span class="empty">Belum ada transaksi yang dipilih.</span></div><small>Transaksi yang dipilih menjadi referensi dokumen. Jurnal asal tidak diubah dan tidak disalin ulang menjadi jurnal koreksi.</small></div>
  </div>
- <div class="section-heading compact"><div><h3>Rincian Akun / Jurnal</h3><p>Masukkan akun dan nominal berdasarkan dokumen pendukung. Total debit dan kredit harus seimbang sebelum posting.</p></div><button class="btn" id="dn-add-line" type="button">＋ Tambah baris</button></div>
-  <div class="table-wrap"><table class="entry-table debit-note-lines"><thead><tr><th>Kode akun</th><th>Nama akun</th><th>Keterangan baris</th><th>Debit</th><th>Kredit</th><th></th></tr></thead><tbody id="dn-lines"></tbody></table></div>
-  <div class="form-actions debit-note-totals"><div class="totals"><span>Total Debit <b id="dn-debit-total">Rp 0</b></span><span>Total Kredit <b id="dn-credit-total">Rp 0</b></span><span>Selisih <b id="dn-difference">Rp 0</b></span></div></div>
+ <div class="section-heading compact"><div><h3>Rincian Akun / Jurnal</h3><p>Masukkan nilai positif (+) untuk penambahan dan negatif (-) untuk pengurangan. Total positif dan negatif harus seimbang sebelum posting.</p></div><button class="btn" id="dn-add-line" type="button">＋ Tambah baris</button></div>
+  <div class="table-wrap"><table class="entry-table debit-note-lines"><thead><tr><th>Kode akun</th><th>Nama akun</th><th>Keterangan baris</th><th>Nilai (+/-)</th><th></th></tr></thead><tbody id="dn-lines"></tbody></table></div>
+  <div class="form-actions debit-note-totals"><div class="totals"><span>Total Positif (+) <b id="dn-debit-total">Rp 0</b></span><span>Total Negatif (-) <b id="dn-credit-total">Rp 0</b></span><span>Selisih <b id="dn-difference">Rp 0</b></span></div></div>
   <div class="form-actions end"><button class="btn" id="dn-reset" type="button">Kosongkan</button><button class="btn" id="dn-save" type="button">Simpan Draft</button><button class="btn btn-primary" id="dn-post" type="button">Posting & Buat Jurnal</button></div>
   <div id="dn-message" class="inline-message">Nota Debet yang sudah diposting tidak dapat diedit.</div>
  </div>
@@ -367,7 +367,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEBIT-NOTE-PRINT-025</span><span>13-11-2026 · Auto account matching & formal Nota Debet print</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEBIT-NOTE-SIGNED-026</span><span>13-11-2026 · Signed values & automatic terbilang on Nota Debet</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=129"></script>
+<script src="app.js?v=130"></script>
 </body></html>
