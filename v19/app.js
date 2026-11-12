@@ -762,6 +762,20 @@ function exportLedgerXlsx(){
  const rows=[['BUKU BESAR',result.account.code,result.account.name],['PERIODE',selection.label],[],['TANGGAL','NO BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT'],...result.rows.map(r=>[r.kind==='opening'?'SALDO AWAL':r.date,r.number,r.description,r.debit,r.credit,r.balanceDebit,r.balanceCredit])];
  exportXlsxSheet('Buku-Besar-'+code+'-'+selection.label.replace(/[^0-9A-Za-z-]/g,'_')+'.xlsx','Buku Besar',rows);
 }
+$('ledger-period').value=new Date().toISOString().slice(0,7);
+$('ledger-year').value=String(new Date().getFullYear());
+$('ledger-from').value=new Date().toISOString().slice(0,10);
+$('ledger-to').value=new Date().toISOString().slice(0,10);
+$('ledger-mode').addEventListener('change',()=>{updateLedgerPeriodMode();renderLedger()});
+$('ledger-period').addEventListener('change',renderLedger);
+$('ledger-year').addEventListener('change',renderLedger);
+$('ledger-from').addEventListener('change',renderLedger);
+$('ledger-to').addEventListener('change',renderLedger);
+$('ledger-account').addEventListener('change',renderLedger);
+$('ledger-status-filter').addEventListener('change',()=>{const s=getLedgerSelection();renderAccountJournalStatus(s?.from,s?.to,$('ledger-account').value)});
+$('ledger-refresh').onclick=renderLedger;
+$('ledger-export').onclick=exportLedgerXlsx;
+updateLedgerPeriodMode();
 function exportTrialBalanceXlsx(){const period=$('report-period').value,rows=getTrialBalanceRows(period);const data=[['PERIODE',period],[],['SANDI','NAMA AKUN','SALDO AWAL DEBIT','SALDO AWAL KREDIT','MUTASI DEBIT','MUTASI KREDIT','SALDO AKHIR DEBIT','SALDO AKHIR KREDIT','SALDO BERSIH D/(K)'],...rows.map(r=>[r.code,r.name,r.openingDebit,r.openingCredit,r.debit,r.credit,r.endingDebit,r.endingCredit,r.balance])];exportXlsxSheet('Neraca-Percobaan-'+period+'.xlsx','Neraca Percobaan',data)}
 function renderTrialBalance(){
  const period=$('report-period').value,rows=getTrialBalanceRows(period),sum=k=>rows.reduce((n,r)=>n+Number(r[k]||0),0),ed=sum('endingDebit'),ec=sum('endingCredit'),difference=ed-ec,balanced=Math.abs(difference)<.005;
@@ -993,6 +1007,7 @@ function printDocument(title,subtitle,body,orientation='portrait'){
  const cleanup=()=>{frame.remove();window.removeEventListener('afterprint',cleanup)};
  frame.onload=()=>{setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(err){toast('Gagal membuka cetak: '+err.message)}},150)};
  window.addEventListener('afterprint',cleanup,{once:true});
+ return frame;
 }
 function printTrialBalance(){
  const period=$('report-period').value,rows=getTrialBalanceRows(period),d=rows.reduce((n,r)=>n+r.endingDebit,0),c=rows.reduce((n,r)=>n+r.endingCredit,0);
@@ -1027,7 +1042,7 @@ async function printLedger(){
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- window.addEventListener('afterprint',verify,{once:true});
+ const printFrame=document.getElementById('sbp-print-frame');\n if(printFrame?.contentWindow)printFrame.contentWindow.addEventListener('afterprint',verify,{once:true});\n else window.addEventListener('afterprint',verify,{once:true});
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
