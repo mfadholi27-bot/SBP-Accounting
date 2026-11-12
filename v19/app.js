@@ -111,7 +111,7 @@ function debitNoteNextNumber(date=$('dn-date')?.value||new Date().toISOString().
 
 let debitNoteSelectedSources=[];
 function debitNoteGroupOptions(){
- const groups=[...new Set(state.accounts.map(a=>String(a.code||'').match(/^(\\d{3})\\.\\d{3}$/)?.[1]).filter(Boolean))].sort();
+ const groups=[...new Set(state.accounts.map(a=>String(a.code||'').match(/^(\d{3})\\.\d{3}$/)?.[1]).filter(Boolean))].sort();
  $('dn-source-group').innerHTML=groups.map(g=>'<option value="'+g+'.000">'+g+'.000 s.d. '+g+'.800</option>').join('');
  if(groups.includes('719'))$('dn-source-group').value='719.000';
 }
@@ -119,7 +119,7 @@ function debitNoteSourceMatches(){
  const base=$('dn-source-group').value, prefix=base.split('.')[0];
  const rows=[];
  (state.journals||[]).filter(j=>j.status==='posted').forEach(j=>(j.lines||[]).forEach((l,index)=>{
-  const code=String(l.code||''),m=code.match(/^\\d{3}\\.(\\d{3})$/);
+  const code=String(l.code||''),m=code.match(/^\d{3}\\.(\d{3})$/);
   if(!m||code.split('.')[0]!==prefix||Number(m[1])>800)return;
   const account=state.accounts.find(a=>a.code===code)||{};
   rows.push({key:j.id+'::'+index,journalId:j.id,lineIndex:index,journalNumber:j.number||'',date:j.date||'',accountCode:code,accountName:account.name||'',description:j.description||'',note:l.note||'',debit:Number(l.debit)||0,credit:Number(l.credit)||0});
@@ -705,7 +705,7 @@ function getTrialBalanceRows(period){
 function ledgerOpeningNet(period,account){const record=(state.openingBalances||[]).find(x=>x.period===period&&String(x.accountCode)===String(account.code));return record?Number(record.debit||0)-Number(record.credit||0):0}
 function getLedgerTransactionsRange(from,to,code){
  const account=state.accounts.find(a=>String(a.code)===String(code));if(!account)return null;
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(from)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(to)||from>to)return null;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)return null;
  const firstMonth=from.slice(0,7),openingNet=ledgerOpeningNet(firstMonth,account);
  let carried=openingNet;
  (Array.isArray(state.journals)?state.journals:[]).filter(j=>isPostedJournal(j)&&String(j.date||'')>=firstMonth+'-01'&&String(j.date||'')<from).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).filter(l=>String(l.code)===String(code)).forEach(l=>{carried+=Number(l.debit||0)-Number(l.credit||0)}));
@@ -881,12 +881,12 @@ function currentMonthKey(){const d=new Date();return d.getFullYear()+'-'+String(
 function ensurePeriodControl(){
  if(!state.periodControl||typeof state.periodControl!=='object')state.periodControl={activePeriod:currentMonthKey(),periods:{}};
  if(!state.periodControl.periods||typeof state.periodControl.periods!=='object')state.periodControl.periods={};
- if(!/^\\d{4}-\\d{2}$/.test(String(state.periodControl.activePeriod||'')))state.periodControl.activePeriod=currentMonthKey();
+ if(!/^\d{4}-\d{2}$/.test(String(state.periodControl.activePeriod||'')))state.periodControl.activePeriod=currentMonthKey();
 }
 function periodRecord(period){ensurePeriodControl();return state.periodControl.periods[period]||{status:'open'}}
 function isPeriodLocked(period){return periodRecord(period).status==='closed'}
 function periodGuard(period,action='mengubah data'){
- if(!/^\\d{4}-\\d{2}$/.test(String(period||''))){toast('Tanggal/periode tidak valid.');return false}
+ if(!/^\d{4}-\d{2}$/.test(String(period||''))){toast('Tanggal/periode tidak valid.');return false}
  if(isPeriodLocked(period)){toast('Periode '+period+' sudah ditutup. Tidak dapat '+action+'. Buka kembali periode dengan otorisasi administrator jika memang diperlukan.');return false}
  return true
 }
@@ -922,7 +922,7 @@ function renderPeriodControl(){
 }
 async function setActivePeriod(){
  const p=$('period-active').value;
- if(!/^\\d{4}-\\d{2}$/.test(p)){toast('Pilih periode kerja yang benar.');return}
+ if(!/^\d{4}-\d{2}$/.test(p)){toast('Pilih periode kerja yang benar.');return}
  if(isPeriodLocked(p)){toast('Periode '+p+' sudah ditutup. Buka kembali terlebih dahulu.');return}
  state.periodControl.activePeriod=p;
  await persist();
@@ -933,7 +933,7 @@ async function setActivePeriod(){
 async function closeAccountingPeriod(){
  ensurePeriodControl();
  const p=$('period-close-month').value,note=$('period-close-note').value.trim();
- if(!/^\\d{4}-\\d{2}$/.test(p)){toast('Pilih bulan yang akan ditutup.');return}
+ if(!/^\d{4}-\d{2}$/.test(p)){toast('Pilih bulan yang akan ditutup.');return}
  if(isPeriodLocked(p)){toast('Periode tersebut sudah ditutup.');return}
  const t=periodTotals(p);
  if(t.drafts){setMessage('period-message','Penutupan diblokir: masih ada '+t.drafts+' jurnal Draft pada periode '+p+'. Posting atau selesaikan Draft terlebih dahulu.','bad');return}
@@ -1042,7 +1042,9 @@ async function printLedger(){
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- const printFrame=document.getElementById('sbp-print-frame');\n if(printFrame?.contentWindow)printFrame.contentWindow.addEventListener('afterprint',verify,{once:true});\n else window.addEventListener('afterprint',verify,{once:true});
+ const printFrame=document.getElementById('sbp-print-frame');
+ if(printFrame?.contentWindow)printFrame.contentWindow.addEventListener('afterprint',verify,{once:true});
+ else window.addEventListener('afterprint',verify,{once:true});
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
@@ -1055,7 +1057,7 @@ function openJournalPrintSettings(){const modal=$('journal-print-modal');if(!mod
 function updateJournalPrintMode(){const mode=$('jprint-mode').value;for(const [id,show] of [['jprint-date-wrap',mode==='date'],['jprint-month-wrap',mode==='month'],['jprint-year-wrap',mode==='year'],['jprint-from-wrap',mode==='range'],['jprint-to-wrap',mode==='range']])$(id).hidden=!show}
 function closeJournalPrintSettings(){$('journal-print-modal').hidden=true}
 function printJournalList(){openJournalPrintSettings()}
-function confirmJournalPrint(){const mode=$('jprint-mode').value;let from='',to='',period='Seluruh data';if(mode==='date'){from=to=$('jprint-date').value;if(!from)return toast('Pilih tanggal jurnal terlebih dahulu.');period='Tanggal '+from}else if(mode==='month'){const v=$('jprint-month').value;if(!/^\\d{4}-\\d{2}$/.test(v))return toast('Pilih bulan dan tahun terlebih dahulu.');const [y,m]=v.split('-').map(Number);from=v+'-01';to=v+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0');period=v}else if(mode==='year'){const y=Number($('jprint-year').value);if(!Number.isInteger(y)||y<1900||y>2200)return toast('Masukkan tahun yang benar.');from=y+'-01-01';to=y+'-12-31';period=String(y)}else if(mode==='range'){from=$('jprint-from').value;to=$('jprint-to').value;if(!from||!to)return toast('Lengkapi tanggal mulai dan tanggal akhir.');if(from>to)return toast('Tanggal mulai tidak boleh melewati tanggal akhir.');period=from+' s.d. '+to}
+function confirmJournalPrint(){const mode=$('jprint-mode').value;let from='',to='',period='Seluruh data';if(mode==='date'){from=to=$('jprint-date').value;if(!from)return toast('Pilih tanggal jurnal terlebih dahulu.');period='Tanggal '+from}else if(mode==='month'){const v=$('jprint-month').value;if(!/^\d{4}-\d{2}$/.test(v))return toast('Pilih bulan dan tahun terlebih dahulu.');const [y,m]=v.split('-').map(Number);from=v+'-01';to=v+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0');period=v}else if(mode==='year'){const y=Number($('jprint-year').value);if(!Number.isInteger(y)||y<1900||y>2200)return toast('Masukkan tahun yang benar.');from=y+'-01-01';to=y+'-12-31';period=String(y)}else if(mode==='range'){from=$('jprint-from').value;to=$('jprint-to').value;if(!from||!to)return toast('Lengkapi tanggal mulai dan tanggal akhir.');if(from>to)return toast('Tanggal mulai tidak boleh melewati tanggal akhir.');period=from+' s.d. '+to}
  const status=$('jprint-status').value,account=$('jprint-account').value,q=$('jprint-search').value.trim().toLowerCase(),sort=$('jprint-sort').value;
  const items=state.journals.filter(j=>{const date=String(j.date||'').slice(0,10);if(from&&(!date||date<from||date>to))return false;if(status!=='all'&&journalPrintStatus(j)!==status)return false;if(account!=='all'&&!(j.lines||[]).some(l=>String(l.code||l.accountCode||'')===account))return false;const hay=(j.number+' '+j.description+' '+date+' '+(j.lines||[]).map(l=>(l.note||'')+' '+(l.code||'')).join(' ')).toLowerCase();return !q||hay.includes(q)}).sort((a,b)=>sort==='asc'?String(a.date||'').localeCompare(String(b.date||'')):String(b.date||'').localeCompare(String(a.date||'')));
  if(!items.length)return toast('Tidak ada jurnal yang cocok dengan pengaturan cetak.');
