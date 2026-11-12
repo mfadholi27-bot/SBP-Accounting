@@ -37,14 +37,15 @@ const server = http.createServer((req,res)=>{
   await page.waitForFunction(()=>typeof go==='function'&&document.getElementById('ledger-mode'));
   await page.evaluate(async()=>{
     const fixture={
-      accounts:[{code:'1000',name:'Kas'}],
+      accounts:[{code:'1000',name:'Kas'},{code:'2000',name:'Piutang Usaha'}],
       journals:[
         {id:1,date:'2026-01-05',number:'J-001',description:'Saldo kas Januari',status:'posted',lines:[{code:'1000',debit:50,credit:0}]},
         {id:2,date:'2026-02-10',number:'J-002',description:'Penerimaan kas Februari',status:'posted',lines:[{code:'1000',debit:20,credit:5}]},
         {id:3,date:'2026-02-15',number:'J-003',description:'Draft tidak boleh masuk',status:'draft',lines:[{code:'1000',debit:900,credit:0}]},
-        {id:4,date:'2026-02-18',number:'J-004',description:'Jurnal batal tidak boleh masuk',status:'cancelled',lines:[{code:'1000',debit:700,credit:0}]}
+        {id:4,date:'2026-02-18',number:'J-004',description:'Jurnal batal tidak boleh masuk',status:'cancelled',lines:[{code:'1000',debit:700,credit:0}]},
+        {id:5,date:'2026-02-20',number:'J-005',description:'Penerimaan piutang',status:'posted',lines:[{code:'2000',debit:300,credit:0}] }
       ],
-      openingBalances:[{period:'2026-01',accountCode:'1000',debit:1000,credit:0}],
+      openingBalances:[{period:'2026-01',accountCode:'1000',debit:1000,credit:0},{period:'2026-01',accountCode:'2000',debit:500,credit:0}],
       nptrans:[],debitNotes:[],annualBudgets:[],auditLogs:[],npTemplate:null,meta:{version:19}
     };
     const db=await new Promise((resolve,reject)=>{
@@ -63,7 +64,7 @@ const server = http.createServer((req,res)=>{
   await page.evaluate(()=>{
     document.getElementById('startup-continue')?.click();
     go('ledger');
-    document.getElementById('ledger-account').value='1000';
+    Array.from(document.getElementById('ledger-account').options).forEach(o=>{o.selected=['1000','2000'].includes(o.value)});
     document.getElementById('ledger-mode').value='month';
     document.getElementById('ledger-period').value='2026-02';
     updateLedgerPeriodMode();renderLedger();
@@ -83,7 +84,9 @@ const server = http.createServer((req,res)=>{
     updateLedgerPeriodMode();renderLedger();
   });
   const table=await page.locator('#ledger-content').innerText();
-  if(!table.includes('J-002')||table.includes('J-003')||table.includes('J-004'))throw new Error('Range journal filtering failed');
+  if(!table.includes('J-002')||!table.includes('J-005')||table.includes('J-003')||table.includes('J-004'))throw new Error('Multi-account range journal filtering failed');
+  if((await page.locator('#ledger-content .ledger-account-result').count())!==2)throw new Error('Expected two selected account ledgers to render');
+  if(!(await page.locator('#ledger-selected-count').innerText()).includes('2 akun'))throw new Error('Selected-account counter failed');
   if(!table.includes('1.065'))throw new Error('Expected ending balance Rp 1.065 not found in ledger');
   const before=await page.evaluate(async()=>JSON.stringify(await readPersistedAccountingState()));
   await page.locator('#ledger-print').click();
@@ -103,12 +106,12 @@ const server = http.createServer((req,res)=>{
   if(!previewResponse||previewResponse.status()!==200)throw new Error('GitHub Pages preview did not return HTTP 200: '+(lastPreviewError?.message||'unknown error'));
   await preview.waitForFunction(()=>typeof go==='function'&&document.getElementById('ledger-mode'),{timeout:20000});
   const previewCheck=await preview.evaluate(async()=>{
-    const response=await fetch('./app.js?v=109',{cache:'no-store'});
+    const response=await fetch('./app.js?v=110',{cache:'no-store'});
     const js=await response.text();
-    return {scriptStatus:response.status,rangeEngine:js.includes('function getLedgerTransactionsRange('),afterPrintGuard:js.includes('async function readPersistedAccountingState('),buildStamp:document.getElementById('build-stamp')?.innerText.includes('SBP-V19-LEDGER-PRINT-004')};
+    return {scriptStatus:response.status,rangeEngine:js.includes('function getLedgerTransactionsRange('),afterPrintGuard:js.includes('async function readPersistedAccountingState('),buildStamp:document.getElementById('build-stamp')?.innerText.includes('SBP-V19-LEDGER-MULTI-ACCOUNT-005')};
   });
   if(previewCheck.scriptStatus!==200||!previewCheck.rangeEngine||!previewCheck.afterPrintGuard||!previewCheck.buildStamp)throw new Error('GitHub Pages preview loaded, but the expected ledger build assets are incomplete: '+JSON.stringify(previewCheck));
-  console.log('PASS: actual browser IndexedDB read, monthly/year/range rendering, posted-only filtering, print callback, exact persisted-state equality, and live GitHub Pages preview HTTP/assets.');
+  console.log('PASS: actual browser IndexedDB, multi-account selection/rendering, monthly/year/range periods, posted-only filtering, print callback, exact persisted-state equality, and live GitHub Pages preview assets.');
  } catch(err) {
   console.error(err);process.exitCode=1;
  } finally {
