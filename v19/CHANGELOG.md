@@ -8,7 +8,7 @@
 - Filter status transaksi pada panel Buku Besar mengikuti rentang tanggal yang dipilih.
 - Ekspor Excel memakai rentang dan perhitungan saldo yang sama dengan tampilan/cetak.
 - Pemeriksaan tanggal kalender menolak tanggal tidak valid dan rentang terbalik.
-- Menambahkan snapshot pembanding state aplikasi dan IndexedDB sebelum serta sesudah dialog cetak. Hasil dicatat di konsol; notifikasi lulus hanya muncul bila kedua snapshot tetap identik.
+- Menambahkan snapshot pembanding state aplikasi dan IndexedDB sebelum serta sesudah dialog cetak. Verifikasi dipicu oleh event `afterprint` dari iframe cetak; notifikasi lulus hanya muncul bila kedua snapshot tetap identik.
 - Menambahkan regression tests untuk saldo pembuka rentang, filter POSTED, pilihan periode, tanggal invalid, dan sifat read-only perhitungan.
 - Memperbarui build stamp menjadi `SBP-V19-LEDGER-PRINT-004`.
 
