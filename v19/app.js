@@ -988,11 +988,22 @@ function printTrialBalance(){
  const body=printSummary([['Periode',period],['Jumlah akun',String(rows.length)],['Total saldo akhir debit',printMoney(d)],['Total saldo akhir kredit',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['SANDI','NAMA AKUN','SALDO AWAL D','SALDO AWAL K','MUTASI D','MUTASI K','SALDO AKHIR D','SALDO AKHIR K'],rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+printMoney(r.openingDebit)+'</td><td class="num">'+printMoney(r.openingCredit)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+printMoney(r.endingDebit)+'</td><td class="num">'+printMoney(r.endingCredit)+'</td></tr>'),'<tr><th colspan="2">TOTAL</th><th class="num">'+printMoney(rows.reduce((n,r)=>n+r.openingDebit,0))+'</th><th class="num">'+printMoney(rows.reduce((n,r)=>n+r.openingCredit,0))+'</th><th class="num">'+printMoney(rows.reduce((n,r)=>n+r.debit,0))+'</th><th class="num">'+printMoney(rows.reduce((n,r)=>n+r.credit,0))+'</th><th class="num">'+printMoney(d)+'</th><th class="num">'+printMoney(c)+'</th></tr>');
  printDocument('NERACA PERCOBAAN','Periode '+period,body,'landscape');
 }
+/* V19 PERIODIC LEDGER PRINT — read-only snapshot guard.
+   Printing must never persist or mutate journal, opening-balance, or account data. */
 function printLedger(){
- const period=$('ledger-period').value,code=$('ledger-account').value,result=getLedgerTransactions(period,code);if(!result){toast('Pilih periode dan akun terlebih dahulu.');return}
+ const period=$('ledger-period').value,code=$('ledger-account').value;
+ const stateBefore=JSON.stringify(state);
+ const result=getLedgerTransactions(period,code);
+ if(!result){toast('Pilih periode dan akun terlebih dahulu.');return}
  const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),c=moves.reduce((n,r)=>n+r.credit,0);
  const body=printSummary([['Periode',period],['Akun',result.account.code+' · '+result.account.name],['Saldo awal',printMoney(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',printMoney(result.endingNet)]])+printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal periode':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+printMoney(r.balanceDebit)+'</td><td class="num">'+printMoney(r.balanceCredit)+'</td></tr>'));
  printDocument('BUKU BESAR PER AKUN','Periode '+period,body,'portrait');
+ if(JSON.stringify(state)!==stateBefore){
+  console.error('[SBP V19] Data berubah saat proses cetak Buku Besar. Periksa fungsi cetak.');
+  toast('Peringatan: terdeteksi perubahan data saat cetak. Hentikan penggunaan dan periksa database.');
+ }else{
+  console.info('[SBP V19] Validasi cetak Buku Besar lulus: state tidak berubah.');
+ }
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
