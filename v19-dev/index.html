@@ -20,6 +20,8 @@
 .sbp-print-dialog>.button-row{display:flex!important;justify-content:flex-end!important;gap:9px!important;flex-wrap:wrap!important;margin-top:14px!important}
 .sbp-print-dialog button{min-height:38px!important}
 @media(max-width:620px){.sbp-print-modal{padding:12px!important;align-items:flex-start!important}.sbp-print-dialog{width:100%!important;max-height:calc(100vh - 24px)!important;padding:16px!important}.sbp-print-filter-grid{grid-template-columns:1fr!important;gap:11px!important}}
+</style><style id="sbp-ledger-multiselect-polish">
+.ledger-account-picker{display:flex;flex-direction:column;gap:8px;min-width:260px;flex:1 1 300px}.ledger-account-picker .ledger-account-field{display:flex;flex-direction:column;gap:6px}.ledger-account-picker .ledger-account-field small{font-size:11px;color:#64748b;font-weight:500}.ledger-account-picker select[multiple]{width:100%;min-height:154px;padding:7px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#17212b;font-size:12px}.ledger-account-picker select[multiple] option{padding:6px 8px;border-radius:5px}.ledger-account-picker-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.ledger-account-picker-actions .footnote{margin:0}.ledger-account-picker .ledger-account-field{min-width:0}
 </style><style id="sbp-force-delete-polish">
 /* BUILD V83 — tidy journal administration controls */
 .force-delete-panel{padding:22px!important;border-radius:15px!important}
@@ -197,14 +199,14 @@
 </section>
 <section class="page" id="page-ledger" hidden>
  <div class="panel">
-  <div class="panel-head"><div><h3>Buku Besar per Akun</h3><p>Rincian saldo awal, mutasi debit/kredit, dan saldo berjalan untuk satu akun pada periode terpilih.</p></div><span class="tag">BUKU BESAR</span></div>
+  <div class="panel-head"><div><h3>Buku Besar per Akun</h3><p>Rincian saldo awal, mutasi debit/kredit, dan saldo berjalan untuk satu atau beberapa akun pada periode terpilih.</p></div><span class="tag">BUKU BESAR</span></div>
   <div class="ledger-filters ledger-period-filters">
    <label class="ledger-field">Jenis periode<select id="ledger-mode"><option value="month">Bulanan</option><option value="year">Tahunan</option><option value="range">Rentang tanggal</option></select></label>
    <label class="ledger-field" id="ledger-month-wrap">Bulan<input type="month" id="ledger-period"></label>
    <label class="ledger-field" id="ledger-year-wrap" hidden>Tahun<input type="number" id="ledger-year" min="1900" max="2200" step="1"></label>
    <label class="ledger-field" id="ledger-from-wrap" hidden>Dari tanggal<input type="date" id="ledger-from"></label>
    <label class="ledger-field" id="ledger-to-wrap" hidden>Sampai tanggal<input type="date" id="ledger-to"></label>
-   <label class="ledger-field ledger-account-field">Akun / SANDI<select id="ledger-account"><option value="">Pilih akun</option></select></label>
+   <div class="ledger-account-picker"><label class="ledger-field ledger-account-field" for="ledger-account">Pilih Akun / SANDI <small>(bisa pilih lebih dari satu)</small><select id="ledger-account" multiple size="7" aria-label="Pilih beberapa akun untuk Buku Besar"><option value="">Memuat akun…</option></select></label><div class="ledger-account-picker-actions"><button class="btn" id="ledger-select-all" type="button">Pilih Semua</button><button class="btn" id="ledger-clear-selection" type="button">Hapus Pilihan</button><span id="ledger-selected-count" class="footnote">0 akun dipilih</span></div></div>
    <button class="btn btn-primary ledger-submit" id="ledger-refresh" type="button"><i data-lucide="search"></i><span>Tampilkan Buku Besar</span></button>
    <div class="ledger-actions"><button class="btn" id="ledger-print" type="button"><i data-lucide="printer"></i><span>Cetak / PDF</span></button><button class="btn" id="ledger-export" type="button"><i data-lucide="file-spreadsheet"></i><span>Ekspor Excel</span></button></div>
   </div>
@@ -303,7 +305,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-LEDGER-PRINT-004</span><span>12-11-2026 · Monthly, annual & date-range ledger print</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-LEDGER-MULTI-ACCOUNT-005</span><span>12-11-2026 · Monthly, annual & date-range ledger print</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=109"></script>
+<script src="app.js?v=110"></script>
 </body></html>
