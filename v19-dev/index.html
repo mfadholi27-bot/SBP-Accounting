@@ -144,7 +144,7 @@
   </div>
   <div class="panel debit-note-source-panel">
   <div class="panel-head"><div><h3>Ambil Transaksi dari Jurnal POSTED</h3><p>Pilih SANDI induk, sistem mencari transaksi pada rentang SANDI induk sampai .800 dari seluruh periode.</p></div><span class="tag">SUMBER JURNAL POSTED</span></div>
-  <div class="debit-note-source-controls"><label>Pilih SANDI induk<select id="dn-source-group"></select></label><button class="btn btn-primary" id="dn-source-search" type="button">Cari Transaksi</button></div>
+  <div class="debit-note-source-controls"><label>Pilih SANDI induk<input id="dn-source-group" type="text" autocomplete="off" placeholder="Pilih atau ketik, contoh 719 atau 719.000"></label><button class="btn btn-primary" id="dn-source-search" type="button">Cari Transaksi</button></div>
   <div id="dn-source-message" class="inline-message">Pilih kelompok SANDI lalu tekan Cari Transaksi.</div>
   <div class="table-wrap"><table class="debit-note-source-table"><thead><tr><th>Pilih</th><th>Tanggal</th><th>No. Bukti</th><th>SANDI</th><th>Nama Akun</th><th>Keterangan</th><th>Debit</th><th>Kredit</th></tr></thead><tbody id="dn-source-rows"><tr><td colspan="8" class="empty">Belum ada pencarian.</td></tr></tbody></table></div>
   <div class="form-actions end"><button class="btn" id="dn-source-add" type="button">Masukkan Transaksi Terpilih</button></div>
@@ -358,7 +358,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEBIT-NOTE-SOURCE-019</span><span>13-11-2026 · Debit Note posted journal SANDI source fix</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEBIT-NOTE-INPUT-020</span><span>13-11-2026 · Editable SANDI parent input for Debit Note</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=123"></script>
+<script src="app.js?v=124"></script>
 </body></html>
