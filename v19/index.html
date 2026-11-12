@@ -80,6 +80,17 @@
 #page-reports .trial-balance-check{margin:0!important;padding:11px 13px!important;border:1px solid #e2e9e4!important;border-radius:9px!important;background:#fbfdfb!important;color:#526458!important;font-size:11px!important;line-height:1.5!important}
 @media(max-width:900px){#page-reports .trial-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:520px){#page-reports .trial-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}#page-reports .trial-summary-card{min-height:76px!important;padding:11px!important}}
+</style><style id="sbp-trial-balance-net-columns">
+#page-reports .trial-compact-table{min-width:680px!important;table-layout:auto!important}
+#page-reports .trial-compact-table thead th{padding:12px 13px!important}
+#page-reports .trial-compact-table tbody td{padding:11px 13px!important}
+#page-reports .trial-compact-table tbody td:nth-child(1){width:100px!important}
+#page-reports .trial-compact-table tbody td:nth-child(2){min-width:190px!important}
+#page-reports .trial-compact-table tbody td:nth-child(n+3){min-width:135px!important}
+#page-reports .trial-compact-table tbody td:nth-child(5){font-weight:750!important;color:#1e4933!important}
+#page-reports .trial-compact-table thead th:nth-child(n+3){text-align:right!important}
+#page-reports .trial-compact-table tbody td.num{text-align:right!important;white-space:nowrap!important}
+@media print{#page-reports .trial-compact-table{min-width:0!important;width:100%!important}#page-reports .trial-compact-table tbody td{padding:6px 5px!important;font-size:9px!important}}
 </style></head>
 <body>
 <div class="shell">
@@ -345,7 +356,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-TRIAL-COMPACT-009</span><span>12-11-2026 · Monthly, annual & date-range ledger print</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-TRIAL-NET-010</span><span>12-11-2026 · Monthly, annual & date-range ledger print</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=113"></script>
+<script src="app.js?v=114"></script>
 </body></html>
