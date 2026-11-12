@@ -738,30 +738,58 @@ function getAccountJournalStatus(from,to,code){
  });
  return rows.sort((a,b)=>a.date.localeCompare(b.date)||a.number.localeCompare(b.number));
 }
-function renderAccountJournalStatus(from,to,code){
- const host=$('ledger-status-content'),summary=$('ledger-status-summary');if(!from||!to||!code){summary.innerHTML='';host.innerHTML='<div class="empty">Pilih periode dan akun untuk melihat status transaksi.</div>';return}
- const all=getAccountJournalStatus(from,to,code),filter=$('ledger-status-filter')?.value||'all',rows=all.filter(r=>filter==='all'||r.status===filter);
- const groups={posted:all.filter(r=>r.status==='posted'),draft:all.filter(r=>r.status==='draft'),cancelled:all.filter(r=>r.status==='cancelled'),unknown:all.filter(r=>r.status==='unknown')};
- const total=(items,key)=>items.reduce((n,r)=>n+r[key],0),card=(label,items)=>'<div><span>'+label+' · '+items.length+' baris akun</span><b>D '+money(total(items,'debit'))+' / K '+money(total(items,'credit'))+'</b></div>';
- summary.innerHTML='<div class="journal-totals">'+card('POSTED',groups.posted)+card('DRAFT',groups.draft)+card('DIBATALKAN',groups.cancelled)+card('STATUS LAIN / KOSONG',groups.unknown)+'</div><p class="footnote">Jumlah transaksi dihitung per baris akun. Satu nomor bukti dapat muncul lebih dari sekali jika SANDI yang sama digunakan pada beberapa baris.</p>';
- host.innerHTML=rows.length?'<table><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan jurnal</th><th>Keterangan baris</th><th>Status</th><th>Debit</th><th>Kredit</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(fmtDate(r.date))+'</td><td><b>'+esc(r.number)+'</b></td><td>'+esc(r.description)+'</td><td>'+esc(r.note)+'</td><td><span class="tag '+(r.status==='posted'?'np-ok':r.status==='draft'?'np-warn':'')+'">'+esc(r.rawStatus)+'</span></td><td class="num">'+money(r.debit)+'</td><td class="num">'+money(r.credit)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="5">TOTAL BARIS TERPILIH</th><th>'+money(total(rows,'debit'))+'</th><th>'+money(total(rows,'credit'))+'</th></tr></tfoot></table>':'<div class="empty">Tidak ada transaksi untuk filter status ini.</div>';
+function getLedgerAccountCodes(){
+ const select=$('ledger-account');
+ return Array.from(select.selectedOptions||[]).map(o=>String(o.value||'').trim()).filter(Boolean);
+}
+function updateLedgerSelectedCount(){
+ const count=getLedgerAccountCodes().length,host=$('ledger-selected-count');
+ if(host)host.textContent=count+' akun dipilih';
 }
 function renderLedger(){
- const selection=getLedgerSelection(),select=$('ledger-account'),current=select.value;
- select.innerHTML='<option value="">Pilih akun</option>'+state.accounts.slice().sort((a,b)=>String(a.code).localeCompare(String(b.code))).map(a=>'<option value="'+esc(a.code)+'">'+esc(a.code)+' · '+esc(a.name||'(Tanpa nama)')+'</option>').join('');
- if(current)select.value=current;
- const code=select.value;
- if(!selection||!code){$('ledger-summary').innerHTML='';$('ledger-content').innerHTML='<div class="empty">Pilih periode dan akun untuk menampilkan buku besar.</div>';renderAccountJournalStatus(selection?.from,selection?.to,code);return}
- renderAccountJournalStatus(selection.from,selection.to,code);
- const result=getLedgerTransactionsRange(selection.from,selection.to,code);if(!result){$('ledger-content').innerHTML='<div class="empty">Rentang tanggal tidak valid.</div>';return}
- const movements=result.rows.filter(r=>r.kind==='movement'),debit=movements.reduce((n,r)=>n+r.debit,0),credit=movements.reduce((n,r)=>n+r.credit,0);
- $('ledger-summary').innerHTML='<div><span>Akun</span><b>'+esc(result.account.code)+' · '+esc(result.account.name)+'</b></div><div><span>Periode</span><b>'+esc(selection.label)+'</b></div><div><span>Saldo awal rentang</span><b>'+money(result.openingNet)+'</b></div><div><span>Mutasi debit</span><b>'+money(debit)+'</b></div><div><span>Mutasi kredit</span><b>'+money(credit)+'</b></div><div><span>Saldo akhir</span><b>'+money(result.endingNet)+'</b></div>';
- $('ledger-content').innerHTML='<table><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan</th><th>Debit</th><th>Kredit</th><th>Saldo Debit</th><th>Saldo Kredit</th></tr></thead><tbody>'+result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td><b>'+esc(r.number)+'</b></td><td>'+esc(r.description)+'</td><td class="num">'+(r.debit?money(r.debit):'—')+'</td><td class="num">'+(r.credit?money(r.credit):'—')+'</td><td class="num">'+(r.balanceDebit?money(r.balanceDebit):'—')+'</td><td class="num">'+(r.balanceCredit?money(r.balanceCredit):'—')+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="3">TOTAL MUTASI</th><th>'+money(debit)+'</th><th>'+money(credit)+'</th><th colspan="2">Saldo akhir: '+money(result.endingNet)+'</th></tr></tfoot></table>';
+ const selection=getLedgerSelection(),select=$('ledger-account'),current=getLedgerAccountCodes();
+ const accounts=state.accounts.slice().sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+ select.innerHTML=accounts.map(a=>'<option value="'+esc(a.code)+'">'+esc(a.code)+' · '+esc(a.name||'(Tanpa nama)')+'</option>').join('');
+ current.forEach(code=>{const option=Array.from(select.options).find(o=>o.value===code);if(option)option.selected=true});
+ const codes=getLedgerAccountCodes();updateLedgerSelectedCount();
+ if(!selection||!codes.length){
+  $('ledger-summary').innerHTML='';
+  $('ledger-content').innerHTML='<div class="empty">Pilih periode dan satu atau beberapa akun untuk menampilkan buku besar.</div>';
+  renderAccountJournalStatus(selection?.from,selection?.to,'');return;
+ }
+ const results=codes.map(code=>getLedgerTransactionsRange(selection.from,selection.to,code)).filter(Boolean);
+ if(!results.length){$('ledger-summary').innerHTML='';$('ledger-content').innerHTML='<div class="empty">Data akun tidak ditemukan.</div>';return}
+ const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0);
+ const totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
+ const ending=results.reduce((n,r)=>n+r.endingNet,0);
+ $('ledger-summary').innerHTML='<div><span>Jumlah akun</span><b>'+results.length+'</b></div><div><span>Periode</span><b>'+esc(selection.label)+'</b></div><div><span>Total mutasi debit</span><b>'+money(totalDebit)+'</b></div><div><span>Total mutasi kredit</span><b>'+money(totalCredit)+'</b></div><div><span>Akumulasi saldo akhir bersih</span><b>'+money(ending)+'</b></div>';
+ $('ledger-content').innerHTML=results.map(result=>{
+  const movements=result.rows.filter(r=>r.kind==='movement'),debit=movements.reduce((n,r)=>n+r.debit,0),credit=movements.reduce((n,r)=>n+r.credit,0);
+  return '<section class="ledger-account-result"><div class="panel-head"><div><h3>'+esc(result.account.code)+' · '+esc(result.account.name)+'</h3><p>Saldo awal '+money(result.openingNet)+' · Mutasi debit '+money(debit)+' · Mutasi kredit '+money(credit)+' · Saldo akhir '+money(result.endingNet)+'</p></div></div><table><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan</th><th>Debit</th><th>Kredit</th><th>Saldo Debit</th><th>Saldo Kredit</th></tr></thead><tbody>'+result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td><b>'+esc(r.number)+'</b></td><td>'+esc(r.description)+'</td><td class="num">'+(r.debit?money(r.debit):'—')+'</td><td class="num">'+(r.credit?money(r.credit):'—')+'</td><td class="num">'+(r.balanceDebit?money(r.balanceDebit):'—')+'</td><td class="num">'+(r.balanceCredit?money(r.balanceCredit):'—')+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="3">TOTAL MUTASI</th><th>'+money(debit)+'</th><th>'+money(credit)+'</th><th colspan="2">Saldo akhir: '+money(result.endingNet)+'</th></tr></tfoot></table></section>';
+ }).join('<div class="ledger-account-separator"></div>');
+ renderAccountJournalStatusMulti(selection.from,selection.to,codes);
+}
+function renderAccountJournalStatusMulti(from,to,codes){
+ const host=$('ledger-status-content'),summary=$('ledger-status-summary');
+ if(!from||!to||!codes.length){summary.innerHTML='';host.innerHTML='<div class="empty">Pilih periode dan satu atau beberapa akun untuk melihat status transaksi.</div>';return}
+ const all=codes.flatMap(code=>getAccountJournalStatus(from,to,code).map(r=>({...r,code,account:state.accounts.find(a=>String(a.code)===code)?.name||''})));
+ const filter=$('ledger-status-filter')?.value||'all',rows=all.filter(r=>filter==='all'||r.status===filter);
+ const groups={posted:all.filter(r=>r.status==='posted'),draft:all.filter(r=>r.status==='draft'),cancelled:all.filter(r=>r.status==='cancelled'),unknown:all.filter(r=>r.status==='unknown')};
+ const total=(items,key)=>items.reduce((n,r)=>n+r[key],0),card=(label,items)=>'<div><span>'+label+' · '+items.length+' baris akun</span><b>D '+money(total(items,'debit'))+' / K '+money(total(items,'credit'))+'</b></div>';
+ summary.innerHTML='<div class="journal-totals">'+card('POSTED',groups.posted)+card('DRAFT',groups.draft)+card('DIBATALKAN',groups.cancelled)+card('STATUS LAIN / KOSONG',groups.unknown)+'</div><p class="footnote">Status transaksi digabung dari '+codes.length+' akun terpilih. Jumlah dihitung per baris akun.</p>';
+ host.innerHTML=rows.length?'<table><thead><tr><th>SANDI</th><th>Nama Akun</th><th>Tanggal</th><th>No. Bukti</th><th>Keterangan jurnal</th><th>Keterangan baris</th><th>Status</th><th>Debit</th><th>Kredit</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.account)+'</td><td>'+esc(fmtDate(r.date))+'</td><td><b>'+esc(r.number)+'</b></td><td>'+esc(r.description)+'</td><td>'+esc(r.note)+'</td><td><span class="tag '+(r.status==='posted'?'np-ok':r.status==='draft'?'np-warn':'')+'">'+esc(r.rawStatus)+'</span></td><td class="num">'+money(r.debit)+'</td><td class="num">'+money(r.credit)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="7">TOTAL BARIS TERPILIH</th><th>'+money(total(rows,'debit'))+'</th><th>'+money(total(rows,'credit'))+'</th></tr></tfoot></table>':'<div class="empty">Tidak ada transaksi untuk filter status ini.</div>';
 }
 function exportLedgerXlsx(){
- const selection=getLedgerSelection(),code=$('ledger-account').value,result=selection&&getLedgerTransactionsRange(selection.from,selection.to,code);if(!result){toast('Pilih akun dan periode yang benar terlebih dahulu.');return}
- const rows=[['BUKU BESAR',result.account.code,result.account.name],['PERIODE',selection.label],[],['TANGGAL','NO BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT'],...result.rows.map(r=>[r.kind==='opening'?'SALDO AWAL':r.date,r.number,r.description,r.debit,r.credit,r.balanceDebit,r.balanceCredit])];
- exportXlsxSheet('Buku-Besar-'+code+'-'+selection.label.replace(/[^0-9A-Za-z-]/g,'_')+'.xlsx','Buku Besar',rows);
+ const selection=getLedgerSelection(),codes=getLedgerAccountCodes();
+ if(!selection||!codes.length){toast('Pilih satu atau beberapa akun dan periode yang benar terlebih dahulu.');return}
+ const rows=[['BUKU BESAR PER AKUN'],['PERIODE',selection.label],['JUMLAH AKUN',codes.length],[]];
+ codes.forEach(code=>{
+  const result=getLedgerTransactionsRange(selection.from,selection.to,code);if(!result)return;
+  rows.push(['SANDI',result.account.code,'NAMA AKUN',result.account.name],['SALDO AWAL',result.openingNet],[],['TANGGAL','NO BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT']);
+  result.rows.forEach(r=>rows.push([r.kind==='opening'?'SALDO AWAL':r.date,r.number,r.description,r.debit,r.credit,r.balanceDebit,r.balanceCredit]));
+  rows.push(['MUTASI DEBIT',result.rows.filter(r=>r.kind==='movement').reduce((n,r)=>n+r.debit,0),'MUTASI KREDIT',result.rows.filter(r=>r.kind==='movement').reduce((n,r)=>n+r.credit,0),'SALDO AKHIR',result.endingNet],[]);
+ });
+ exportXlsxSheet('Buku-Besar-Multi-Akun-'+selection.label.replace(/[^0-9A-Za-z-]/g,'_')+'.xlsx','Buku Besar',rows);
 }
 $('ledger-period').value=new Date().toISOString().slice(0,7);
 $('ledger-year').value=String(new Date().getFullYear());
@@ -773,7 +801,9 @@ $('ledger-year').addEventListener('change',renderLedger);
 $('ledger-from').addEventListener('change',renderLedger);
 $('ledger-to').addEventListener('change',renderLedger);
 $('ledger-account').addEventListener('change',renderLedger);
-$('ledger-status-filter').addEventListener('change',()=>{const s=getLedgerSelection();renderAccountJournalStatus(s?.from,s?.to,$('ledger-account').value)});
+$('ledger-select-all').addEventListener('click',()=>{Array.from($('ledger-account').options).forEach(o=>o.selected=true);renderLedger()});
+$('ledger-clear-selection').addEventListener('click',()=>{Array.from($('ledger-account').options).forEach(o=>o.selected=false);renderLedger()});
+$('ledger-status-filter').addEventListener('change',()=>{const s=getLedgerSelection();renderAccountJournalStatusMulti(s?.from,s?.to,getLedgerAccountCodes())});
 $('ledger-refresh').onclick=renderLedger;
 $('ledger-export').onclick=exportLedgerXlsx;
 updateLedgerPeriodMode();
@@ -1029,26 +1059,32 @@ async function readPersistedAccountingState(){
  finally{db.close()}
 }
 async function printLedger(){
- const selection=getLedgerSelection(),code=$('ledger-account').value;
- if(!selection||!code){toast('Pilih akun dan periode yang benar terlebih dahulu.');return}
+ const selection=getLedgerSelection(),codes=getLedgerAccountCodes();
+ if(!selection||!codes.length){toast('Pilih satu atau beberapa akun dan periode yang benar terlebih dahulu.');return}
  const memoryBefore=JSON.stringify(state);
  let persistedBefore=null;
  try{persistedBefore=JSON.stringify(await readPersistedAccountingState())}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sebelum cetak gagal:',err)}
- const result=getLedgerTransactionsRange(selection.from,selection.to,code);
- if(!result){toast('Data Buku Besar tidak dapat dihitung. Periksa periode dan akun.');return}
- const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),c=moves.reduce((n,r)=>n+r.credit,0);
- const body=printSummary([['Periode',selection.label],['Akun',result.account.code+' · '+result.account.name],['Saldo awal rentang',printMoney(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',printMoney(result.endingNet)]])+printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+printMoney(r.balanceDebit)+'</td><td class="num">'+printMoney(r.balanceCredit)+'</td></tr>'));
+ const results=codes.map(code=>getLedgerTransactionsRange(selection.from,selection.to,code)).filter(Boolean);
+ if(!results.length){toast('Data Buku Besar tidak dapat dihitung. Periksa periode dan akun.');return}
+ const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0),totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
+ let body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]]);
+ results.forEach(result=>{
+  const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),c=moves.reduce((n,r)=>n+r.credit,0);
+  body+='<h2 style="margin:18px 0 6px;font-size:14px">'+esc(result.account.code)+' · '+esc(result.account.name)+'</h2>';
+  body+=printSummary([['Saldo awal rentang',printMoney(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',printMoney(result.endingNet)]]);
+  body+=printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+printMoney(r.balanceDebit)+'</td><td class="num">'+printMoney(r.balanceCredit)+'</td></tr>'));
+ });
  const verify=async()=>{
   const memoryUnchanged=JSON.stringify(state)===memoryBefore;
   let persistedUnchanged=false,persistedVerified=false;
   try{const after=JSON.stringify(await readPersistedAccountingState());persistedVerified=persistedBefore!==null;persistedUnchanged=persistedVerified&&after===persistedBefore}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sesudah cetak gagal:',err)}
   const pass=memoryUnchanged&&persistedVerified&&persistedUnchanged;
-  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,account:code};
+  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes};
   console.info('[SBP V19] Hasil uji integritas cetak Buku Besar',detail);
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- printDocument('BUKU BESAR PER AKUN','Periode '+selection.label,body,'landscape',verify);
+ printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun',body,'landscape',verify);
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
