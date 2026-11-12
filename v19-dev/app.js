@@ -110,11 +110,13 @@ let editingDebitNoteId=null;
 function debitNoteNextNumber(date=$('dn-date')?.value||new Date().toISOString().slice(0,10)){const year=String(date).slice(0,4);const nums=(state.debitNotes||[]).map(n=>String(n.number||'')).filter(n=>n.startsWith('ND-'+year+'-')).map(n=>Number(n.split('-').pop())||0);let seq=1;while(nums.includes(seq))seq++;return 'ND-'+year+'-'+String(seq).padStart(5,'0')}
 
 let debitNoteSelectedSources=[];
-function debitNoteNormalizeCode(value){return String(value??'').trim().replace(/[.\\s]+$/,'')}
+function debitNoteNormalizeCode(value){
+ return String(value??'').trim().replace(/[.]+$/,'');
+}
 function debitNoteGroupOptions(){
  const posted=(state.journals||[]).filter(j=>isPostedJournal(j));
  const codes=[...state.accounts.map(a=>a.code),...posted.flatMap(j=>(j.lines||[]).map(l=>l.code??l.accountCode??l.sandi))];
- const groups=[...new Set(codes.map(code=>debitNoteNormalizeCode(code).match(/^(\\d{3})\\.(\\d{3})(?:\\.\\d+)?$/)?.[1]).filter(Boolean))].sort();
+ const groups=[...new Set(codes.map(code=>debitNoteNormalizeCode(code).match(/^([0-9]{3})[.]([0-9]{3})(?:[.]([0-9]+))?$/)?.[1]).filter(Boolean))].sort();
  const input=$('dn-source-group');
  input.setAttribute('list','dn-source-group-options');
  let list=$('dn-source-group-options');
@@ -125,11 +127,12 @@ function debitNoteGroupOptions(){
 }
 function debitNoteSourceMatches(){
  const raw=String($('dn-source-group').value||'').trim();
- const parsed=raw.match(/^(\\d{3})(?:\\.000)?$/);
+ const parsed=raw.match(/^([0-9]{3})(?:[.]000)?$/);
  if(!parsed){setMessage('dn-source-message','Masukkan SANDI induk 3 digit, misalnya 704 atau 704.000.','bad');return []}
  const prefix=parsed[1],rows=[];
  (state.journals||[]).filter(j=>isPostedJournal(j)).forEach(j=>(j.lines||[]).forEach((l,index)=>{
-  const code=debitNoteNormalizeCode(l.code??l.accountCode??l.sandi),m=code.match(/^(\\d{3})\\.(\\d{3})(?:\\.(\\d+))?$/);
+  const code=debitNoteNormalizeCode(l.code??l.accountCode??l.sandi);
+  const m=code.match(/^([0-9]{3})[.]([0-9]{3})(?:[.]([0-9]+))?$/);
   if(!m||m[1]!==prefix||Number(m[2])>800)return;
   const account=state.accounts.find(a=>debitNoteNormalizeCode(a.code)===code)||{};
   rows.push({key:j.id+'::'+index,journalId:j.id,lineIndex:index,journalNumber:j.number||'',date:j.date||'',accountCode:code,accountName:account.name||'',description:j.description||'',note:l.note||'',debit:Number(l.debit)||0,credit:Number(l.credit)||0});
