@@ -21,6 +21,12 @@ jobs:
         run: node --check v19/app.js
       - name: Test ledger period calculations
         run: node --test v19/tests/*.test.cjs
+      - name: Install Chromium browser test runner
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Test real IndexedDB and print integrity in Chromium
+        run: node v19/tests/browser-ledger-smoke.cjs
       - name: Check required app files
         run: |
           test -s v19/index.html
