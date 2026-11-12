@@ -148,8 +148,21 @@ function addSelectedDebitNoteSources(){
  const selected=[...document.querySelectorAll('.dn-source-check:checked')].map(c=>c.dataset.key),all=debitNoteSourceMatches();
  let added=0;
  selected.forEach(key=>{const row=all.find(x=>x.key===key);if(row&&!debitNoteSelectedSources.some(x=>x.key===key)){debitNoteSelectedSources.push(row);added++}});
+ if(!added){setMessage('dn-source-message','Pilih minimal satu transaksi yang belum dimasukkan.','bad');return}
+ const chosen=debitNoteSelectedSources.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.journalNumber||'').localeCompare(b.journalNumber||''));
+ const sourceDates=[...new Set(chosen.map(x=>x.date).filter(Boolean))];
+ if(sourceDates.length)$('dn-date').value=sourceDates[0];
+ $('dn-reference').value=[...new Set(chosen.map(x=>x.journalNumber).filter(Boolean))].join(', ');
+ const sourceLabel=[...new Set(chosen.map(x=>x.journalNumber).filter(Boolean))].join(', ');
+ $('dn-description').value='Koreksi transaksi berdasarkan jurnal '+sourceLabel;
+ $('dn-lines').innerHTML='';
+ chosen.forEach(r=>debitNoteAddLine({code:r.accountCode,note:r.note||r.description||('Referensi '+r.journalNumber),debit:r.debit,credit:r.credit}));
+ // Add one blank balancing row so the user can complete the counterpart account.
+ debitNoteAddLine();
+ debitNoteTotals();
  renderDebitNoteSelectedSources();
- setMessage('dn-source-message',added+' transaksi ditambahkan sebagai referensi Nota Debet.','');
+ setMessage('dn-source-message',added+' transaksi ditambahkan. Data Nota Debet dan rincian akun sudah diisi otomatis. Lengkapi Nama Pihak, periksa akun/nominal, lalu klik Simpan Draft.','good');
+ $('dn-partner').focus();
 }
 function renderDebitNoteSelectedSources(){
  $('dn-source-selected').innerHTML=debitNoteSelectedSources.length?debitNoteSelectedSources.map((r,i)=>'<div class="dn-selected-item"><span><b>'+esc(r.journalNumber)+'</b> · '+esc(r.date)+' · '+esc(r.accountCode)+' — '+esc(r.accountName)+'<small>'+esc(r.note||r.description)+' | D '+money(r.debit)+' / K '+money(r.credit)+'</small></span><button type="button" class="icon-btn dn-source-remove" data-index="'+i+'">×</button></div>').join(''):'<span class="empty">Belum ada transaksi yang dipilih.</span>';
