@@ -110,27 +110,28 @@ let editingDebitNoteId=null;
 function debitNoteNextNumber(date=$('dn-date')?.value||new Date().toISOString().slice(0,10)){const year=String(date).slice(0,4);const nums=(state.debitNotes||[]).map(n=>String(n.number||'')).filter(n=>n.startsWith('ND-'+year+'-')).map(n=>Number(n.split('-').pop())||0);let seq=1;while(nums.includes(seq))seq++;return 'ND-'+year+'-'+String(seq).padStart(5,'0')}
 
 let debitNoteSelectedSources=[];
+function debitNoteNormalizeCode(value){return String(value??'').trim().replace(/[.\\s]+$/,'')}
 function debitNoteGroupOptions(){
  const posted=(state.journals||[]).filter(j=>isPostedJournal(j));
  const codes=[...state.accounts.map(a=>a.code),...posted.flatMap(j=>(j.lines||[]).map(l=>l.code??l.accountCode??l.sandi))];
- const groups=[...new Set(codes.map(code=>String(code||'').trim().match(/^(\\d{3})\\.(\\d{3})$/)?.[1]).filter(Boolean))].sort();
+ const groups=[...new Set(codes.map(code=>debitNoteNormalizeCode(code).match(/^(\\d{3})\\.(\\d{3})(?:\\.\\d+)?$/)?.[1]).filter(Boolean))].sort();
  const input=$('dn-source-group');
  input.setAttribute('list','dn-source-group-options');
  let list=$('dn-source-group-options');
  if(!list){list=document.createElement('datalist');list.id='dn-source-group-options';input.insertAdjacentElement('afterend',list)}
  list.innerHTML=groups.map(g=>'<option value="'+g+'.000">'+g+'.000 s.d. '+g+'.800</option>').join('');
- input.placeholder='Ketik 3 digit SANDI induk, misalnya 719';
+ input.placeholder='Ketik 3 digit SANDI induk, misalnya 704';
  if(!input.value)input.value=groups.includes('719')?'719.000':(groups[0]?groups[0]+'.000':'');
 }
 function debitNoteSourceMatches(){
  const raw=String($('dn-source-group').value||'').trim();
  const parsed=raw.match(/^(\\d{3})(?:\\.000)?$/);
- if(!parsed){setMessage('dn-source-message','Masukkan SANDI induk 3 digit, misalnya 719 atau 719.000.','bad');return []}
+ if(!parsed){setMessage('dn-source-message','Masukkan SANDI induk 3 digit, misalnya 704 atau 704.000.','bad');return []}
  const prefix=parsed[1],rows=[];
  (state.journals||[]).filter(j=>isPostedJournal(j)).forEach(j=>(j.lines||[]).forEach((l,index)=>{
-  const code=String(l.code??l.accountCode??l.sandi??'').trim(),m=code.match(/^(\\d{3})\\.(\\d{3})$/);
+  const code=debitNoteNormalizeCode(l.code??l.accountCode??l.sandi),m=code.match(/^(\\d{3})\\.(\\d{3})(?:\\.(\\d+))?$/);
   if(!m||m[1]!==prefix||Number(m[2])>800)return;
-  const account=state.accounts.find(a=>String(a.code).trim()===code)||{};
+  const account=state.accounts.find(a=>debitNoteNormalizeCode(a.code)===code)||{};
   rows.push({key:j.id+'::'+index,journalId:j.id,lineIndex:index,journalNumber:j.number||'',date:j.date||'',accountCode:code,accountName:account.name||'',description:j.description||'',note:l.note||'',debit:Number(l.debit)||0,credit:Number(l.credit)||0});
  }));
  return rows.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(a.journalNumber||'').localeCompare(b.journalNumber||''));
