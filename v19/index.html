@@ -42,6 +42,24 @@
 .force-delete-panel>#force-delete-result:not(:empty){display:block!important;margin-top:12px!important;padding:12px 14px!important;border-radius:9px!important;line-height:1.55!important}
 @media(max-width:720px){.force-delete-controls{grid-template-columns:1fr 1fr!important}.force-delete-controls #force-delete-period{grid-column:1/-1;width:100%!important}.force-delete-panel>.panel-head{flex-direction:column!important}.force-delete-panel .tag.np-warn{align-self:flex-start!important}}
 @media(max-width:480px){.force-delete-panel{padding:16px!important}.force-delete-controls{grid-template-columns:1fr!important}.force-delete-controls #force-delete-period{grid-column:auto!important;width:100%!important}}
+</style><style id="sbp-ledger-layout-fix">
+/* BUILD V19 — align Buku Besar filters and keep account checklist inside panel */
+#page-ledger .ledger-filters.ledger-period-filters{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;align-items:start!important;gap:14px!important;width:100%!important;min-width:0!important}
+#page-ledger .ledger-field[hidden],#page-ledger [hidden]{display:none!important}
+#page-ledger .ledger-account-picker{grid-column:1/-1!important;display:flex!important;position:relative!important;inset:auto!important;float:none!important;width:100%!important;max-width:none!important;min-width:0!important;flex:initial!important;box-sizing:border-box!important;margin:0!important;padding:14px!important;overflow:hidden!important}
+#page-ledger .ledger-account-title,#page-ledger .ledger-account-search-wrap,#page-ledger .ledger-account-toolbar,#page-ledger .ledger-account-checklist{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+#page-ledger .ledger-account-search-wrap input{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+#page-ledger .ledger-account-toolbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;flex-wrap:wrap!important}
+#page-ledger .ledger-account-toolbar>div{display:flex!important;gap:8px!important;flex-wrap:wrap!important}
+#page-ledger .ledger-account-checklist{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;max-height:230px!important;overflow-y:auto!important;overflow-x:hidden!important;padding:2px!important}
+#page-ledger .ledger-account-option{display:flex!important;align-items:flex-start!important;gap:8px!important;min-width:0!important;width:100%!important;box-sizing:border-box!important;overflow:hidden!important}
+#page-ledger .ledger-account-option span{min-width:0!important;flex:1 1 auto!important}
+#page-ledger .ledger-account-option b,#page-ledger .ledger-account-option small{display:block!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;line-height:1.35!important}
+#page-ledger .ledger-submit{grid-column:1/-1!important;justify-self:start!important}
+#page-ledger .ledger-actions{grid-column:1/-1!important}
+@media(max-width:1100px){#page-ledger .ledger-account-checklist{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:760px){#page-ledger .ledger-filters.ledger-period-filters{grid-template-columns:repeat(2,minmax(0,1fr))!important}#page-ledger .ledger-account-checklist{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:520px){#page-ledger .ledger-filters.ledger-period-filters{grid-template-columns:minmax(0,1fr)!important}#page-ledger .ledger-account-checklist{grid-template-columns:minmax(0,1fr)!important}#page-ledger .ledger-account-toolbar{align-items:flex-start!important;flex-direction:column!important}}
 </style></head>
 <body>
 <div class="shell">
