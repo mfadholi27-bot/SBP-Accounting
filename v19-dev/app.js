@@ -978,7 +978,7 @@ function printMoney(v){return money(Number(v||0))}
 function printTable(headers,rows,foot=''){return '<table class="sbp-print-table"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody>'+(foot?'<tfoot>'+foot+'</tfoot>':'')+'</table>'}
 function printSummary(items){return PRINT_CONFIG.summary?'<section class="sbp-print-summary">'+items.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>').join('')+'</section>':''}
 function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-print-signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':''}
-function printDocument(title,subtitle,body,orientation='portrait'){
+function printDocument(title,subtitle,body,orientation='portrait',afterPrint=null){
  const old=document.getElementById('sbp-print-frame');if(old)old.remove();
  const frame=document.createElement('iframe');frame.id='sbp-print-frame';frame.title='Pratinjau cetak '+title;
  frame.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(frame);
@@ -1005,8 +1005,14 @@ function printDocument(title,subtitle,body,orientation='portrait'){
  const signatures=PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'';
  const footer=PRINT_CONFIG.footer?'<footer class="footer">SBP Accounting V19 · Dokumen hasil cetak sistem</footer>':'';
  const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body><main class="sheet"><header class="header">'+brand+'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
- const cleanup=()=>{frame.remove();window.removeEventListener('afterprint',cleanup)};
+ let printHandled=false;
+ const cleanup=()=>{
+  if(printHandled)return;printHandled=true;
+  if(typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}
+  frame.remove();window.removeEventListener('afterprint',cleanup);
+ };
  frame.onload=()=>{setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(err){toast('Gagal membuka cetak: '+err.message)}},150)};
+ frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
  window.addEventListener('afterprint',cleanup,{once:true});
  return frame;
 }
@@ -1032,7 +1038,6 @@ async function printLedger(){
  if(!result){toast('Data Buku Besar tidak dapat dihitung. Periksa periode dan akun.');return}
  const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),c=moves.reduce((n,r)=>n+r.credit,0);
  const body=printSummary([['Periode',selection.label],['Akun',result.account.code+' · '+result.account.name],['Saldo awal rentang',printMoney(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',printMoney(result.endingNet)]])+printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO DEBIT','SALDO KREDIT'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+printMoney(r.balanceDebit)+'</td><td class="num">'+printMoney(r.balanceCredit)+'</td></tr>'));
- printDocument('BUKU BESAR PER AKUN','Periode '+selection.label,body,'landscape');
  const verify=async()=>{
   const memoryUnchanged=JSON.stringify(state)===memoryBefore;
   let persistedUnchanged=false,persistedVerified=false;
@@ -1043,9 +1048,7 @@ async function printLedger(){
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- const printFrame=document.getElementById('sbp-print-frame');
- if(printFrame?.contentWindow)printFrame.contentWindow.addEventListener('afterprint',verify,{once:true});
- else window.addEventListener('afterprint',verify,{once:true});
+ printDocument('BUKU BESAR PER AKUN','Periode '+selection.label,body,'landscape',verify);
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
