@@ -90,7 +90,25 @@ const server = http.createServer((req,res)=>{
   await page.waitForFunction(()=>document.getElementById('toast')?.textContent.includes('Validasi lulus'),{timeout:10000});
   const after=await page.evaluate(async()=>JSON.stringify(await readPersistedAccountingState()));
   if(before!==after)throw new Error('IndexedDB state changed after print');
-  console.log('PASS: actual browser IndexedDB read, monthly/year/range rendering, posted-only filtering, print callback, and exact persisted-state equality.');
+  const preview=await browser.newPage();
+  let previewResponse=null,lastPreviewError=null;
+  for(let attempt=0;attempt<12;attempt++){
+    try{
+      previewResponse=await preview.goto('https://mfadholi27-bot.github.io/SBP-Accounting/v19-dev/',{waitUntil:'domcontentloaded',timeout:20000});
+      if(previewResponse&&previewResponse.status()===200)break;
+      lastPreviewError=new Error('GitHub Pages returned HTTP '+(previewResponse?.status()??'no response'));
+    }catch(err){lastPreviewError=err}
+    await new Promise(resolve=>setTimeout(resolve,10000));
+  }
+  if(!previewResponse||previewResponse.status()!==200)throw new Error('GitHub Pages preview did not return HTTP 200: '+(lastPreviewError?.message||'unknown error'));
+  await preview.waitForFunction(()=>typeof go==='function'&&document.getElementById('ledger-mode'),{timeout:20000});
+  const previewCheck=await preview.evaluate(async()=>{
+    const response=await fetch('./app.js?v=109',{cache:'no-store'});
+    const js=await response.text();
+    return {scriptStatus:response.status,rangeEngine:js.includes('function getLedgerTransactionsRange('),afterPrintGuard:js.includes('async function readPersistedAccountingState('),buildStamp:document.body.innerText.includes('SBP ACCOUNTING')};
+  });
+  if(previewCheck.scriptStatus!==200||!previewCheck.rangeEngine||!previewCheck.afterPrintGuard)throw new Error('GitHub Pages preview loaded, but the expected ledger build assets are incomplete: '+JSON.stringify(previewCheck));
+  console.log('PASS: actual browser IndexedDB read, monthly/year/range rendering, posted-only filtering, print callback, exact persisted-state equality, and live GitHub Pages preview HTTP/assets.');
  } catch(err) {
   console.error(err);process.exitCode=1;
  } finally {
