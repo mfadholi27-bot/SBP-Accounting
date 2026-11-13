@@ -248,7 +248,38 @@ document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=
 $('quick-journal').onclick=()=>{resetJournalForm();go('journal')};
 
 function fmtDate(d){if(!d)return '';const x=new Date(d+'T00:00:00');return Number.isNaN(x.getTime())?d:x.toLocaleDateString('id-ID')}
-function renderDashboard(){const posted=state.journals.filter(j=>isPostedJournal(j));const lines=posted.flatMap(j=>j.lines||[]),debit=lines.reduce((a,l)=>a+Number(l.debit||0),0),credit=lines.reduce((a,l)=>a+Number(l.credit||0),0);$('stat-debit').textContent=money(debit);$('stat-credit').textContent=money(credit);$('stat-journals').textContent=posted.length.toLocaleString('id-ID');const recent=posted.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,5);$('recent-journals').innerHTML=recent.length?journalTable(recent,false):'<div class="empty"><div class="empty-state"><span class="empty-state-icon"><i data-lucide="list"></i></span><strong>Belum ada jurnal tersimpan</strong><p>Transaksi terbaru akan muncul di sini setelah jurnal dibuat.</p></div></div>';window.lucide?.createIcons($('recent-journals'))}
+function renderDashboard(){
+ ensurePeriodControl();
+ const period=state.periodControl.activePeriod,totals=periodTotals(period),periodRec=periodRecord(period),closed=periodRec.status==='closed';
+ $('dash-period-label').textContent=periodLabel(period);
+ $('dash-period-state').textContent=closed?'Periode ditutup':'Periode terbuka · transaksi dapat dicatat';
+ $('stat-debit').textContent=money(totals.rows.reduce((n,r)=>n+Number(r.debit||0),0));
+ $('stat-credit').textContent=money(totals.rows.reduce((n,r)=>n+Number(r.credit||0),0));
+ $('stat-journals').textContent=totals.posted.toLocaleString('id-ID');
+ $('stat-drafts').textContent=totals.drafts.toLocaleString('id-ID');
+ const checks=[
+  {label:'Jurnal POSTED seimbang',count:totals.unbalancedJournals,go:'journal-list'},
+  {label:'Referensi SANDI tidak ditemukan',count:totals.missingAccounts,go:'accounts'},
+  {label:'Struktur jurnal tidak valid',count:totals.invalidJournals,go:'validation'},
+  {label:'Saldo awal duplikat',count:totals.duplicateOpenings,go:'opening-balances'},
+  {label:'Saldo awal tidak valid',count:totals.invalidOpenings,go:'opening-balances'}
+ ];
+ const issueCount=checks.reduce((n,x)=>n+x.count,0),allClear=issueCount===0&&Math.abs(totals.difference)<0.005;
+ $('dash-integrity-badge').textContent=allClear?'TERKENDALI':'PERLU PEMERIKSAAN';
+ $('dash-integrity-badge').className='tag '+(allClear?'np-ok':'np-warn');
+ $('dash-integrity-list').innerHTML=checks.map(x=>'<button type="button" class="dashboard-integrity-item" data-go="'+x.go+'"><span>'+esc(x.label)+'</span><b class="'+(x.count?'dashboard-issue':'dashboard-clear')+'">'+x.count.toLocaleString('id-ID')+'</b><small>'+(x.count?'Perlu ditinjau':'Tidak ditemukan')+'</small></button>').join('')+
+  '<div class="dashboard-integrity-item dashboard-balance-item"><span>Selisih neraca saldo</span><b class="'+(Math.abs(totals.difference)<0.005?'dashboard-clear':'dashboard-issue')+'">'+money(totals.difference)+'</b><small>'+(Math.abs(totals.difference)<0.005?'Debit dan kredit seimbang':'Periksa Neraca Percobaan')+'</small></div>';
+ $('dash-integrity-note').textContent=totals.noteDrafts?totals.noteDrafts+' Nota Debet Draft belum diposting atau dibatalkan.':'Kontrol tidak mengubah data; tindak lanjut dilakukan pada modul sumber.';
+ $('dash-period-status').textContent=closed?'DITUTUP':'TERBUKA';
+ $('dash-period-status').className=closed?'dashboard-issue':'dashboard-clear';
+ $('dash-backup-status').textContent=backupDirectoryHandle?'Folder terhubung · verifikasi izin di menu Backup':'Belum terhubung';
+ $('dash-backup-status').className=backupDirectoryHandle?'dashboard-neutral':'dashboard-issue';
+ $('dash-account-status').textContent=(state.accounts||[]).length.toLocaleString('id-ID')+' akun';
+ $('dash-opening-status').textContent=totals.openings.toLocaleString('id-ID')+' entri';
+ const recent=(state.journals||[]).filter(j=>String(j.date||'').slice(0,7)===period).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.number||'').localeCompare(String(a.number||''))).slice(0,7);
+ $('recent-journals').innerHTML=recent.length?'<div class="table-wrap"><table class="dashboard-recent-list"><thead><tr><th>Tanggal</th><th>No. Bukti</th><th>Keterangan</th><th>Status</th><th>Baris</th><th>Total Debit</th><th>Total Kredit</th></tr></thead><tbody>'+recent.map(j=>{const lines=Array.isArray(j.lines)?j.lines:[],d=lines.reduce((n,l)=>n+Number(l.debit||0),0),c=lines.reduce((n,l)=>n+Number(l.credit||0),0),status=isPostedJournal(j)?'POSTED':String(j.status||'DRAFT').toUpperCase();return '<tr><td>'+esc(fmtDate(j.date))+'</td><td><b>'+esc(j.number||'—')+'</b></td><td class="dashboard-recent-desc">'+esc(j.description||'—')+'</td><td><span class="tag '+(isPostedJournal(j)?'np-ok':'np-warn')+'">'+esc(status)+'</span></td><td class="num">'+lines.length+'</td><td class="num">'+money(d)+'</td><td class="num">'+money(c)+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="empty"><div class="empty-state"><span class="empty-state-icon"><i data-lucide="list"></i></span><strong>Belum ada aktivitas jurnal pada periode ini</strong><p>Jurnal yang dibuat pada periode aktif akan muncul di sini.</p></div></div>';
+ window.lucide?.createIcons($('recent-journals'));
+}
 function accountOptions(selected=''){return '<option value="">Pilih akun</option>'+state.accounts.map(a=>'<option value="'+esc(a.code)+'" '+(a.code===selected?'selected':'')+'>'+esc(a.code)+' — '+esc(a.name)+'</option>').join('')}
 function addJournalLine(line={}){const tr=document.createElement('tr');tr.className='entry-row';tr.innerHTML='<td><select class="line-code">'+accountOptions(line.code||'')+'</select></td><td class="line-account-name">'+esc((state.accounts.find(a=>a.code===line.code)||{}).name||'—')+'</td><td><input class="line-note" placeholder="Keterangan baris" value="'+esc(line.note||'')+'"></td><td><input class="amount line-debit" type="number" min="0" step="0.01" value="'+(line.debit||'')+'"></td><td><input class="amount line-credit" type="number" min="0" step="0.01" value="'+(line.credit||'')+'"></td><td><button class="icon-btn remove-line" type="button">×</button></td>';tr.querySelector('.line-code').onchange=()=>{const a=state.accounts.find(x=>x.code===tr.querySelector('.line-code').value);tr.querySelector('.line-account-name').textContent=a?a.name:'—';updateJournalBudgetPreview()};tr.querySelectorAll('input').forEach(i=>i.addEventListener('input',updateJournalTotals));tr.querySelector('.remove-line').onclick=()=>{if($('journal-lines').children.length>2){tr.remove();updateJournalTotals()}else toast('Minimal dua baris akun diperlukan.')};$('journal-lines').appendChild(tr);updateJournalTotals()}
 function resetJournalForm(){editingId=null;ensurePeriodControl();$('j-date').value=state.periodControl.activePeriod+'-01';$('j-number').value='';$('j-description').value='';$('journal-lines').innerHTML='';addJournalLine();addJournalLine();$('save-journal').textContent='Simpan sebagai Draft';$('post-journal').textContent='Posting Jurnal';$('post-journal').disabled=false;setMessage('journal-message','Simpan sebagai Draft untuk dilanjutkan nanti, atau Posting Jurnal setelah debit dan kredit seimbang.')}
