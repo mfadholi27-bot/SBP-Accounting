@@ -414,3 +414,13 @@ button.dashboard-integrity-item:hover{border-color:#b9dfc8;background:#f4faf6}
 @keyframes dashboard-chart-draw{to{stroke-dashoffset:0}}@keyframes dashboard-chart-grow{from{transform:scaleY(.04);opacity:.35}to{transform:scaleY(1);opacity:1}}@keyframes dashboard-chart-pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
 @media(max-width:900px){.dashboard-chart-grid{grid-template-columns:minmax(0,1fr)}.dashboard-chart-wide{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.chart-line,.chart-point,.chart-bar{animation:none;stroke-dashoffset:0}}
+
+/* BUILD 032 — visible values and exact monthly chart figures */
+.chart-value-label{fill:#385849;font-size:8px;font-weight:750;paint-order:stroke;stroke:#fff;stroke-width:2.6px;stroke-linejoin:round;pointer-events:none}
+.dashboard-chart-data-table{max-height:245px;overflow:auto;margin-top:9px;border:1px solid #e5eee7;border-radius:9px}
+.dashboard-chart-data-table table{width:100%;border-collapse:collapse;font-size:11px}
+.dashboard-chart-data-table th,.dashboard-chart-data-table td{padding:8px 10px;border-bottom:1px solid #edf2ee;white-space:nowrap}
+.dashboard-chart-data-table th{position:sticky;top:0;background:#f5faf6;color:#60766a;text-align:left;font-size:10px}
+.dashboard-chart-data-table td.num,.dashboard-chart-data-table th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.dashboard-chart-data-table tbody tr:last-child td{border-bottom:0}
+@media(prefers-reduced-motion:reduce){.chart-value-label{animation:none}}
