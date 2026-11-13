@@ -1,7 +1,7 @@
 /* SBP Accounting V19 — safe same-origin offline cache */
-const CACHE='sbp-accounting-v19-dev-ledger-checklist-006';
+const CACHE='sbp-accounting-v19-dev-ledger-checklist-007';
 const FILES=[
- './','./index.html','./styles.css','./app.js?v=110',
+ './','./index.html','./styles.css?v=31','./app.js?v=136',
  './vendor/xlsx.full.min.js','./manifest.webmanifest',
  './assets/sbp-app-icon.svg','./lucide-local.js',
  './palm-glass-theme.css?v=45','./assets/palm-wallpaper.svg',
