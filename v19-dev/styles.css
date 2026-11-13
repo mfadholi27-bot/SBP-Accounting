@@ -343,6 +343,10 @@ input,select,textarea{max-width:100%}
 .dashboard-period-box{position:relative;z-index:2;display:flex;flex-direction:column;gap:5px;min-width:230px;padding:14px 17px;border:1px solid #ffffff35;border-radius:13px;background:#ffffff13;backdrop-filter:blur(8px)}
 .dashboard-period-box span{font-size:9px;letter-spacing:.9px;font-weight:800;color:#ccebdd}
 .dashboard-period-box b{font-size:18px;line-height:1.25;color:#fff}
+.dashboard-period-box input[type=month]{width:100%;min-width:0;padding:8px 10px;border:1px solid #ffffff65;border-radius:9px;background:#ffffffed;color:#183d2b;font:700 17px/1.3 inherit;font-variant-numeric:tabular-nums;cursor:pointer;accent-color:var(--green)}
+.dashboard-period-box input[type=month]:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.dashboard-period-box input[type=month]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.8}
+@media(max-width:600px){.dashboard-period-box{min-width:0;width:100%}.dashboard-period-box input[type=month]{font-size:16px}}
 .dashboard-period-box small{font-size:11px;color:#e0f2e8}
 .dashboard-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:16px 0}
 .dashboard-stat{min-width:0;padding:18px}
