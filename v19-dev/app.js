@@ -1173,6 +1173,7 @@ async function reopenAccountingPeriod(p){
  await persist();renderPeriodControl();setMessage('period-message','Periode '+periodLabel(p)+' dibuka kembali. Aktivitas ini tercatat di Riwayat Aktivitas.','good');
 }
 $('period-set-active').addEventListener('click',setActivePeriod);
+$('dash-period-picker').addEventListener('change',()=>{const p=$('dash-period-picker').value;$('period-active').value=p;setActivePeriod(p)});
 $('period-close-button').addEventListener('click',closeAccountingPeriod);
 $('period-active').addEventListener('change',()=>{const p=$('period-active').value;if(isPeriodLocked(p))toast('Periode tersebut telah ditutup.')});
 
