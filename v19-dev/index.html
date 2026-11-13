@@ -174,19 +174,41 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div class="module-guide-backdrop" id="module-guide-modal" hidden><section class="module-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="module-guide-title"><div class="module-guide-head"><div><span class="tag">PANDUAN MODUL</span><h2 id="module-guide-title">Panduan</h2></div><button class="icon-btn" id="module-guide-close" type="button" aria-label="Tutup panduan"><i data-lucide="x"></i></button></div><div id="module-guide-content" class="module-guide-content"></div></section></div>
 <section class="page active" id="page-dashboard">
-  <div class="welcome"><div><div class="eyebrow light">SBP ACCOUNTING</div><h2 class="welcome-brandline">PERKEBUNAN SAWIT &amp; PKS</h2></div><div class="welcome-icon"><i data-lucide="layout-dashboard"></i></div></div>
-  <div class="stats">
-    <article class="stat"><span>Total Debit</span><strong id="stat-debit">Rp 0</strong><small>Akumulasi jurnal tersimpan</small></article>
-    <article class="stat"><span>Total Kredit</span><strong id="stat-credit">Rp 0</strong><small>Akumulasi jurnal tersimpan</small></article>
-    <article class="stat"><span>Transaksi Jurnal</span><strong id="stat-journals">0</strong><small>Nomor bukti tersimpan</small></article>
+  <div class="welcome dashboard-welcome">
+    <div><div class="eyebrow light">SBP ACCOUNTING · RINGKASAN PEMBUKUAN</div><h2 class="welcome-brandline">Dashboard</h2><p>Pantau aktivitas dan integritas pembukuan dalam satu tampilan.</p></div>
+    <div class="dashboard-period-box"><span>PERIODE KERJA AKTIF</span><b id="dash-period-label">—</b><small id="dash-period-state">Memuat status periode…</small></div>
   </div>
-  <div class="section-heading"><div><h3>Akses cepat</h3><p>Pilih modul untuk melanjutkan pekerjaan.</p></div></div>
-  <div class="quick-grid">
-    <button class="quick-card" data-go="journal"><span class="quick-icon"><i data-lucide="plus"></i></span><b>Input Jurnal</b><small>Buat jurnal debit dan kredit</small></button>
-    <button class="quick-card" data-go="accounts"><span class="quick-icon"><i data-lucide="users"></i></span><b>Master Akun</b><small>Kelola SANDI dan nama akun</small></button>
-    <button class="quick-card" data-go="reports"><span class="quick-icon"><i data-lucide="chart-no-axes-combined"></i></span><b>Laporan</b><small>Rekap dan neraca saldo</small></button>
+  <div class="dashboard-stats">
+    <article class="stat dashboard-stat"><span>Total Debit</span><strong id="stat-debit">Rp 0</strong><small>Jurnal POSTED · periode aktif</small></article>
+    <article class="stat dashboard-stat"><span>Total Kredit</span><strong id="stat-credit">Rp 0</strong><small>Jurnal POSTED · periode aktif</small></article>
+    <article class="stat dashboard-stat"><span>Jurnal POSTED</span><strong id="stat-journals">0</strong><small>Nomor bukti terposting</small></article>
+    <article class="stat dashboard-stat"><span>Jurnal DRAFT</span><strong id="stat-drafts">0</strong><small>Menunggu pemeriksaan / posting</small></article>
   </div>
-  <div class="panel"><div class="panel-head"><div><h3>Jurnal terbaru</h3><p>Aktivitas pembukuan terakhir.</p></div><button class="btn" data-go="journal-list">Lihat semua</button></div><div id="recent-journals" class="empty"><div class="empty-state"><span class="empty-state-icon"><i data-lucide="list"></i></span><strong>Belum ada jurnal tersimpan</strong><p>Transaksi terbaru akan muncul di sini setelah jurnal dibuat.</p></div></div></div>
+  <div class="dashboard-main-grid">
+    <section class="panel dashboard-control-panel">
+      <div class="panel-head"><div><h3>Kontrol integritas pembukuan</h3><p>Pemeriksaan data pada periode kerja aktif.</p></div><span id="dash-integrity-badge" class="tag">MEMERIKSA</span></div>
+      <div id="dash-integrity-list" class="dashboard-integrity-list"></div>
+      <div class="dashboard-panel-foot"><span id="dash-integrity-note">Gunakan modul terkait untuk menindaklanjuti temuan.</span><button class="btn" data-go="periods">Periksa periode</button></div>
+    </section>
+    <section class="panel dashboard-status-panel">
+      <div class="panel-head"><div><h3>Status sistem</h3><p>Informasi operasional aplikasi lokal.</p></div></div>
+      <div class="dashboard-status-list">
+        <div><span>Periode akuntansi</span><b id="dash-period-status">—</b></div>
+        <div><span>Folder backup</span><b id="dash-backup-status">—</b></div>
+        <div><span>Master Akun</span><b id="dash-account-status">0 akun</b></div>
+        <div><span>Saldo awal periode</span><b id="dash-opening-status">0 akun</b></div>
+      </div>
+      <button class="btn dashboard-backup-action" data-go="backup">Buka Backup &amp; Restore</button>
+    </section>
+  </div>
+  <div class="section-heading"><div><h3>Akses cepat</h3><p>Menu utama untuk pekerjaan pembukuan harian.</p></div></div>
+  <div class="quick-grid dashboard-quick-grid">
+    <button class="quick-card" data-go="journal"><span class="quick-icon"><i data-lucide="plus-circle"></i></span><b>Input Jurnal</b><small>Catat transaksi baru</small></button>
+    <button class="quick-card" data-go="journal-list"><span class="quick-icon"><i data-lucide="clipboard-list"></i></span><b>Daftar Jurnal</b><small>Periksa Draft dan POSTED</small></button>
+    <button class="quick-card" data-go="ledger"><span class="quick-icon"><i data-lucide="book-open"></i></span><b>Buku Besar</b><small>Telusuri mutasi per akun</small></button>
+    <button class="quick-card" data-go="reports"><span class="quick-icon"><i data-lucide="chart-no-axes-combined"></i></span><b>Laporan</b><small>Neraca dan rekap keuangan</small></button>
+  </div>
+  <div class="panel dashboard-recent-panel"><div class="panel-head"><div><h3>Aktivitas jurnal terbaru</h3><p>Transaksi periode aktif, termasuk status Draft dan POSTED.</p></div><button class="btn" data-go="journal-list">Lihat semua jurnal</button></div><div id="recent-journals" class="dashboard-recent-table"></div></div>
 </section>
 <section class="page" id="page-debit-notes" hidden>
  <div class="panel debit-note-intro"><span class="tag">DOKUMEN KOREKSI TRANSAKSI</span><h3>Nota Debet</h3><p>Kelola nota debet pembelian TBS, pembelian lainnya, penjualan, biaya, dan transaksi umum. Nota dapat diterima atau diterbitkan. Akun dan arah debit/kredit ditentukan sesuai substansi transaksi.</p></div>
