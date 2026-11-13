@@ -2,8 +2,8 @@
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 const DB_NAME='sbp-accounting-v19', STORE='app', STATE_KEY='main';
-const emptyState=()=>({accounts:[],journals:[],nptrans:[],openingBalances:[],debitNotes:[],annualBudgets:[],auditLogs:[],companyProfile:{name:'PT. SURYA BRATASENA PLANTATION',address:'',unit:'',systemName:'SBP ACCOUNTING',tagline:'Integrated Accounting Management System'},npTemplate:null,meta:{version:19}});
-let state=emptyState(), editingId=null, editingAccountCode=null, pendingNpImport=null, auditBaseline=null;
+const emptyState=()=>({accounts:[],journals:[],nptrans:[],openingBalances:[],debitNotes:[],annualBudgets:[],journalTemplates:[],auditLogs:[],companyProfile:{name:'PT. SURYA BRATASENA PLANTATION',address:'',unit:'',systemName:'SBP ACCOUNTING',tagline:'Integrated Accounting Management System'},npTemplate:null,meta:{version:19}});
+let state=emptyState(), editingId=null, editingAccountCode=null, pendingNpImport=null, auditBaseline=null, pendingJournalAttachments=[], journalNumberAuto=true;
 const $=id=>document.getElementById(id);
 const money=n=>'Rp '+Number(n||0).toLocaleString('id-ID',{maximumFractionDigits:2});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -331,7 +331,54 @@ function renderDashboard(){
 }
 function accountOptions(selected=''){return '<option value="">Pilih akun</option>'+state.accounts.map(a=>'<option value="'+esc(a.code)+'" '+(a.code===selected?'selected':'')+'>'+esc(a.code)+' — '+esc(a.name)+'</option>').join('')}
 function addJournalLine(line={}){const tr=document.createElement('tr');tr.className='entry-row';tr.innerHTML='<td><select class="line-code">'+accountOptions(line.code||'')+'</select></td><td class="line-account-name">'+esc((state.accounts.find(a=>a.code===line.code)||{}).name||'—')+'</td><td><input class="line-note" placeholder="Keterangan baris" value="'+esc(line.note||'')+'"></td><td><input class="amount line-debit" type="number" min="0" step="0.01" value="'+(line.debit||'')+'"></td><td><input class="amount line-credit" type="number" min="0" step="0.01" value="'+(line.credit||'')+'"></td><td><button class="icon-btn remove-line" type="button">×</button></td>';tr.querySelector('.line-code').onchange=()=>{const a=state.accounts.find(x=>x.code===tr.querySelector('.line-code').value);tr.querySelector('.line-account-name').textContent=a?a.name:'—';updateJournalBudgetPreview()};tr.querySelectorAll('input').forEach(i=>i.addEventListener('input',updateJournalTotals));tr.querySelector('.remove-line').onclick=()=>{if($('journal-lines').children.length>2){tr.remove();updateJournalTotals()}else toast('Minimal dua baris akun diperlukan.')};$('journal-lines').appendChild(tr);updateJournalTotals()}
-function resetJournalForm(){editingId=null;ensurePeriodControl();$('j-date').value=state.periodControl.activePeriod+'-01';$('j-number').value='';$('j-description').value='';$('journal-lines').innerHTML='';addJournalLine();addJournalLine();$('save-journal').textContent='Simpan sebagai Draft';$('post-journal').textContent='Posting Jurnal';$('post-journal').disabled=false;setMessage('journal-message','Simpan sebagai Draft untuk dilanjutkan nanti, atau Posting Jurnal setelah debit dan kredit seimbang.')}
+function nextJournalNumber(date){
+ const year=String(date||'').slice(0,4);if(!/^\d{4}$/.test(year))return '';
+ let max=0;for(const j of state.journals||[]){const m=String(j.number||'').trim().match(/^JU\/(\d+)\/(\d{4})$/i);if(m&&m[2]===year)max=Math.max(max,Number(m[1])||0)}
+ let seq=max+1,candidate='';do{candidate='JU/'+String(seq).padStart(3,'0')+'/'+year;seq++}while((state.journals||[]).some(j=>String(j.number||'').trim().toLowerCase()===candidate.toLowerCase()));
+ return candidate;
+}
+function setAutomaticJournalNumber(){if(!journalNumberAuto)return;const next=nextJournalNumber($('j-date').value);if(next)$('j-number').value=next}
+function renderJournalTemplates(){
+ const select=$('journal-template-select');if(!select)return;const current=select.value;
+ select.innerHTML='<option value="">Pilih template jurnal…</option>'+(state.journalTemplates||[]).map(t=>'<option value="'+esc(t.id)+'">'+esc(t.name)+'</option>').join('');
+ if((state.journalTemplates||[]).some(t=>t.id===current))select.value=current;
+}
+function saveJournalTemplate(){
+ const name=prompt('Nama template jurnal:');if(name===null)return;const clean=name.trim();if(!clean)return toast('Nama template wajib diisi.');
+ if((state.journalTemplates||[]).some(t=>String(t.name).toLowerCase()===clean.toLowerCase()))return toast('Nama template sudah digunakan.');
+ const lines=[...document.querySelectorAll('.entry-row')].map(r=>({code:r.querySelector('.line-code').value,note:r.querySelector('.line-note').value.trim()})).filter(l=>l.code);
+ if(!lines.length)return toast('Pilih minimal satu SANDI akun sebelum menyimpan template.');
+ state.journalTemplates=Array.isArray(state.journalTemplates)?state.journalTemplates:[];
+ state.journalTemplates.push({id:crypto.randomUUID(),name:clean,description:$('j-description').value.trim(),lines,createdAt:new Date().toISOString()});
+ persist().then(()=>{renderJournalTemplates();toast('Template jurnal "'+clean+'" berhasil disimpan.')});
+}
+function applyJournalTemplate(){
+ const id=$('journal-template-select').value,t=(state.journalTemplates||[]).find(x=>x.id===id);if(!t)return toast('Pilih template jurnal terlebih dahulu.');
+ if(!confirm('Terapkan template "'+t.name+'"? Baris input saat ini akan diganti. Nominal debit/kredit diatur ulang menjadi kosong.'))return;
+ $('journal-lines').innerHTML='';(t.lines||[]).forEach(l=>addJournalLine({code:l.code,note:l.note,debit:0,credit:0}));
+ if(t.description)$('j-description').value=t.description;
+ updateJournalTotals();toast('Template "'+t.name+'" diterapkan. Periksa kembali akun dan nominal sebelum menyimpan.');
+}
+function formatAttachmentSize(bytes){return bytes>=1048576?(bytes/1048576).toFixed(1)+' MB':Math.max(1,Math.round(bytes/1024))+' KB'}
+function renderJournalAttachments(){
+ const host=$('journal-attachment-list');if(!host)return;const files=pendingJournalAttachments||[];
+ host.innerHTML=files.length?files.map(f=>'<span class="journal-attachment-item"><a href="'+f.dataUrl+'" download="'+esc(f.name)+'" title="Buka atau unduh lampiran">'+esc(f.name)+'</a><small>'+formatAttachmentSize(f.size)+'</small><button type="button" class="journal-attachment-remove" data-attachment-id="'+esc(f.id)+'" aria-label="Hapus lampiran">×</button></span>').join(''):'<span class="journal-attachment-empty">Belum ada lampiran.</span>';
+ host.querySelectorAll('.journal-attachment-remove').forEach(b=>b.onclick=()=>{pendingJournalAttachments=pendingJournalAttachments.filter(f=>f.id!==b.dataset.attachmentId);renderJournalAttachments()});
+}
+function readJournalFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(reader.error||new Error('File tidak dapat dibaca.'));reader.readAsDataURL(file)})}
+async function addJournalAttachments(files){
+ const selected=[...files];if(!selected.length)return;
+ for(const file of selected){
+  if(pendingJournalAttachments.length>=5){setMessage('journal-message','Maksimal 5 lampiran per jurnal.','bad');break}
+  if(file.size>5*1024*1024){setMessage('journal-message','Lampiran "'+file.name+'" melebihi batas 5 MB per file.','bad');continue}
+  const total=pendingJournalAttachments.reduce((n,f)=>n+Number(f.size||0),0);
+  if(total+file.size>15*1024*1024){setMessage('journal-message','Total lampiran maksimal 15 MB per jurnal.','bad');break}
+  try{const dataUrl=await readJournalFile(file);pendingJournalAttachments.push({id:crypto.randomUUID(),name:file.name,type:file.type||'application/octet-stream',size:file.size,dataUrl})}
+  catch(e){setMessage('journal-message','Gagal membaca "'+file.name+'": '+e.message,'bad')}
+ }
+ renderJournalAttachments();$('journal-attachments').value='';
+}
+function resetJournalForm(){editingId=null;journalNumberAuto=true;pendingJournalAttachments=[];ensurePeriodControl();$('j-date').value=state.periodControl.activePeriod+'-01';$('j-number').value='';$('j-description').value='';$('journal-lines').innerHTML='';addJournalLine();addJournalLine();setAutomaticJournalNumber();$('journal-template-select').value='';$('journal-attachments').value='';renderJournalAttachments();$('save-journal').textContent='Simpan sebagai Draft';$('post-journal').textContent='Posting Jurnal';$('post-journal').disabled=false;setMessage('journal-message','Simpan sebagai Draft untuk dilanjutkan nanti, atau Posting Jurnal setelah debit dan kredit seimbang.')}
 function updateJournalTotals(){const rows=[...document.querySelectorAll('.entry-row')];let d=0,c=0;rows.forEach(r=>{d+=Number(r.querySelector('.line-debit').value||0);c+=Number(r.querySelector('.line-credit').value||0)});$('sum-debit').textContent=money(d);$('sum-credit').textContent=money(c);$('sum-diff').textContent=money(Math.abs(d-c));$('sum-diff').style.color=Math.abs(d-c)<.005?'#176c45':'#b34444';updateJournalBudgetPreview()}
 const BUDGET_MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 function findBudget(y,code){return (state.annualBudgets||[]).find(x=>Number(x.year)===Number(y)&&String(x.accountCode)===String(code))}
@@ -477,13 +524,17 @@ async function saveJournal(targetStatus){
  const old=state.journals.find(j=>j.id===editingId);
  if(old&&!periodGuard(String(old.date||'').slice(0,7),'mengubah jurnal lama'))return;
   if(old&&old.status!=='draft'){setMessage('journal-message','Jurnal terposting tidak dapat diedit. Buat jurnal koreksi/pembalik.','bad');return}
- const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:rows,status:targetStatus,updatedAt:now,...(targetStatus==='posted'?{postedAt:now}:{})};
+ const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:rows,status:targetStatus,attachments:pendingJournalAttachments.map(f=>({...f})),updatedAt:now,...(targetStatus==='posted'?{postedAt:now}:{})};
  if(!old)item.createdAt=now;
  if(old)state.journals=state.journals.map(j=>j.id===editingId?item:j);else state.journals.push(item);
  await persist();toast(targetStatus==='posted'?'Jurnal berhasil diposting.':'Draft jurnal berhasil disimpan.');resetJournalForm();go('journal-list');renderDashboard();
 }
 $('save-journal').onclick=()=>saveJournal('draft');
-$('post-journal').onclick=()=>saveJournal('posted');$('j-date').addEventListener('change',updateJournalBudgetPreview);
+$('post-journal').onclick=()=>saveJournal('posted');$('j-date').addEventListener('change',()=>{if(journalNumberAuto)setAutomaticJournalNumber();updateJournalBudgetPreview()});
+$('j-number').addEventListener('input',()=>{journalNumberAuto=false});
+$('journal-auto-number').onclick=()=>{journalNumberAuto=true;setAutomaticJournalNumber();toast('Nomor bukti otomatis diperbarui.')};
+$('journal-template-save').onclick=saveJournalTemplate;$('journal-template-apply').onclick=applyJournalTemplate;
+$('journal-attachments').addEventListener('change',e=>addJournalAttachments(e.target.files));
 function exportJournalsXlsx(){const scope=$('journal-period-scope')?.value||'active',active=state.periodControl?.activePeriod||currentMonthKey(),items=state.journals.filter(j=>scope==='all'||String(j.date||'').slice(0,7)===active),rows=[['RUANG LINGKUP',scope==='all'?'SEMUA PERIODE':'PERIODE AKTIF '+active],[],['TANGGAL','NOBUKTI','KETERANGAN','STATUS','SANDI','KETERANGAN BARIS','DEBIT','KREDIT'],...items.flatMap(j=>(j.lines||[]).map(l=>[j.date,j.number,j.description,j.status==='draft'?'DRAFT':(j.status==='cancelled'?'DIBATALKAN / DIPECAH':'POSTED'),l.code,l.note,l.debit||0,l.credit||0]))];exportXlsxSheet('Daftar-Jurnal.xlsx','Daftar Jurnal',rows)}
 function journalTable(items,actions=true,summaryItems=items){
  const posted=summaryItems.filter(j=>isPostedJournal(j));
@@ -602,7 +653,7 @@ async function executeSplit(source,chunks,reason){
 }
 
 let journalPage=0;
-function editJournal(id){const j=state.journals.find(x=>x.id===id);if(!j||j.status!=='draft'){toast('Hanya Draft yang dapat diedit.');return}editingId=id;$('j-date').value=j.date;$('j-number').value=j.number;$('j-description').value=j.description;$('journal-lines').innerHTML='';j.lines.forEach(l=>addJournalLine(l));$('save-journal').textContent='Simpan perubahan Draft';$('post-journal').textContent='Posting Jurnal';go('journal')}
+function editJournal(id){const j=state.journals.find(x=>x.id===id);if(!j||j.status!=='draft'){toast('Hanya Draft yang dapat diedit.');return}editingId=id;journalNumberAuto=false;pendingJournalAttachments=Array.isArray(j.attachments)?j.attachments.map(f=>({...f})):[];$('j-date').value=j.date;$('j-number').value=j.number;$('j-description').value=j.description;$('journal-lines').innerHTML='';j.lines.forEach(l=>addJournalLine(l));renderJournalAttachments();$('journal-template-select').value='';$('save-journal').textContent='Simpan perubahan Draft';$('post-journal').textContent='Posting Jurnal';go('journal')}
 let bulkPostCandidates=[];
 function updateBulkPostMode(){
  const mode=$('bulk-post-mode').value;
@@ -1839,7 +1890,7 @@ let pendingBackupRestore=null;
  $('backup-import-confirm').onclick=async()=>{const b=pendingBackupRestore;if(!b)return;if(!requireImportPassword('Pemulihan / Import Backup'))return;if(!confirm('PERINGATAN AKHIR: Ganti seluruh database lokal dengan backup '+b.fileName+'?'))return;try{const candidate=b.candidate,prior=Array.isArray(state.auditLogs)?state.auditLogs:[];state={...emptyState(),...candidate};state.auditLogs=[...new Map([...prior,...(Array.isArray(candidate.auditLogs)?candidate.auditLogs:[])].map(x=>[x.id||JSON.stringify(x),x])).values()].sort((x,y)=>String(y.at).localeCompare(String(x.at)));if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();pendingBackupRestore=null;$('backup-import-review').hidden=true;$('backup-file').value='';renderDashboard();renderAccounts();renderNptrans();renderJournals();renderOpeningBalances();renderPeriodControl();setMessage('backup-message','Backup '+b.fileName+' berhasil dipulihkan. Database aktif telah diganti.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}};
 
 
-async function init(){await loadState();ensureCompanyProfile();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();resetJournalForm();initAnnualBudget();renderCompanyIdentity();renderDashboard();renderAccounts();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}
+async function init(){await loadState();state.journalTemplates=Array.isArray(state.journalTemplates)?state.journalTemplates:[];ensureCompanyProfile();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();renderJournalTemplates();resetJournalForm();initAnnualBudget();renderCompanyIdentity();renderDashboard();renderAccounts();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}
  const startupNotice=$('startup-backup-notice');if(startupNotice)startupNotice.hidden=false;
  if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
 init();
