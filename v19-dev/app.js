@@ -553,7 +553,7 @@ async function saveJournal(targetStatus){
  const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:persistedRows,status:targetStatus,attachments:pendingJournalAttachments.map(f=>({...f})),updatedAt:now,...(targetStatus==='posted'?{postedAt:now}:{})};
  if(!old)item.createdAt=now;
  if(old)state.journals=state.journals.map(j=>j.id===editingId?item:j);else state.journals.push(item);
- await persist();toast(targetStatus==='posted'?'Jurnal berhasil diposting.':'Draft jurnal berhasil disimpan.');resetJournalForm();go('journal-list');renderDashboard();
+ await persist();toast(targetStatus==='posted'?'Jurnal berhasil diposting. Form siap untuk jurnal berikutnya.':'Draft jurnal berhasil disimpan. Form siap untuk jurnal berikutnya.');resetJournalForm();renderDashboard();
 }
 $('save-journal').onclick=()=>saveJournal('draft');
 $('post-journal').onclick=()=>saveJournal('posted');$('j-date').addEventListener('change',()=>{if(journalNumberAuto)setAutomaticJournalNumber();updateJournalBudgetPreview()});
