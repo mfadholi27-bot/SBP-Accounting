@@ -181,7 +181,7 @@ async function saveDebitNote(){const p=debitNotePayload();if(!p.date||!p.partner
  if(!periodGuard(p.date.slice(0,7),'menyimpan Nota Debet'))return;
  warnActivePeriodMismatch(p.date,'Nota Debet');const old=(state.debitNotes||[]).find(n=>n.id===editingDebitNoteId);if(old&&old.status!=='draft')return;if(state.debitNotes.some(n=>n.number===p.number&&n.id!==editingDebitNoteId)){setMessage('dn-message','Nomor Nota Debet sudah digunakan.','bad');return}if(p.lines.some(l=>l.debit<0||l.credit<0)){setMessage('dn-message','Nominal tidak boleh negatif.','bad');return}const now=new Date().toISOString(),item={...(old||{}),...p,id:editingDebitNoteId||crypto.randomUUID(),status:'draft',updatedAt:now};if(!old)item.createdAt=now;if(old)state.debitNotes=state.debitNotes.map(n=>n.id===old.id?item:n);else state.debitNotes.push(item);await persist();renderDebitNotes();resetDebitNoteForm();toast('Draft Nota Debet tersimpan.')}
 async function postDebitNote(id=editingDebitNoteId){let n=(state.debitNotes||[]).find(x=>x.id===id);if(id===editingDebitNoteId){const p=debitNotePayload();n={...(n||{}),...p}}if(!n||n.status!=='draft')return;if(!periodGuard(String(n.date||'').slice(0,7),'memposting Nota Debet'))return;const lines=n.lines||[],debit=lines.reduce((s,l)=>s+Number(l.debit||0),0),credit=lines.reduce((s,l)=>s+Number(l.credit||0),0);if(!n.partner||!n.description||lines.length<2||lines.some(l=>!l.code||!state.accounts.some(a=>a.code===l.code)||!Number.isFinite(l.debit)||!Number.isFinite(l.credit)||l.debit<0||l.credit<0||(!l.debit&&!l.credit)||(l.debit&&l.credit))){setMessage('dn-message','Periksa pihak, keterangan, akun, dan nominal. Setiap baris harus berisi satu sisi debit atau kredit.','bad');return}if(Math.abs(debit-credit)>.005){setMessage('dn-message','Nota belum seimbang. Selisih '+money(Math.abs(debit-credit))+'.','bad');return}if(!confirm('Posting '+n.number+' dan buat satu jurnal POSTED dengan nomor '+n.number+'? Dokumen dan jurnal saling terhubung.'))return;if(state.journals.some(j=>j.number===n.number)){setMessage('dn-message','Nomor jurnal sudah digunakan.','bad');return}const now=new Date().toISOString(),journal={id:crypto.randomUUID(),date:n.date,number:n.number,description:'Nota Debet '+n.number+' · '+n.description,lines:lines.map(l=>({...l})),status:'posted',source:'DEBIT_NOTE',sourceId:n.id,createdAt:now,updatedAt:now,postedAt:now};state.journals.push(journal);state.debitNotes=state.debitNotes.map(x=>x.id===n.id?{...x,status:'posted',journalId:journal.id,postedAt:now,updatedAt:now}:x);await persist();renderDebitNotes();renderJournals();renderDashboard();renderTrialBalance();resetDebitNoteForm();toast('Nota Debet diposting dan jurnal '+n.number+' dibuat.')}
-async function cancelDebitNote(id){const n=state.debitNotes.find(x=>x.id===id);if(!n||n.status!=='draft')return;const reason=prompt('Alasan pembatalan Nota Debet '+n.number+':');if(reason===null)return;if(!reason.trim()){toast('Alasan pembatalan wajib diisi.');return}n.status='cancelled';n.cancelReason=reason.trim();n.cancelledAt=new Date().toISOString();await persist();renderDebitNotes();toast('Nota Debet dibatalkan.')}
+async function cancelDebitNote(id){const n=state.debitNotes.find(x=>x.id===id);if(!n||n.status!=='draft')return;if(n.journalId){toast('Nota Debet sudah terhubung ke jurnal. Gunakan prosedur koreksi jurnal, bukan pembatalan Draft.');return}if(!periodGuard(String(n.date||'').slice(0,7),'membatalkan Nota Debet Draft'))return;const reason=prompt('Alasan pembatalan Nota Debet '+n.number+':');if(reason===null)return;if(!reason.trim()){toast('Alasan pembatalan wajib diisi.');return}const current=state.debitNotes.find(x=>x.id===id);if(!current||current.status!=='draft'||current.journalId||!periodGuard(String(current.date||'').slice(0,7),'membatalkan Nota Debet Draft')){toast('Nota Debet berubah atau periode terkunci. Pembatalan dibatalkan.');return}current.status='cancelled';current.cancelReason=reason.trim();current.cancelledAt=new Date().toISOString();await persist();renderDebitNotes();renderDashboard();toast('Nota Debet Draft dibatalkan. Tidak ada jurnal keuangan yang dibuat.')}
 function terbilangRupiah(value){
  const n=Math.floor(Math.abs(Number(value)||0)+0.5);
  if(n===0)return 'Nol rupiah';
@@ -508,7 +508,19 @@ function renderJournals(){
  document.querySelectorAll('.edit-journal').forEach(b=>b.onclick=()=>editJournal(b.dataset.id));
  document.querySelectorAll('.detail-journal').forEach(b=>b.onclick=()=>{const row=document.querySelector('[data-detail="'+CSS.escape(b.dataset.id)+'"]');if(row){row.hidden=!row.hidden;b.textContent=row.hidden?'⌄':'⌃'}});
  document.querySelectorAll('.delete-journal').forEach(b=>b.onclick=async()=>{const j=state.journals.find(x=>x.id===b.dataset.id);if(!j||j.status!=='draft')return;if(!periodGuard(String(j.date||'').slice(0,7),'menghapus Draft'))return;if(confirm('Hapus Draft '+j.number+'?')){state.journals=state.journals.filter(x=>x.id!==b.dataset.id);await persist();renderJournals();renderDashboard();toast('Draft dihapus.')}});
- document.querySelectorAll('.reverse-journal').forEach(b=>b.onclick=async()=>{const j=state.journals.find(x=>x.id===b.dataset.id);if(!j||j.status!=='posted'||j.reversedBy)return;const number=prompt('Nomor bukti jurnal pembalik:',j.number+'-K');if(!number)return;if(state.journals.some(x=>String(x.number).trim()===number.trim())){alert('Nomor bukti sudah digunakan.');return}const date=prompt('Tanggal jurnal pembalik (YYYY-MM-DD):',new Date().toISOString().slice(0,10));if(date===null||!isValidCalendarDate(date)){alert('Tanggal tidak valid. Periksa tanggal, bulan, dan tahun.');return}if(!periodGuard(date.slice(0,7),'membuat jurnal pembalik'))return;warnActivePeriodMismatch(date,'jurnal pembalik');const reversal={id:crypto.randomUUID(),date,number:number.trim(),description:'Pembalikan atas '+j.number+' — '+j.description,lines:(j.lines||[]).map(l=>({...l,debit:Number(l.credit||0),credit:Number(l.debit||0)})),status:'posted',reversalOf:j.id,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};j.reversedBy=reversal.id;state.journals.push(reversal);await persist();renderJournals();renderDashboard();renderTrialBalance();toast('Jurnal pembalik berhasil diposting.');});
+ document.querySelectorAll('.reverse-journal').forEach(b=>b.onclick=async()=>{
+ const sourceId=b.dataset.id,source=state.journals.find(x=>x.id===sourceId);if(!source||!isPostedJournal(source)||source.reversedBy||source.reversalOf||source.splitInto?.length)return;
+ const number=prompt('Nomor bukti jurnal pembalik:',source.number+'-K');if(number===null||!number.trim())return;
+ const cleanNumber=number.trim(),numberKey=cleanNumber.toLowerCase();if(state.journals.some(x=>String(x.number||'').trim().toLowerCase()===numberKey)){alert('Nomor bukti sudah digunakan.');return}
+ const date=prompt('Tanggal jurnal pembalik (YYYY-MM-DD):',new Date().toISOString().slice(0,10));if(date===null||!isValidCalendarDate(date)){alert('Tanggal tidak valid. Periksa tanggal, bulan, dan tahun.');return}
+ if(!periodGuard(date.slice(0,7),'membuat jurnal pembalik'))return;
+ const current=state.journals.find(x=>x.id===sourceId);if(!current||!isPostedJournal(current)||current.reversedBy||current.reversalOf||current.splitInto?.length){toast('Jurnal sumber berubah atau sudah dikoreksi. Muat ulang daftar jurnal.');renderJournals();return}
+ if(state.journals.some(x=>String(x.number||'').trim().toLowerCase()===numberKey)){alert('Nomor bukti sudah digunakan.');return}
+ const lines=Array.isArray(current.lines)?current.lines:[];let debit=0,credit=0;
+ if(lines.length<2||lines.some(l=>{const d=Number(l.debit),c=Number(l.credit);if(!String(l.code||'').trim()||!state.accounts.some(a=>String(a.code)===String(l.code))||!Number.isFinite(d)||!Number.isFinite(c)||d<0||c<0||((d>0)===(c>0)))return true;debit+=d;credit+=c;return false})||Math.abs(debit-credit)>.005){toast('Jurnal sumber tidak memenuhi validasi struktur dan keseimbangan. Pembalikan dibatalkan.');return}
+ warnActivePeriodMismatch(date,'jurnal pembalik');const now=new Date().toISOString(),reversal={id:crypto.randomUUID(),date,number:cleanNumber,description:'Pembalikan atas '+current.number+' — '+current.description,lines:lines.map(l=>({...l,debit:Number(l.credit),credit:Number(l.debit)})),status:'posted',reversalOf:current.id,createdAt:now,updatedAt:now,postedAt:now};
+ current.reversedBy=reversal.id;state.journals.push(reversal);await persist();renderJournals();renderDashboard();renderTrialBalance();toast('Jurnal pembalik berhasil diposting.');
+});
  document.querySelectorAll('.split-journal').forEach(b=>b.onclick=()=>openJournalSplit(b.dataset.id));
 }
 
@@ -628,12 +640,13 @@ function previewBulkPosting(){
 $('bulk-post-mode').addEventListener('change',updateBulkPostMode);
 $('bulk-post-preview').addEventListener('click',previewBulkPosting);
 $('bulk-post-confirm').addEventListener('click',async()=>{
- const ids=new Set(bulkPostCandidates.map(j=>j.id));if(!ids.size)return;if(bulkPostCandidates.some(j=>isPeriodLocked(String(j.date||'').slice(0,7)))){toast('Posting diblokir: ada Draft dari periode yang sudah ditutup.');return}
- const count=ids.size;
- if(!confirm('Konfirmasi posting '+count+' jurnal Draft yang sudah lolos validasi? Jurnal yang tidak valid tetap menjadi Draft.'))return;
- const now=new Date().toISOString();
- state.journals.forEach(j=>{if(ids.has(j.id)){j.status='posted';j.updatedAt=now;j.postedAt=now}});
- await persist();bulkPostCandidates=[];$('bulk-post-confirm').disabled=true;$('bulk-post-result').innerHTML='<p class="balance-ok"><b>'+count+' jurnal berhasil diposting.</b> Draft yang tidak lolos validasi tetap berstatus Draft.</p>';$('bulk-post-result').hidden=false;
+ const ids=[...new Set(bulkPostCandidates.map(j=>String(j.id||'')).filter(Boolean))];if(!ids.length)return;
+ const recheck=()=>{const rows=ids.map(id=>state.journals.find(j=>String(j.id)===id));if(rows.some(j=>!j||j.status!=='draft'))return {error:'Daftar Draft berubah sejak pratinjau. Periksa ulang sebelum posting.'};if(new Set(rows.map(j=>String(j.number||'').trim().toLowerCase())).size!==rows.length)return {error:'Ada nomor bukti duplikat di antara Draft terpilih.'};for(const j of rows){if(!String(j.number||'').trim())return {error:'Ada Draft tanpa nomor bukti.'};if(state.journals.some(x=>x.id!==j.id&&String(x.number||'').trim().toLowerCase()===String(j.number||'').trim().toLowerCase()))return {error:'Nomor bukti '+j.number+' sudah digunakan.'};if(!isValidCalendarDate(String(j.date||'')))return {error:'Tanggal jurnal '+j.number+' tidak valid.'};if(isPeriodLocked(String(j.date||'').slice(0,7)))return {error:'Posting diblokir: periode '+String(j.date||'').slice(0,7)+' sudah ditutup.'};const reason=validateBulkPostJournal(j);if(reason)return {error:'Draft '+j.number+' tidak lagi valid: '+reason}}return {rows}};
+ let checked=recheck();if(checked.error){toast(checked.error);previewBulkPosting();return}
+ const count=checked.rows.length;if(!confirm('Konfirmasi posting '+count+' jurnal Draft yang sudah lolos validasi ulang?'))return;
+ checked=recheck();if(checked.error){toast(checked.error);previewBulkPosting();return}
+ const now=new Date().toISOString();checked.rows.forEach(j=>{j.status='posted';j.updatedAt=now;j.postedAt=now});
+ await persist();bulkPostCandidates=[];$('bulk-post-confirm').disabled=true;$('bulk-post-result').innerHTML='<p class="balance-ok"><b>'+count+' jurnal berhasil diposting.</b> Semua Draft divalidasi ulang tepat sebelum penyimpanan.</p>';$('bulk-post-result').hidden=false;
  renderJournals();renderDashboard();renderTrialBalance();toast(count+' jurnal berhasil diposting secara kolektif.');
 });
 $('journal-search').addEventListener('input',()=>{journalPage=0;renderJournals()});
@@ -1192,8 +1205,19 @@ async function closeAccountingPeriod(){
  if(password!=='PKS123'){setMessage('period-message','Password salah. Periode tidak ditutup.','bad');return}
  const backupResult=await createVerifiedPeriodCloseBackup(p);
  if(!backupResult.ok){setMessage('period-message','Penutupan dibatalkan: backup belum berhasil diverifikasi. '+backupResult.error,'bad');return}
+ if(isPeriodLocked(p)){setMessage('period-message','Penutupan dibatalkan: status periode berubah selama proses backup.','bad');return}
+ const latest=periodTotals(p),latestBlockers=[];
+ if(latest.drafts)latestBlockers.push(latest.drafts+' jurnal Draft');
+ if(latest.noteDrafts)latestBlockers.push(latest.noteDrafts+' Nota Debet Draft');
+ if(Math.abs(latest.difference)>=0.005)latestBlockers.push('Neraca Percobaan tidak seimbang ('+money(latest.difference)+')');
+ if(latest.unbalancedJournals)latestBlockers.push(latest.unbalancedJournals+' jurnal Posted tidak seimbang');
+ if(latest.missingAccounts)latestBlockers.push(latest.missingAccounts+' referensi akun tidak ditemukan');
+ if(latest.invalidJournals)latestBlockers.push(latest.invalidJournals+' struktur jurnal Posted tidak valid');
+ if(latest.duplicateOpenings)latestBlockers.push(latest.duplicateOpenings+' saldo awal duplikat');
+ if(latest.invalidOpenings)latestBlockers.push(latest.invalidOpenings+' saldo awal tidak valid');
+ if(latestBlockers.length){setMessage('period-message','Penutupan dibatalkan karena data berubah saat backup: '+latestBlockers.join('; ')+'. Periksa ulang periode.','bad');return}
  const now=new Date().toISOString();
- state.periodControl.periods[p]={status:'closed',closedAt:now,closedBy:'Administrator lokal',note:note||'Tutup buku bulanan',totals:{debit:t.debit,credit:t.credit,difference:t.difference,journals:t.posted,openingRecords:t.openings,noteDrafts:t.noteDrafts},backup:backupResult.meta};
+ state.periodControl.periods[p]={status:'closed',closedAt:now,closedBy:'Administrator lokal',note:note||'Tutup buku bulanan',totals:{debit:latest.debit,credit:latest.credit,difference:latest.difference,journals:latest.posted,openingRecords:latest.openings,noteDrafts:latest.noteDrafts},backup:backupResult.meta};
  state.auditLogs.unshift({id:crypto.randomUUID(),at:now,action:'TUTUP PERIODE',entity:'Periode Akuntansi',entityId:p,summary:'Tutup buku '+p+'; jurnal posted '+t.posted+'; backup terverifikasi '+backupResult.meta.fileName,before:{status:'open'},after:auditClone(state.periodControl.periods[p])});
  if(state.periodControl.activePeriod===p){let next=new Date(Number(p.slice(0,4)),Number(p.slice(5,7)),1),candidate='';for(let i=0;i<24;i++){candidate=next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0');if(!isPeriodLocked(candidate))break;next.setMonth(next.getMonth()+1)}state.periodControl.activePeriod=candidate||currentMonthKey()}
  syncActivePeriodViews(state.periodControl.activePeriod);
@@ -1207,6 +1231,7 @@ async function closeAccountingPeriod(){
  setMessage('period-message','Periode '+periodLabel(p)+' berhasil ditutup dan dikunci. Periode aktif otomatis berpindah ke '+periodLabel(state.periodControl.activePeriod)+'. Backup sebelum penutupan telah diverifikasi.','good');
 }
 async function reopenAccountingPeriod(p){
+ if(!isPeriodLocked(p)){toast('Periode tersebut sudah terbuka.');return}
  const reason=prompt('Alasan pembukaan kembali periode '+p+':');
  if(reason===null)return;
  if(!reason.trim()){toast('Alasan wajib diisi.');return}
@@ -1216,7 +1241,7 @@ async function reopenAccountingPeriod(p){
  const old=periodRecord(p),now=new Date().toISOString();
  state.periodControl.periods[p]={...old,status:'open',reopenedAt:now,reopenReason:reason.trim()};
  state.auditLogs.unshift({id:crypto.randomUUID(),at:now,action:'BUKA KEMBALI PERIODE',entity:'Periode Akuntansi',entityId:p,summary:'Periode '+p+' dibuka kembali. Alasan: '+reason.trim(),before:auditClone(old),after:auditClone(state.periodControl.periods[p])});
- await persist();renderPeriodControl();setMessage('period-message','Periode '+periodLabel(p)+' dibuka kembali. Aktivitas ini tercatat di Riwayat Aktivitas.','good');
+ await persist();renderPeriodControl();renderDashboard();renderJournals();renderDebitNotes();renderTrialBalance();renderLedger();renderOpeningBalances();renderAnnualBudgets();setMessage('period-message','Periode '+periodLabel(p)+' dibuka kembali. Semua tampilan terkait periode telah disegarkan dan aktivitas tercatat di Riwayat Aktivitas.','good');
 }
 $('period-set-active').addEventListener('click',setActivePeriod);
 $('dash-period-picker').addEventListener('change',()=>{const p=$('dash-period-picker').value;$('period-active').value=p;setActivePeriod(p)});
@@ -1337,7 +1362,8 @@ function confirmJournalPrint(){
  const status=$('jprint-status').value,account=$('jprint-account').value,q=$('jprint-search').value.trim().toLowerCase(),sort=$('jprint-sort').value;
  const items=state.journals.filter(j=>{const date=String(j.date||'').slice(0,10);if(from&&(!date||date<from||date>to))return false;if(status!=='all'&&journalPrintStatus(j)!==status)return false;if(account!=='all'&&!(j.lines||[]).some(l=>String(l.code||l.accountCode||'')===account))return false;const hay=(j.number+' '+j.description+' '+date+' '+(j.lines||[]).map(l=>(l.note||'')+' '+(l.code||'')).join(' ')).toLowerCase();return !q||hay.includes(q)}).sort((a,b)=>sort==='asc'?String(a.date||'').localeCompare(String(b.date||'')):String(b.date||'').localeCompare(String(a.date||'')));
  if(!items.length)return toast('Tidak ada jurnal yang cocok dengan pengaturan cetak.');
- const d=items.reduce((n,j)=>n+(j.lines||[]).reduce((v,l)=>v+Number(l.debit||0),0),0),c=items.reduce((n,j)=>n+(j.lines||[]).reduce((v,l)=>v+Number(l.credit||0),0),0);
+ const postedItems=items.filter(j=>journalPrintStatus(j)==='posted'),draftCount=items.filter(j=>journalPrintStatus(j)==='draft').length,cancelledCount=items.filter(j=>journalPrintStatus(j)==='cancelled').length;
+ const d=postedItems.reduce((n,j)=>n+(j.lines||[]).reduce((v,l)=>v+Number(l.debit||0),0),0),c=postedItems.reduce((n,j)=>n+(j.lines||[]).reduce((v,l)=>v+Number(l.credit||0),0),0);
  const statusLabel={all:'Semua status',posted:'Posted',draft:'Draft',cancelled:'Dibatalkan',unknown:'Status tidak dikenal/kosong'}[status],accountLabel=account==='all'?'Semua akun':account;
  const allDates=state.journals.map(j=>String(j.date||'').slice(0,10)).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)).sort();
  const firstMonth=(from||allDates[0]||new Date().toISOString().slice(0,10)).slice(0,7),monthStart=firstMonth+'-01',balanceStartDate=from||monthStart;
