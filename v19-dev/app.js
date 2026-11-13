@@ -286,7 +286,7 @@ function renderDashboardCharts(period){
 function renderDashboard(){
  ensurePeriodControl();
  const period=state.periodControl.activePeriod,totals=periodTotals(period),periodRec=periodRecord(period),closed=periodRec.status==='closed';
- $('dash-period-label').textContent=periodLabel(period);
+ $('dash-period-label').value=period;
  $('dash-period-state').textContent=closed?'Periode ditutup':'Periode terbuka · transaksi dapat dicatat';
  $('stat-debit').textContent=money(totals.journalDebit);
  $('stat-credit').textContent=money(totals.journalCredit);
@@ -1112,16 +1112,19 @@ function renderPeriodControl(){
  document.querySelectorAll('.period-activate').forEach(b=>b.onclick=()=>{$('period-active').value=b.dataset.period;setActivePeriod()});
  document.querySelectorAll('.period-reopen').forEach(b=>b.onclick=()=>reopenAccountingPeriod(b.dataset.period));
 }
-async function setActivePeriod(){
- const p=$('period-active').value;
- if(!isValidPeriodKey(p)){toast('Pilih periode kerja yang benar (bulan 01–12, tahun 1900–2200).');return}
- if(isPeriodLocked(p)){toast('Periode '+p+' sudah ditutup. Buka kembali terlebih dahulu.');return}
+async function setActivePeriod(periodOverride){
+ const p=periodOverride||$('period-active').value;
+ if(!isValidPeriodKey(p)){toast('Pilih periode kerja yang benar (bulan 01–12, tahun 1900–2200).');renderDashboard();return}
+ if(isPeriodLocked(p)){toast('Periode '+periodLabel(p)+' sudah ditutup. Buka kembali terlebih dahulu sebelum menjadikannya periode kerja aktif.');renderDashboard();return}
  state.periodControl.activePeriod=p;
+ $('period-active').value=p;
+ if($('dash-period-picker'))$('dash-period-picker').value=p;
+ for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=p;
+ if(!editingId&&$('j-date'))$('j-date').value=p+'-01';
  await persist();
- for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=p;if(!editingId&&$('j-date'))$('j-date').value=p+'-01';
  renderPeriodControl();
  renderDashboard();
- toast('Periode aktif disinkronkan ke Dashboard, Buku Besar, Neraca Percobaan, dan Saldo Awal: '+periodLabel(p)+'.');
+ toast('Periode aktif disinkronkan ke Dashboard, Buku Besar, Neraca Percobaan, Saldo Awal, dan tanggal awal input jurnal: '+periodLabel(p)+'.');
 }
 async function createVerifiedPeriodCloseBackup(period){
  if(!backupDirectoryHandle)return {ok:false,error:'Folder backup belum terhubung. Hubungkan folder backup terlebih dahulu agar file dapat ditulis dan diverifikasi.'};
