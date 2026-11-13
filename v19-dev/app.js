@@ -1081,7 +1081,8 @@ async function setActivePeriod(){
  await persist();
  for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=p;if(!editingId&&$('j-date'))$('j-date').value=p+'-01';
  renderPeriodControl();
- toast('Periode aktif disinkronkan ke Buku Besar, Neraca Percobaan, dan Saldo Awal: '+periodLabel(p)+'.');
+ renderDashboard();
+ toast('Periode aktif disinkronkan ke Dashboard, Buku Besar, Neraca Percobaan, dan Saldo Awal: '+periodLabel(p)+'.');
 }
 async function createVerifiedPeriodCloseBackup(period){
  if(!backupDirectoryHandle)return {ok:false,error:'Folder backup belum terhubung. Hubungkan folder backup terlebih dahulu agar file dapat ditulis dan diverifikasi.'};
