@@ -537,7 +537,8 @@ async function saveJournal(targetStatus){
  const old=state.journals.find(j=>j.id===editingId);
  if(old&&!periodGuard(String(old.date||'').slice(0,7),'mengubah jurnal lama'))return;
   if(old&&old.status!=='draft'){setMessage('journal-message','Jurnal terposting tidak dapat diedit. Buat jurnal koreksi/pembalik.','bad');return}
- const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:rows,status:targetStatus,attachments:pendingJournalAttachments.map(f=>({...f})),updatedAt:now,...(targetStatus==='posted'?{postedAt:now}:{})};
+ const persistedRows=rows.map(({code,note,debit,credit})=>({code,note,debit,credit}));
+ const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:persistedRows,status:targetStatus,attachments:pendingJournalAttachments.map(f=>({...f})),updatedAt:now,...(targetStatus==='posted'?{postedAt:now}:{})};
  if(!old)item.createdAt=now;
  if(old)state.journals=state.journals.map(j=>j.id===editingId?item:j);else state.journals.push(item);
  await persist();toast(targetStatus==='posted'?'Jurnal berhasil diposting.':'Draft jurnal berhasil disimpan.');resetJournalForm();go('journal-list');renderDashboard();
