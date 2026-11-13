@@ -231,7 +231,7 @@ function go(page){
  const labels={'company-identity':'Identitas Perusahaan','annual-budget':'Anggaran Tahunan','import-center':'Pusat Import Data','journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program','debit-notes':'Nota Debet',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Laporan',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data','print-settings':'Pengaturan Cetak'};
  $('page-title').textContent=labels[page]||page;
  if(page==='periods')renderPeriodControl();if(page==='company-identity')renderCompanyIdentity();if(page==='annual-budget')renderAnnualBudgets();
- if(page==='dashboard')renderDashboard();
+ if(page==='dashboard')renderDashboard();if(page==='journal-list')renderJournals();
  if(page==='journal-list')renderJournals();
  if(page==='debit-notes')renderDebitNotes();
  if(page==='accounts')renderAccounts();
@@ -496,7 +496,9 @@ function journalTable(items,actions=true,summaryItems=items){
 }
 function renderJournals(){
  const q=($('journal-search').value||'').toLowerCase().trim(),status=$('journal-status-filter')?.value||'all',size=Number($('journal-page-size')?.value||10);
- const items=state.journals.filter(j=>(j.number+' '+j.description+' '+(j.date||'')).toLowerCase().includes(q)&&(status==='all'||(status==='draft'?j.status==='draft':j.status!=='draft'))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ const scope=$('journal-period-scope')?.value||'active',activePeriod=state.periodControl?.activePeriod||currentMonthKey();
+ const items=state.journals.filter(j=>(scope==='all'||String(j.date||'').slice(0,7)===activePeriod)&&(j.number+' '+j.description+' '+(j.date||'')).toLowerCase().includes(q)&&(status==='all'||(status==='draft'?j.status==='draft':j.status!=='draft'))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ const scopeLabel=$('journal-period-label');if(scopeLabel)scopeLabel.textContent=scope==='all'?'Semua periode':'Periode aktif: '+periodLabel(activePeriod);
  const pages=Math.max(1,Math.ceil(items.length/size));journalPage=Math.min(journalPage,pages-1);
  const shown=items.slice(journalPage*size,(journalPage+1)*size);
  $('journal-table').innerHTML=shown.length?journalTable(shown,true,items):'<div class="empty">Tidak ada jurnal yang cocok.</div>';
@@ -634,7 +636,8 @@ $('bulk-post-confirm').addEventListener('click',async()=>{
  await persist();bulkPostCandidates=[];$('bulk-post-confirm').disabled=true;$('bulk-post-result').innerHTML='<p class="balance-ok"><b>'+count+' jurnal berhasil diposting.</b> Draft yang tidak lolos validasi tetap berstatus Draft.</p>';$('bulk-post-result').hidden=false;
  renderJournals();renderDashboard();renderTrialBalance();toast(count+' jurnal berhasil diposting secara kolektif.');
 });
-$('journal-search').addEventListener('input',()=>{journalPage=0;renderJournals()});$('journal-status-filter').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-page-size').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-prev').onclick=()=>{journalPage=Math.max(0,journalPage-1);renderJournals()};$('journal-next').onclick=()=>{journalPage++;renderJournals()};$('export-journals-xlsx').onclick=exportJournalsXlsx;
+$('journal-search').addEventListener('input',()=>{journalPage=0;renderJournals()});
+$('journal-period-scope').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-status-filter').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-page-size').addEventListener('change',()=>{journalPage=0;renderJournals()});$('journal-prev').onclick=()=>{journalPage=Math.max(0,journalPage-1);renderJournals()};$('journal-next').onclick=()=>{journalPage++;renderJournals()};$('export-journals-xlsx').onclick=exportJournalsXlsx;
 
 function syncNptransSandis(){const map=new Map(state.accounts.map(a=>[String(a.code),a]));let added=0;for(const row of state.nptrans){const code=String(row.sandi||'').trim();if(code&&!map.has(code)){map.set(code,{code,name:''});added++}}if(added)state.accounts=[...map.values()];return added}
 function renderAccounts(){const q=($('account-search')?.value||'').trim().toLowerCase(),items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));$('account-count').textContent=state.accounts.length.toLocaleString('id-ID')+' AKUN';$('account-rows').innerHTML=items.length?items.map((a,index)=>'<tr><td>'+(index+1)+'</td><td><b>'+esc(a.code)+'</b></td><td>'+esc(a.name)+'</td><td><button class="btn edit-account" data-code="'+esc(a.code)+'">Edit</button> <button class="icon-btn delete-account" data-code="'+esc(a.code)+'">Hapus</button></td></tr>').join(''):'<tr><td colspan="4" class="empty">Tidak ada akun yang cocok.</td></tr>';document.querySelectorAll('.edit-account').forEach(b=>b.onclick=()=>editAccount(b.dataset.code));document.querySelectorAll('.delete-account').forEach(b=>b.onclick=async()=>{const code=b.dataset.code,usedOpening=(state.openingBalances||[]).some(x=>x.accountCode===code),usedJournal=state.journals.some(j=>(j.lines||[]).some(l=>l.code===code)),usedNp=state.nptrans.some(r=>r.sandi===code);if(usedOpening){toast('Akun tidak dapat dihapus karena masih memiliki saldo awal. Hapus saldo awal terkait terlebih dahulu.');return}const warning=usedJournal||usedNp?'\n\nKode ini masih dipakai pada transaksi. Jika dihapus, data tetap ada tetapi akun menjadi tidak cocok.':'';if(confirm('Hapus akun '+code+'?'+warning)){state.accounts=state.accounts.filter(x=>x.code!==code);if(editingAccountCode===code)resetAccountForm();await persist();renderAccounts();renderNptrans();toast('Akun dihapus.')}})}
@@ -1143,6 +1146,7 @@ async function setActivePeriod(periodOverride){
  await persist();
  renderPeriodControl();
  renderDashboard();
+ if($('page-journal-list')?.classList.contains('active')){journalPage=0;renderJournals()}
  toast('Periode aktif disinkronkan ke Dashboard, Buku Besar, Neraca Percobaan, Saldo Awal, dan tanggal awal input jurnal: '+periodLabel(p)+'.');
 }
 async function createVerifiedPeriodCloseBackup(period){
