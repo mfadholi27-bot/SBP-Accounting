@@ -1749,7 +1749,7 @@ function runDataValidation(){
  for(const [period,t] of openingTotals)if(Math.abs(t.debit-t.credit)>.005)add('GAGAL','Keseimbangan Saldo Awal',period,'Total debit '+money(t.debit)+' tidak sama dengan kredit '+money(t.credit)+'.','Rekonsiliasi saldo awal berdasarkan neraca saldo pembukaan yang disetujui.');
  // Rekonsiliasi lintas periode: bandingkan saldo akhir bulan sebelumnya dengan saldo awal bulan berikutnya.
  // Hanya pasangan bulan berurutan yang sama-sama memiliki snapshot Saldo Awal; pemeriksaan ini read-only.
- const openingPeriods=new Set(openings.map(o=>String(o.period||'')).filter(p=>/^\\d{4}-(0[1-9]|1[0-2])$/.test(p)));
+ const openingPeriods=new Set(openings.map(o=>String(o.period||'')).filter(p=>/^\d{4}-(0[1-9]|1[0-2])$/.test(p)));
  const nextPeriod=period=>{const [y,m]=period.split('-').map(Number);return m===12?String(y+1)+'-01':String(y)+'-'+String(m+1).padStart(2,'0')};
  const openingByPeriod=new Map();
  openings.forEach(o=>{const p=String(o.period||''),code=String(o.accountCode??'').trim();if(!openingPeriods.has(p)||!code)return;const map=openingByPeriod.get(p)||new Map(),v=map.get(code)||{net:0,count:0};v.net+=Number(o.debit||0)-Number(o.credit||0);v.count++;map.set(code,v);openingByPeriod.set(p,map)});
