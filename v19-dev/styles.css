@@ -333,3 +333,62 @@ input,select,textarea{max-width:100%}
 .print-settings-options input{width:17px;height:17px;accent-color:var(--green)}
 .print-settings-actions{justify-content:flex-end;flex-wrap:wrap}
 @media(max-width:760px){.print-settings-grid{grid-template-columns:1fr 1fr}.print-settings-options{grid-template-columns:1fr}}
+
+
+/* BUILD 030 — synchronized professional accounting dashboard */
+.dashboard-welcome{align-items:center;gap:24px;min-height:142px}
+.dashboard-welcome>div:first-child{min-width:0}
+.dashboard-welcome h2{margin:7px 0 5px}
+.dashboard-welcome p{margin:0;color:#d5eee1;font-size:12px;line-height:1.5}
+.dashboard-period-box{position:relative;z-index:2;display:flex;flex-direction:column;gap:5px;min-width:230px;padding:14px 17px;border:1px solid #ffffff35;border-radius:13px;background:#ffffff13;backdrop-filter:blur(8px)}
+.dashboard-period-box span{font-size:9px;letter-spacing:.9px;font-weight:800;color:#ccebdd}
+.dashboard-period-box b{font-size:18px;line-height:1.25;color:#fff}
+.dashboard-period-box small{font-size:11px;color:#e0f2e8}
+.dashboard-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:16px 0}
+.dashboard-stat{min-width:0;padding:18px}
+.dashboard-stat strong{font-size:clamp(17px,1.65vw,25px);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.dashboard-main-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:15px;align-items:stretch;margin:0 0 18px}
+.dashboard-main-grid>.panel{min-width:0;margin:0}
+.dashboard-control-panel,.dashboard-status-panel{padding:19px}
+.dashboard-control-panel .panel-head,.dashboard-status-panel .panel-head{align-items:center;flex-direction:row}
+.dashboard-integrity-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dashboard-integrity-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 10px;min-width:0;padding:11px 12px;border:1px solid #e6eee8;border-radius:10px;background:#fbfdfb;text-align:left;color:var(--ink)}
+button.dashboard-integrity-item{cursor:pointer}
+button.dashboard-integrity-item:hover{border-color:#b9dfc8;background:#f4faf6}
+.dashboard-integrity-item>span{font-size:11px;font-weight:650;line-height:1.35;overflow-wrap:anywhere}
+.dashboard-integrity-item>b{font-size:15px;font-variant-numeric:tabular-nums}
+.dashboard-integrity-item>small{grid-column:1/-1;color:var(--muted);font-size:10px}
+.dashboard-balance-item{background:#f6faf7}
+.dashboard-clear{color:#16845b!important}.dashboard-issue{color:#b45309!important}.dashboard-neutral{color:#315b46!important}
+.dashboard-panel-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px;padding-top:12px;border-top:1px solid #edf2ee}
+.dashboard-panel-foot>span{font-size:10px;color:var(--muted);line-height:1.45}
+.dashboard-status-list{display:flex;flex-direction:column;gap:0}
+.dashboard-status-list>div{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #edf2ee}
+.dashboard-status-list>div:first-child{padding-top:2px}
+.dashboard-status-list>div>span{font-size:11px;color:var(--muted)}
+.dashboard-status-list>div>b{font-size:11px;text-align:right;overflow-wrap:anywhere}
+.dashboard-backup-action{width:100%;margin-top:15px}
+.dashboard-quick-grid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:17px}
+.dashboard-quick-grid .quick-card{min-width:0}
+.dashboard-recent-panel{min-width:0}
+.dashboard-recent-table{min-width:0}
+.dashboard-recent-list{min-width:820px;table-layout:auto}
+.dashboard-recent-list td{vertical-align:middle}
+.dashboard-recent-desc{max-width:330px;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:1100px){
+ .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dashboard-main-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:720px){
+ .dashboard-welcome{align-items:stretch;flex-direction:column;padding:19px}
+ .dashboard-period-box{min-width:0}
+ .dashboard-stats{gap:9px}
+ .dashboard-stat{padding:13px}
+ .dashboard-main-grid{gap:10px}
+ .dashboard-integrity-list{grid-template-columns:minmax(0,1fr)}
+ .dashboard-control-panel .panel-head,.dashboard-status-panel .panel-head{align-items:flex-start;flex-direction:column}
+ .dashboard-panel-foot{align-items:flex-start;flex-direction:column}
+ .dashboard-panel-foot .btn{width:100%}
+ .dashboard-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dashboard-recent-panel{padding:14px}
+}
