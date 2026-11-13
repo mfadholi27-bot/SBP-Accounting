@@ -506,3 +506,16 @@ button.dashboard-integrity-item:hover{border-color:#b9dfc8;background:#f4faf6}
  #page-journal .journal-attachment-picker{grid-column:1/-1;max-width:420px}
  #page-journal>.panel>.form-grid{gap:10px}
 }
+
+
+/* Build 046 — signed amount input, scoped strictly to Input Jurnal Umum */
+#page-journal .entry-table{table-layout:fixed;min-width:900px}
+#page-journal .entry-table th:nth-child(1){width:18%!important}
+#page-journal .entry-table th:nth-child(2){width:12%!important}
+#page-journal .entry-table th:nth-child(3){width:30%!important}
+#page-journal .entry-table th:nth-child(4){width:33%!important}
+#page-journal .entry-table th:nth-child(5){width:7%!important}
+#page-journal .entry-table td:nth-child(4) input.line-amount{width:100%;height:46px;min-width:0;padding:0 14px;text-align:right;font-variant-numeric:tabular-nums}
+#page-journal .entry-table td:nth-child(4) input.line-amount::placeholder{font-size:11px;color:#9aaac0;text-align:left}
+#page-journal .entry-table td:nth-child(5){text-align:center}
+#page-journal .entry-table td:nth-child(5) .remove-line{margin:auto}
