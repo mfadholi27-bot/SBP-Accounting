@@ -1,4 +1,4 @@
-/* BUILD V87 — Active-period cross-month reconciliation */
+/* BUILD 047 — Dual-format mass journal import */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 const DB_NAME='sbp-accounting-v19', STORE='app', STATE_KEY='main';
@@ -473,12 +473,23 @@ function bulkDate(value){
 }
 function parseBulkJournalRows(rows){
  if(!rows.length)throw Error('File tidak memiliki data.');
- let hi=-1,cols={};
- const aliases={date:['TANGGAL','DATE'],number:['NOBUKTI','NOMORBUKTI','BUKTI'],desc:['KETERANGAN','URAIAN','DESKRIPSI'],code:['SANDI','KODE','KODEAKUN','ACCOUNTCODE'],note:['KETERANGANBARIS','CATATANBARIS','URAIANBARIS'],debit:['DEBIT','MUTASIDB'],credit:['KREDIT','MUTASIKR']};
- for(let i=0;i<Math.min(rows.length,30);i++){const h=rows[i].map(norm),f={};for(const [k,n] of Object.entries(aliases))f[k]=h.findIndex(x=>n.includes(x));if(f.date>=0&&f.number>=0&&f.code>=0&&f.debit>=0&&f.credit>=0){hi=i;cols=f;break}}
- if(hi<0)throw Error('Header wajib tidak lengkap. Wajib ada TANGGAL, NOBUKTI, SANDI, DEBIT, dan KREDIT.');
- const parsed=[];rows.slice(hi+1).forEach((r,i)=>{if(!r.some(v=>String(v??'').trim()))return;parsed.push({date:bulkDate(r[cols.date]),number:String(r[cols.number]??'').trim(),description:String(cols.desc>=0?r[cols.desc]??'':'').trim(),code:String(r[cols.code]??'').trim(),note:String(cols.note>=0?r[cols.note]??'':'').trim(),debit:parseAmount(r[cols.debit]),credit:parseAmount(r[cols.credit]),row:hi+i+2})});
- if(!parsed.length)throw Error('Header ditemukan, tetapi tidak ada baris transaksi.');return parsed;
+ let hi=-1,cols={},format='';
+ const aliases={date:['TANGGAL','DATE'],number:['NOBUKTI','NOMORBUKTI','BUKTI'],desc:['KETERANGAN','URAIAN','DESKRIPSI'],code:['SANDI','KODE','KODEAKUN','ACCOUNTCODE'],note:['KETERANGANBARIS','CATATANBARIS','URAIANBARIS'],debit:['DEBIT','MUTASIDB'],credit:['KREDIT','MUTASIKR'],amount:['NOMINAL','JUMLAHNOMINAL','SIGNEDAMOUNT']};
+ for(let i=0;i<Math.min(rows.length,30);i++){
+  const h=rows[i].map(norm),f={};for(const [k,n] of Object.entries(aliases))f[k]=h.findIndex(x=>n.includes(x));
+  const hasDebit=f.debit>=0,hasCredit=f.credit>=0,hasAmount=f.amount>=0;
+  if(f.date>=0&&f.number>=0&&f.code>=0&&((hasDebit&&hasCredit&&!hasAmount)||(!hasDebit&&!hasCredit&&hasAmount))){hi=i;cols=f;format=hasAmount?'signed':'debit-credit';break}
+  if(f.date>=0&&f.number>=0&&f.code>=0&&(hasAmount&&(hasDebit||hasCredit)||hasDebit!==hasCredit))throw Error('Format kolom campuran atau tidak lengkap. Gunakan hanya DEBIT + KREDIT, atau hanya NOMINAL (+/−).');
+ }
+ if(hi<0)throw Error('Header wajib tidak lengkap. Wajib ada TANGGAL, NOBUKTI, SANDI, serta DEBIT dan KREDIT atau NOMINAL (+/−).');
+ const parsed=[];rows.slice(hi+1).forEach((r,i)=>{
+  if(!r.some(v=>String(v??'').trim()))return;
+  const signed=format==='signed'?parseAmount(r[cols.amount]):null;
+  parsed.push({date:bulkDate(r[cols.date]),number:String(r[cols.number]??'').trim(),description:String(cols.desc>=0?r[cols.desc]??'':'').trim(),code:String(r[cols.code]??'').trim(),note:String(cols.note>=0?r[cols.note]??'':'').trim(),debit:format==='signed'?Math.max(signed,0):parseAmount(r[cols.debit]),credit:format==='signed'?Math.max(-signed,0):parseAmount(r[cols.credit]),row:hi+i+2,sourceFormat:format});
+ });
+ if(!parsed.length)throw Error('Header ditemukan, tetapi tidak ada baris transaksi.');
+ if(parsed.some(r=>r.sourceFormat!==format))throw Error('Format nominal tidak konsisten.');
+ return parsed;
 }
 function validateBulkJournals(rows){
  const errors=[],warnings=[],groups=new Map(),known=new Set(state.accounts.map(a=>String(a.code)));
@@ -515,7 +526,8 @@ $('bulk-journal-file').onchange=e=>{const f=e.target.files?.[0];$('bulk-journal-
 $('bulk-journal-preview').onclick=async()=>{const f=$('bulk-journal-file').files?.[0];if(!f)return;try{let rows;if(/\.xlsx?$/i.test(f.name)){if(!window.XLSX)throw Error('Mesin Excel lokal belum siap.');const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:false});let found=null;for(const name of wb.SheetNames){const data=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:true});try{parseBulkJournalRows(data);found=data;break}catch{}}if(!found)throw Error('Format kolom jurnal tidak ditemukan pada sheet Excel.');rows=parseBulkJournalRows(found)}else rows=parseBulkJournalRows(parseCSV(await f.text()));showBulkPreview(rows)}catch(err){pendingBulkJournals=[];$('bulk-journal-review').hidden=true;setMessage('bulk-journal-message','Gagal membaca file: '+err.message,'bad')}};
 $('bulk-journal-save').onclick=async()=>{if(!pendingBulkJournals.length)return;if(pendingBulkJournals.some(j=>isPeriodLocked(String(j.date||'').slice(0,7)))){setMessage('bulk-journal-message','Import diblokir: file berisi tanggal pada periode yang sudah ditutup.','bad');return}if(!requireImportPassword('Import Jurnal Massal'))return;const otherPeriods=[...new Set(pendingBulkJournals.map(j=>String(j.date||'').slice(0,7)).filter(p=>p!==state.periodControl.activePeriod))];if(otherPeriods.length&&!confirm('File memuat transaksi di luar periode aktif ('+periodLabel(state.periodControl.activePeriod)+'): '+otherPeriods.map(periodLabel).join(', ')+'. Periode tujuan tetap harus terbuka. Lanjutkan import?'))return;const existing=new Set(state.journals.map(j=>j.number));if(pendingBulkJournals.some(j=>existing.has(j.number))){setMessage('bulk-journal-message','Ada nomor bukti yang sudah tersimpan. Periksa kembali file.','bad');return}try{state.journals.push(...pendingBulkJournals);await persist();const count=pendingBulkJournals.length;pendingBulkJournals=[];$('bulk-journal-review').hidden=true;$('bulk-journal-file').value='';$('bulk-journal-file-name').textContent='Belum ada file dipilih.';$('bulk-journal-preview').disabled=true;renderDashboard();renderJournals();setMessage('bulk-journal-message',count+' jurnal berhasil disimpan dan siap dilihat di Daftar Jurnal.','good');toast(count+' jurnal massal berhasil disimpan.');go('journal-list');const toggle=document.querySelector('[data-target="journal-list-content"]');if(toggle&&$('journal-list-content').hidden)toggle.click()}catch(err){setMessage('bulk-journal-message','Penyimpanan gagal: '+err.message,'bad')}};
 $('bulk-journal-cancel').onclick=()=>{$('bulk-journal-review').hidden=true;pendingBulkJournals=[]};
-$('bulk-journal-template').onclick=()=>exportXlsxSheet('Format-Import-Jurnal-Massal-SBP.xlsx','Input Jurnal',[['TANGGAL','NOBUKTI','KETERANGAN','STATUS','SANDI','KETERANGAN BARIS','DEBIT','KREDIT'],['2026-10-01','JU/001/2026','Contoh transaksi','POSTED','111.100','Kas bertambah',100000,0],['2026-10-01','JU/001/2026','Contoh transaksi','POSTED','311.100','Modal disetor',0,100000]]);
+$('bulk-journal-template').onclick=()=>exportXlsxSheet('Format-Import-Jurnal-Massal-Debit-Kredit-SBP.xlsx','Input Jurnal',[['TANGGAL','NOBUKTI','KETERANGAN','STATUS','SANDI','KETERANGAN BARIS','DEBIT','KREDIT'],['2026-10-01','JU/001/2026','Contoh transaksi','DRAFT','111.100','Kas bertambah',100000,0],['2026-10-01','JU/001/2026','Contoh transaksi','DRAFT','311.100','Modal disetor',0,100000]]);
+$('bulk-journal-template-signed').onclick=()=>exportXlsxSheet('Format-Import-Jurnal-Massal-Nominal-SBP.xlsx','Input Jurnal',[['TANGGAL','NOBUKTI','KETERANGAN','SANDI','KETERANGAN BARIS','NOMINAL (+/-)'],['2026-10-01','JU/001/2026','Contoh transaksi','111.100','Kas bertambah',100000],['2026-10-01','JU/001/2026','Contoh transaksi','311.100','Modal disetor',-100000]]);
 
 $('add-line').onclick=()=>addJournalLine();$('clear-journal').onclick=resetJournalForm;
 async function saveJournal(targetStatus){
