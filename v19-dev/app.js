@@ -1,4 +1,4 @@
-/* BUILD V85 — Debit Note module and linked journal workflow */
+/* BUILD V86 — Cross-period opening-to-closing reconciliation */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 const DB_NAME='sbp-accounting-v19', STORE='app', STATE_KEY='main';
@@ -1747,6 +1747,28 @@ function runDataValidation(){
  });
  for(const [key,count] of openingKeys)if(count>1)add('PERINGATAN','Saldo Awal',key,'Terdapat '+count+' baris saldo awal untuk akun dan periode yang sama.','Periksa apakah baris tersebut memang disengaja atau merupakan duplikasi.');
  for(const [period,t] of openingTotals)if(Math.abs(t.debit-t.credit)>.005)add('GAGAL','Keseimbangan Saldo Awal',period,'Total debit '+money(t.debit)+' tidak sama dengan kredit '+money(t.credit)+'.','Rekonsiliasi saldo awal berdasarkan neraca saldo pembukaan yang disetujui.');
+ // Rekonsiliasi lintas periode: bandingkan saldo akhir bulan sebelumnya dengan saldo awal bulan berikutnya.
+ // Hanya pasangan bulan berurutan yang sama-sama memiliki snapshot Saldo Awal; pemeriksaan ini read-only.
+ const openingPeriods=new Set(openings.map(o=>String(o.period||'')).filter(p=>/^\\d{4}-(0[1-9]|1[0-2])$/.test(p)));
+ const nextPeriod=period=>{const [y,m]=period.split('-').map(Number);return m===12?String(y+1)+'-01':String(y)+'-'+String(m+1).padStart(2,'0')};
+ const openingByPeriod=new Map();
+ openings.forEach(o=>{const p=String(o.period||''),code=String(o.accountCode??'').trim();if(!openingPeriods.has(p)||!code)return;const map=openingByPeriod.get(p)||new Map(),v=map.get(code)||{net:0,count:0};v.net+=Number(o.debit||0)-Number(o.credit||0);v.count++;map.set(code,v);openingByPeriod.set(p,map)});
+ for(const previousPeriod of [...openingPeriods].sort()){
+  const followingPeriod=nextPeriod(previousPeriod);if(!openingPeriods.has(followingPeriod))continue;
+  const previousOpening=openingByPeriod.get(previousPeriod)||new Map(),followingOpening=openingByPeriod.get(followingPeriod)||new Map(),closingByAccount=new Map();
+  previousOpening.forEach((v,code)=>closingByAccount.set(code,v.net));
+  journals.filter(j=>isPostedJournal(j)&&String(j.date||'').slice(0,7)===previousPeriod).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).forEach(line=>{const code=String(line.code??'').trim();if(!code)return;closingByAccount.set(code,(closingByAccount.get(code)||0)+Number(line.debit||0)-Number(line.credit||0))}));
+  const codes=new Set([...closingByAccount.keys(),...followingOpening.keys()]);
+  for(const code of codes){
+   const closing=closingByAccount.get(code)||0,opening=followingOpening.get(code)?.net||0;
+   if(Math.abs(closing-opening)>.005){
+    const missing=!followingOpening.has(code);
+    add('PERINGATAN','Rekonsiliasi Lintas Periode',previousPeriod+' → '+followingPeriod+' · SANDI '+code,
+     'Saldo akhir '+previousPeriod+' '+money(closing)+' tidak sama dengan saldo awal '+followingPeriod+' '+money(opening)+(missing?' (baris saldo awal akun tidak ditemukan).':'.'),
+     'Telusuri saldo awal bulan berikutnya, jurnal Posted bulan sebelumnya, jurnal penyesuaian, dan kemungkinan perbedaan periode. Pemeriksaan ini tidak mengubah saldo otomatis.');
+   }
+  }
+ }
  const npKeys=new Map();
  npRows.forEach((r,i)=>{
   const key=[r.tanggal,r.nobukti,r.nourut,r.sandi].map(v=>String(v??'').trim().toLowerCase()).join('|');
