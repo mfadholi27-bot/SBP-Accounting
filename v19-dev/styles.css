@@ -444,3 +444,14 @@ button.dashboard-integrity-item:hover{border-color:#b9dfc8;background:#f4faf6}
 .dashboard-chart-panel{min-width:0}
 @media(max-width:600px){.dashboard-chart-summary{gap:8px 14px}.dashboard-chart-summary b{font-size:11px}.dashboard-trend-svg,.dashboard-net-svg{min-height:165px}}
 @media(prefers-reduced-motion:reduce){.dashboard-trend-svg .chart-point,.chart-net-bar{transition:none}}
+
+/* BUILD 037 — centralized corporate identity settings */
+.company-identity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}
+.company-identity-grid label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;font-weight:650}
+.company-identity-grid input,.company-identity-grid textarea{width:100%;min-width:0;padding:10px 12px;border:1px solid var(--line,#dce7df);border-radius:9px;background:var(--surface,#fff);color:var(--ink);font:inherit;font-weight:500}
+.company-identity-grid textarea{resize:vertical}
+.company-identity-grid .company-full{grid-column:1/-1}
+.company-identity-preview{display:flex;flex-direction:column;gap:5px;padding:17px;border:1px dashed #a9cbb6;border-radius:11px;background:#f5faf6;color:#244b36;margin:12px 0}
+.company-identity-preview b{font-size:16px}.company-identity-preview span{font-size:13px;font-weight:800;letter-spacing:.4px}.company-identity-preview small{font-size:11px;color:#637c6c}
+.page-brand{max-width:min(48vw,600px)}.page-brand strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:650px){.company-identity-grid{grid-template-columns:1fr}.company-identity-grid .company-full{grid-column:auto}.page-brand{max-width:45vw}}
