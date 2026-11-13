@@ -252,14 +252,27 @@ function fmtDate(d){if(!d)return '';const x=new Date(d+'T00:00:00');return Numbe
 function chartSvgEmpty(message){return '<div class="dashboard-chart-empty">'+esc(message)+'</div>'}
 function chartCompact(value){const n=Number(value)||0,abs=Math.abs(n);if(abs>=1e9)return 'Rp '+(n/1e9).toLocaleString('id-ID',{maximumFractionDigits:1})+' M';if(abs>=1e6)return 'Rp '+(n/1e6).toLocaleString('id-ID',{maximumFractionDigits:1})+' jt';if(abs>=1e3)return 'Rp '+(n/1e3).toLocaleString('id-ID',{maximumFractionDigits:1})+' rb';return 'Rp '+n.toLocaleString('id-ID',{maximumFractionDigits:0})}
 function renderDashboardLineChart(host,rows){
- if(!rows.some(x=>x.debit||x.credit)){host.innerHTML=chartSvgEmpty('Belum ada mutasi jurnal POSTED pada periode ini.');return}
- const W=720,H=250,L=66,R=18,T=18,B=38,PW=W-L-R,PH=H-T-B,max=Math.max(1,...rows.flatMap(x=>[x.debit,x.credit]))*1.12;
+ const totalDebit=rows.reduce((n,r)=>n+r.debit,0),totalCredit=rows.reduce((n,r)=>n+r.credit,0);
+ if(!totalDebit&&!totalCredit){host.innerHTML=chartSvgEmpty('Belum ada mutasi jurnal POSTED pada periode ini.');return}
+ const W=900,H=286,L=82,R=22,T=22,B=42,PW=W-L-R,PH=H-T-B,max=Math.max(1,...rows.flatMap(x=>[x.debit,x.credit]))*1.08;
  const y=v=>T+PH-(v/max)*PH,x=i=>L+(rows.length<=1?PW/2:i/(rows.length-1)*PW);
- let grid='';for(let k=0;k<=4;k++){const v=max*k/4,yy=y(v);grid+='<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" class="chart-gridline"/><text x="'+(L-9)+'" y="'+(yy+4)+'" text-anchor="end" class="chart-axis-label">'+esc(chartCompact(v).replace('Rp ',''))+'</text>'}
+ let grid='';for(let k=0;k<=4;k++){const v=max*k/4,yy=y(v);grid+='<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" class="chart-gridline"/><text x="'+(L-12)+'" y="'+(yy+4)+'" text-anchor="end" class="chart-axis-label">'+esc(chartCompact(v).replace('Rp ',''))+'</text>'}
  const path=key=>rows.map((r,i)=>(i?'L':'M')+x(i).toFixed(2)+' '+y(r[key]).toFixed(2)).join(' ');
- const labels=rows.map((r,i)=>i===0||i===rows.length-1||(i+1)%5===0?'<text x="'+x(i)+'" y="'+(H-12)+'" text-anchor="middle" class="chart-axis-label">'+(i+1)+'</text>':'').join('');
- const points=key=>rows.map((r,i)=>'<circle cx="'+x(i)+'" cy="'+y(r[key])+'" r="3.2" class="chart-point '+key+'"><title>'+esc(r.label)+' · '+(key==='debit'?'Debit':'Kredit')+': '+esc(money(r[key]))+'</title></circle>'+ (r[key]>0?'<text x="'+x(i)+'" y="'+(y(r[key])-7)+'" text-anchor="middle" class="chart-value-label">'+esc(chartCompact(r[key]).replace('Rp ',''))+'</text>':'')).join('');
- host.innerHTML='<svg class="dashboard-svg-chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">'+grid+'<path d="'+path('debit')+'" class="chart-line debit"/><path d="'+path('credit')+'" class="chart-line credit"/>'+points('debit')+points('credit')+labels+'</svg>';
+ const labels=rows.map((r,i)=>i===0||i===rows.length-1||(i+1)%5===0?'<text x="'+x(i)+'" y="'+(H-13)+'" text-anchor="middle" class="chart-axis-label">'+r.day+'</text>':'').join('');
+ const points=key=>rows.map((r,i)=>'<circle cx="'+x(i)+'" cy="'+y(r[key])+'" r="'+((r[key]>0)?4:2.5)+'" class="chart-point '+key+'"><title>'+esc(r.label)+' · '+(key==='debit'?'Debit':'Kredit')+': '+esc(money(r[key]))+'</title></circle>').join('');
+ const debitArea='M'+x(0)+' '+y(0)+' '+rows.map((r,i)=>'L'+x(i)+' '+y(r.debit)).join(' ')+' L'+x(rows.length-1)+' '+y(0)+' Z';
+ const creditArea='M'+x(0)+' '+y(0)+' '+rows.map((r,i)=>'L'+x(i)+' '+y(r.credit)).join(' ')+' L'+x(rows.length-1)+' '+y(0)+' Z';
+ host.innerHTML='<div class="dashboard-chart-summary"><span><i class="legend-dot debit"></i>Debit <b>'+esc(money(totalDebit))+'</b></span><span><i class="legend-dot credit"></i>Kredit <b>'+esc(money(totalCredit))+'</b></span></div><svg class="dashboard-svg-chart dashboard-trend-svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Grafik garis mutasi debit dan kredit harian; pilih titik untuk melihat nominal lengkap"><defs><linearGradient id="dashDebitFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#168453" stop-opacity=".14"/><stop offset="100%" stop-color="#168453" stop-opacity="0"/></linearGradient><linearGradient id="dashCreditFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#4d91bd" stop-opacity=".12"/><stop offset="100%" stop-color="#4d91bd" stop-opacity="0"/></linearGradient></defs>'+grid+'<path d="'+debitArea+'" class="chart-area debit"/><path d="'+creditArea+'" class="chart-area credit"/><path d="'+path('debit')+'" class="chart-line debit"/><path d="'+path('credit')+'" class="chart-line credit"/>'+points('debit')+points('credit')+labels+'</svg><div class="dashboard-chart-note">Nominal menggunakan skala rupiah linear. Arahkan kursor atau pilih titik untuk melihat nilai harian lengkap; transaksi bernilai besar dapat memengaruhi jarak visual titik lainnya.</div>';
+}
+function renderDashboardNetChart(host,rows){
+ const values=rows.map(r=>({day:r.day,label:r.label,value:r.debit-r.credit}));
+ if(!values.some(x=>x.value)){host.innerHTML=chartSvgEmpty('Belum ada selisih mutasi Debit dan Kredit pada periode ini.');return}
+ const W=900,H=220,L=82,R=22,T=18,B=34,PW=W-L-R,PH=H-T-B,max=Math.max(1,...values.map(x=>Math.abs(x.value)))*1.12,zero=T+PH/2;
+ const y=v=>zero-(v/max)*(PH/2),step=PW/values.length,bw=Math.max(3,Math.min(18,step*.48));
+ let grid='<line x1="'+L+'" y1="'+zero+'" x2="'+(W-R)+'" y2="'+zero+'" class="chart-zero-line"/>';
+ for(let k=-2;k<=2;k++){const v=max*k/2,yy=y(v);if(k!==0)grid+='<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" class="chart-gridline"/>';grid+='<text x="'+(L-12)+'" y="'+(yy+4)+'" text-anchor="end" class="chart-axis-label">'+esc(chartCompact(v).replace('Rp ',''))+'</text>'}
+ let bars='',labels='';values.forEach((r,i)=>{const cx=L+i*step+step/2,yy=y(r.value),top=Math.min(zero,yy),height=Math.max(1,Math.abs(zero-yy));bars+='<rect x="'+(cx-bw/2)+'" y="'+top+'" width="'+bw+'" height="'+height+'" rx="3" class="chart-net-bar '+(r.value>=0?'positive':'negative')+'"><title>'+esc(r.label)+' · Selisih Debit - Kredit: '+esc(money(r.value))+'</title></rect>';if(i===0||i===values.length-1||(i+1)%5===0)labels+='<text x="'+cx+'" y="'+(H-11)+'" text-anchor="middle" class="chart-axis-label">'+r.day+'</text>'});
+ host.innerHTML='<svg class="dashboard-svg-chart dashboard-net-svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Grafik selisih Debit dikurangi Kredit per hari">'+grid+bars+labels+'</svg><div class="dashboard-chart-note">Nilai positif berarti Debit lebih besar; nilai negatif berarti Kredit lebih besar. Arahkan kursor pada batang untuk melihat nominal selisih.</div>';
 }
 function renderDashboardActivityChart(host,rows){
  const max=Math.max(1,...rows.flatMap(x=>[x.posted,x.drafts])),W=720,H=250,L=36,R=16,T=18,B=38,PW=W-L-R,PH=H-T-B,step=PW/rows.length,bw=Math.max(3,Math.min(9,step*.27));
@@ -280,7 +293,7 @@ function renderDashboardBudgetChart(host,year){
 function renderDashboardCharts(period){
  const [year,month]=period.split('-').map(Number),days=new Date(year,month,0).getDate(),daily=Array.from({length:days},(_,i)=>({day:i+1,label:String(i+1).padStart(2,'0'),debit:0,credit:0,posted:0,drafts:0}));
  (state.journals||[]).filter(j=>String(j.date||'').slice(0,7)===period).forEach(j=>{const date=String(j.date||''),day=Number(date.slice(8,10)),r=daily[day-1];if(!r)return;if(isPostedJournal(j)){r.posted++;(Array.isArray(j.lines)?j.lines:[]).forEach(l=>{const d=Number(l.debit||0),c=Number(l.credit||0);if(!Number.isFinite(d)||!Number.isFinite(c)||d<0||c<0||(d>0&&c>0)||(!d&&!c))return;r.debit+=d;r.credit+=c})}else if(String(j.status||'').toLowerCase()==='draft')r.drafts++});
- renderDashboardLineChart($('dash-chart-trend'),daily);renderDashboardActivityChart($('dash-chart-activity'),daily);renderDashboardBudgetChart($('dash-chart-budget'),year);
+ renderDashboardLineChart($('dash-chart-trend'),daily);renderDashboardNetChart($('dash-chart-net'),daily);renderDashboardActivityChart($('dash-chart-activity'),daily);renderDashboardBudgetChart($('dash-chart-budget'),year);
 }
 
 function renderDashboard(){
