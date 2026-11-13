@@ -1147,8 +1147,8 @@ function syncActivePeriodViews(period){
 }
 async function setActivePeriod(periodOverride){
  const p=periodOverride||$('period-active').value;
- if(!isValidPeriodKey(p)){toast('Pilih periode kerja yang benar (bulan 01–12, tahun 1900–2200).');renderDashboard();return}
- if(isPeriodLocked(p)){toast('Periode '+periodLabel(p)+' sudah ditutup. Buka kembali terlebih dahulu sebelum menjadikannya periode kerja aktif.');renderDashboard();return}
+ if(!isValidPeriodKey(p)){toast('Pilih periode kerja yang benar (bulan 01–12, tahun 1900–2200).');renderPeriodControl();renderDashboard();return}
+ if(isPeriodLocked(p)){toast('Periode '+periodLabel(p)+' sudah ditutup. Buka kembali terlebih dahulu sebelum menjadikannya periode kerja aktif.');renderPeriodControl();renderDashboard();return}
  state.periodControl.activePeriod=p;
  $('period-active').value=p;
  if($('dash-period-picker'))$('dash-period-picker').value=p;
@@ -1196,7 +1196,15 @@ async function closeAccountingPeriod(){
  state.periodControl.periods[p]={status:'closed',closedAt:now,closedBy:'Administrator lokal',note:note||'Tutup buku bulanan',totals:{debit:t.debit,credit:t.credit,difference:t.difference,journals:t.posted,openingRecords:t.openings,noteDrafts:t.noteDrafts},backup:backupResult.meta};
  state.auditLogs.unshift({id:crypto.randomUUID(),at:now,action:'TUTUP PERIODE',entity:'Periode Akuntansi',entityId:p,summary:'Tutup buku '+p+'; jurnal posted '+t.posted+'; backup terverifikasi '+backupResult.meta.fileName,before:{status:'open'},after:auditClone(state.periodControl.periods[p])});
  if(state.periodControl.activePeriod===p){let next=new Date(Number(p.slice(0,4)),Number(p.slice(5,7)),1),candidate='';for(let i=0;i<24;i++){candidate=next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0');if(!isPeriodLocked(candidate))break;next.setMonth(next.getMonth()+1)}state.periodControl.activePeriod=candidate||currentMonthKey()}
- await persist();renderPeriodControl();setMessage('period-message','Periode '+periodLabel(p)+' berhasil ditutup dan dikunci. Backup sebelum penutupan diunduh; simpan file tersebut di folder backup perusahaan.','good');
+ syncActivePeriodViews(state.periodControl.activePeriod);
+ await persist();renderPeriodControl();renderDashboard();
+ if($('page-journal-list')?.classList.contains('active'))renderJournals();
+ if($('page-debit-notes')?.classList.contains('active'))renderDebitNotes();
+ if($('page-ledger')?.classList.contains('active'))renderLedger();
+ if($('page-reports')?.classList.contains('active'))renderTrialBalance();
+ if($('page-opening-balances')?.classList.contains('active'))renderOpeningBalances();
+ if($('page-annual-budget')?.classList.contains('active'))renderAnnualBudgets();
+ setMessage('period-message','Periode '+periodLabel(p)+' berhasil ditutup dan dikunci. Periode aktif otomatis berpindah ke '+periodLabel(state.periodControl.activePeriod)+'. Backup sebelum penutupan telah diverifikasi.','good');
 }
 async function reopenAccountingPeriod(p){
  const reason=prompt('Alasan pembukaan kembali periode '+p+':');
@@ -1213,7 +1221,7 @@ async function reopenAccountingPeriod(p){
 $('period-set-active').addEventListener('click',setActivePeriod);
 $('dash-period-picker').addEventListener('change',()=>{const p=$('dash-period-picker').value;$('period-active').value=p;setActivePeriod(p)});
 $('period-close-button').addEventListener('click',closeAccountingPeriod);
-$('period-active').addEventListener('change',()=>{const p=$('period-active').value;if(isPeriodLocked(p))toast('Periode tersebut telah ditutup.')});
+$('period-active').addEventListener('change',()=>{const p=$('period-active').value;setActivePeriod(p)});
 
 /* PRINT ENGINE V1 — independent report renderer; does not mutate accounting records. */
 const PRINT_SETTINGS_KEY='sbp-print-settings-v1';
