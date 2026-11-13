@@ -428,3 +428,19 @@ button.dashboard-integrity-item:hover{border-color:#b9dfc8;background:#f4faf6}
 .dashboard-chart-data-table td.num,.dashboard-chart-data-table th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
 .dashboard-chart-data-table tbody tr:last-child td{border-bottom:0}
 @media(prefers-reduced-motion:reduce){.chart-value-label{animation:none}}
+
+/* BUILD 036 — refined debit/credit analytics */
+.dashboard-chart-summary{display:flex;gap:12px 26px;align-items:center;flex-wrap:wrap;padding:2px 4px 8px}
+.dashboard-chart-summary>span{display:inline-flex;align-items:center;gap:7px;color:#66796e;font-size:11px}
+.dashboard-chart-summary b{color:#263c30;font-size:13px;font-variant-numeric:tabular-nums}
+.dashboard-trend-svg,.dashboard-net-svg{display:block;width:100%;height:auto;min-height:205px;max-height:320px;overflow:visible}
+.chart-area{stroke:none}.chart-area.debit{fill:url(#dashDebitFill)}.chart-area.credit{fill:url(#dashCreditFill)}
+.dashboard-trend-svg .chart-line{stroke-width:3.2;stroke-dasharray:none;stroke-dashoffset:0;animation:none}
+.dashboard-trend-svg .chart-point{cursor:crosshair;transition:r .15s ease,stroke-width .15s ease}
+.dashboard-trend-svg .chart-point:hover{r:6;stroke-width:2.4}
+.dashboard-net-svg{min-height:170px;max-height:250px}
+.chart-net-bar{transition:opacity .15s ease}.chart-net-bar.positive{fill:#168453}.chart-net-bar.negative{fill:#d28a38}.chart-net-bar:hover{opacity:.72}
+.legend-dot.positive{background:#168453}.legend-dot.negative{background:#d28a38}
+.dashboard-chart-panel{min-width:0}
+@media(max-width:600px){.dashboard-chart-summary{gap:8px 14px}.dashboard-chart-summary b{font-size:11px}.dashboard-trend-svg,.dashboard-net-svg{min-height:165px}}
+@media(prefers-reduced-motion:reduce){.dashboard-trend-svg .chart-point,.chart-net-bar{transition:none}}
