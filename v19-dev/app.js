@@ -1801,13 +1801,26 @@ function runDataValidation(){
  for(const [key,count] of npKeys)if(count>1)add('PERINGATAN','NPTRANS','Kunci '+key,'Kombinasi tanggal, nomor bukti, nomor urut, dan SANDI muncul '+count+' kali.','Bandingkan dengan file NPTRANS asli sebelum memutuskan apakah record duplikat.');
  return {issues,checkedAt:new Date(),counts:{accounts:accounts.length,journals:journals.length,openings:openings.length,nptrans:npRows.length}};
 }
+function openValidationLocation(issue){
+ const category=String(issue.category||''),location=String(issue.location||'');
+ let page='dashboard',focusId='';
+ if(category==='Periode'){page='periods';focusId='period-active'}
+ else if(category==='Rekonsiliasi Lintas Periode'||category==='Saldo Awal'||category==='Keseimbangan Saldo Awal'){page='opening-balances';focusId='opening-period'}
+ else if(category==='Master Akun'){page='accounts';focusId='account-search'}
+ else if(category==='Jurnal'||category==='Keseimbangan Jurnal'||category==='Nomor Bukti'){page='journal-list';focusId='journal-search'}
+ else if(category==='NPTRANS'){page='nptrans';focusId='np-search'}
+ go(page);
+ const target=focusId&&$(focusId);if(target){target.focus();if(target.select)target.select()}
+ const hint=$('validation-navigation-hint');if(hint)hint.textContent='Lokasi dibuka: '+category+' · '+location+'. Periksa data sumber sebelum melakukan perubahan.';
+}
 function renderValidation(){
  const result=runDataValidation(),filter=$('validation-filter')?.value||'all',errors=result.issues.filter(x=>x.level==='GAGAL').length,warnings=result.issues.length-errors;
  $('validation-total').textContent=result.issues.length.toLocaleString('id-ID');$('validation-errors').textContent=errors.toLocaleString('id-ID');$('validation-warnings').textContent=warnings.toLocaleString('id-ID');
  const status=$('validation-status');status.textContent=errors?'PERLU PERBAIKAN':warnings?'ADA PERINGATAN':'VALID';status.className=errors?'validation-bad':warnings?'validation-warn':'validation-good';
  $('validation-meta').textContent='Diperiksa '+result.checkedAt.toLocaleString('id-ID')+' · '+result.counts.accounts+' akun · '+result.counts.journals+' jurnal · '+result.counts.openings+' saldo awal · '+result.counts.nptrans+' baris NPTRANS.';
  const shown=result.issues.filter(x=>filter==='all'||x.level===filter);
- $('validation-results').innerHTML=shown.length?'<div class="table-wrap"><table class="validation-table"><thead><tr><th>Status</th><th>Kategori</th><th>Lokasi data</th><th>Temuan</th><th>Saran pemeriksaan</th></tr></thead><tbody>'+shown.map(x=>'<tr><td><span class="validation-badge '+(x.level==='GAGAL'?'bad':'warn')+'">'+x.level+'</span></td><td>'+esc(x.category)+'</td><td>'+esc(x.location)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.action)+'</td></tr>').join('')+'</tbody></table></div>':'<div class="validation-clear"><i data-lucide="check-circle-2"></i><b>'+(result.issues.length?'Tidak ada temuan pada filter ini.':'Tidak ditemukan masalah pada pemeriksaan yang tersedia.')+'</b><span>Hasil pemeriksaan hanya mencakup aturan validasi BUILD V66.</span></div>';
+ $('validation-results').innerHTML=shown.length?'<div class="table-wrap"><table class="validation-table"><thead><tr><th>Status</th><th>Kategori</th><th>Lokasi data</th><th>Temuan</th><th>Saran pemeriksaan</th><th>Tindakan</th></tr></thead><tbody>'+shown.map(x=>'<tr><td><span class="validation-badge '+(x.level==='GAGAL'?'bad':'warn')+'">'+x.level+'</span></td><td>'+esc(x.category)+'</td><td>'+esc(x.location)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.action)+'</td><td><button class="btn validation-open-location" type="button" data-issue-index="'+result.issues.indexOf(x)+'">Buka Lokasi</button></td></tr>').join('')+'</tbody></table></div>':'<div class="validation-clear"><i data-lucide="check-circle-2"></i><b>'+(result.issues.length?'Tidak ada temuan pada filter ini.':'Tidak ditemukan masalah pada pemeriksaan yang tersedia.')+'</b><span>Hasil pemeriksaan hanya mencakup aturan validasi BUILD V66.</span></div>';
+ document.querySelectorAll('.validation-open-location').forEach(button=>button.onclick=()=>openValidationLocation(result.issues[Number(button.dataset.issueIndex)]));
  if(window.lucide?.createIcons)window.lucide.createIcons();
 }
 $('validation-run').onclick=renderValidation;$('validation-filter').onchange=renderValidation;
