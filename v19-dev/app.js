@@ -288,8 +288,8 @@ function renderDashboard(){
  const period=state.periodControl.activePeriod,totals=periodTotals(period),periodRec=periodRecord(period),closed=periodRec.status==='closed';
  $('dash-period-label').textContent=periodLabel(period);
  $('dash-period-state').textContent=closed?'Periode ditutup':'Periode terbuka · transaksi dapat dicatat';
- $('stat-debit').textContent=money(totals.rows.reduce((n,r)=>n+Number(r.debit||0),0));
- $('stat-credit').textContent=money(totals.rows.reduce((n,r)=>n+Number(r.credit||0),0));
+ $('stat-debit').textContent=money(totals.journalDebit);
+ $('stat-credit').textContent=money(totals.journalCredit);
  $('stat-journals').textContent=totals.posted.toLocaleString('id-ID');
  $('stat-drafts').textContent=totals.drafts.toLocaleString('id-ID');
  const checks=[
@@ -1076,13 +1076,16 @@ function periodGuard(period,action='mengubah data'){if(!isValidPeriodKey(period)
 function periodTotals(period){
  const rows=getTrialBalanceRows(period),accounts=new Set((state.accounts||[]).map(a=>String(a.code??'').trim()).filter(Boolean));
  const debit=rows.reduce((n,r)=>n+Number(r.endingDebit||0),0),credit=rows.reduce((n,r)=>n+Number(r.endingCredit||0),0);
- const journals=(state.journals||[]).filter(j=>String(j.date||'').slice(0,7)===period),notes=(state.debitNotes||[]).filter(n=>String(n.date||'').slice(0,7)===period);
+ const journals=(state.journals||[]).filter(j=>String(j.date||'').slice(0,7)===period),postedJournals=journals.filter(isPostedJournal),notes=(state.debitNotes||[]).filter(n=>String(n.date||'').slice(0,7)===period);
+ // Dashboard totals must include every POSTED journal line, even when its account code is missing from Master Akun.
+ const journalDebit=postedJournals.reduce((sum,j)=>sum+(Array.isArray(j.lines)?j.lines:[]).reduce((n,l)=>{const v=Number(l.debit??0);return n+(Number.isFinite(v)&&v>0?v:0)},0),0);
+ const journalCredit=postedJournals.reduce((sum,j)=>sum+(Array.isArray(j.lines)?j.lines:[]).reduce((n,l)=>{const v=Number(l.credit??0);return n+(Number.isFinite(v)&&v>0?v:0)},0),0);
  const drafts=journals.filter(j=>j.status==='draft').length,posted=journals.filter(isPostedJournal).length,noteDrafts=notes.filter(n=>n.status==='draft').length;
  let unbalancedJournals=0,missingAccounts=0,invalidJournals=0;
  journals.filter(isPostedJournal).forEach(j=>{const lines=Array.isArray(j.lines)?j.lines:[];if(lines.length<2)invalidJournals++;let d=0,c=0,invalid=false;lines.forEach(l=>{const code=String(l.code??'').trim(),db=Number(l.debit),cr=Number(l.credit);if(!code||!accounts.has(code))missingAccounts++;if(!Number.isFinite(db)||!Number.isFinite(cr)||db<0||cr<0||(db>0&&cr>0)||(!db&&!cr))invalid=true;if(Number.isFinite(db))d+=db;if(Number.isFinite(cr))c+=cr});if(invalid)invalidJournals++;if(Math.abs(d-c)>.005)unbalancedJournals++});
  const openingRows=(state.openingBalances||[]).filter(x=>x.period===period),openings=openingRows.length,openingSeen=new Set();let duplicateOpenings=0,invalidOpenings=0;
  openingRows.forEach(x=>{const code=String(x.accountCode??'').trim(),d=Number(x.debit),c=Number(x.credit);if(openingSeen.has(code))duplicateOpenings++;openingSeen.add(code);if(!code||!accounts.has(code)||!Number.isFinite(d)||!Number.isFinite(c)||d<0||c<0||(d>0&&c>0)||(!d&&!c))invalidOpenings++});
- return {rows,debit,credit,difference:debit-credit,drafts,posted,openings,noteDrafts,unbalancedJournals,missingAccounts,invalidJournals,duplicateOpenings,invalidOpenings};
+ return {rows,debit,credit,journalDebit,journalCredit,difference:debit-credit,drafts,posted,openings,noteDrafts,unbalancedJournals,missingAccounts,invalidJournals,duplicateOpenings,invalidOpenings};
 }
 function periodLabel(p){const [y,m]=p.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'})}
 function renderPeriodControl(){
