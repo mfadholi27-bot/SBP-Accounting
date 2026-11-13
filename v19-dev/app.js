@@ -466,16 +466,18 @@ async function saveJournal(targetStatus){
  if(!isValidCalendarDate(date)){setMessage('journal-message','Tanggal jurnal tidak valid. Periksa tanggal, bulan, dan tahun.','bad');return}
  if(!periodGuard(date.slice(0,7),'menyimpan atau memposting jurnal'))return;
  warnActivePeriodMismatch(date,'jurnal');
- if(state.journals.some(j=>j.number===number&&j.id!==editingId)){setMessage('journal-message','Nomor bukti sudah digunakan.','bad');return}
+ const numberKey=number.toLowerCase();if(state.journals.some(j=>String(j.number||'').trim().toLowerCase()===numberKey&&j.id!==editingId)){setMessage('journal-message','Nomor bukti sudah digunakan (tidak membedakan huruf besar/kecil atau spasi tepi).','bad');return}
  if(targetStatus==='posted'){
-  if(rows.length<2||rows.some(x=>!x.code||!Number.isFinite(x.debit)||!Number.isFinite(x.credit)||(!x.debit&&!x.credit)||(x.debit&&x.credit)||x.debit<0||x.credit<0)){setMessage('journal-message','Untuk posting, setiap baris wajib memiliki akun dan hanya satu nilai debit/kredit yang valid.','bad');return}
+  const missingCodes=[...new Set(rows.map(x=>String(x.code||'').trim()).filter(code=>code&&!state.accounts.some(a=>String(a.code??'').trim()===code)))];
+  if(missingCodes.length){setMessage('journal-message','Posting dibatalkan. SANDI berikut tidak ditemukan di Master Akun: '+missingCodes.slice(0,8).join(', ')+(missingCodes.length>8?' dan '+(missingCodes.length-8)+' lainnya.':'.')+' Tambahkan atau perbaiki Master Akun terlebih dahulu.','bad');return}
+  if(rows.length<2||rows.some(x=>!String(x.code||'').trim()||!Number.isFinite(x.debit)||!Number.isFinite(x.credit)||(!x.debit&&!x.credit)||(x.debit&&x.credit)||x.debit<0||x.credit<0)){setMessage('journal-message','Untuk posting, setiap baris wajib memiliki SANDI Master Akun dan hanya satu nilai debit/kredit yang valid.','bad');return}
   const debit=rows.reduce((s,x)=>s+x.debit,0),credit=rows.reduce((s,x)=>s+x.credit,0);
   if(Math.abs(debit-credit)>.005){setMessage('journal-message','Jurnal belum seimbang. Selisih: '+money(Math.abs(debit-credit)),'bad');return}
  }else if(rows.some(x=>x.debit<0||x.credit<0||!Number.isFinite(x.debit)||!Number.isFinite(x.credit))){setMessage('journal-message','Nilai debit/kredit tidak boleh negatif atau tidak valid.','bad');return}
  const old=state.journals.find(j=>j.id===editingId);
  if(old&&!periodGuard(String(old.date||'').slice(0,7),'mengubah jurnal lama'))return;
   if(old&&old.status!=='draft'){setMessage('journal-message','Jurnal terposting tidak dapat diedit. Buat jurnal koreksi/pembalik.','bad');return}
- const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:rows,status:targetStatus,updatedAt:now};
+ const now=new Date().toISOString(),item={...(old||{}),id:editingId||crypto.randomUUID(),date,number,description,lines:rows,status:targetStatus,updatedAt:now,...(targetStatus==='posted'?{postedAt:now}:{})};
  if(!old)item.createdAt=now;
  if(old)state.journals=state.journals.map(j=>j.id===editingId?item:j);else state.journals.push(item);
  await persist();toast(targetStatus==='posted'?'Jurnal berhasil diposting.':'Draft jurnal berhasil disimpan.');resetJournalForm();go('journal-list');renderDashboard();
