@@ -482,7 +482,7 @@ async function saveJournal(targetStatus){
 }
 $('save-journal').onclick=()=>saveJournal('draft');
 $('post-journal').onclick=()=>saveJournal('posted');$('j-date').addEventListener('change',updateJournalBudgetPreview);
-function exportJournalsXlsx(){const rows=[['TANGGAL','NOBUKTI','KETERANGAN','STATUS','SANDI','KETERANGAN BARIS','DEBIT','KREDIT'],...state.journals.flatMap(j=>(j.lines||[]).map(l=>[j.date,j.number,j.description,j.status==='draft'?'DRAFT':(j.status==='cancelled'?'DIBATALKAN / DIPECAH':'POSTED'),l.code,l.note,l.debit||0,l.credit||0]))];exportXlsxSheet('Daftar-Jurnal.xlsx','Daftar Jurnal',rows)}
+function exportJournalsXlsx(){const scope=$('journal-period-scope')?.value||'active',active=state.periodControl?.activePeriod||currentMonthKey(),items=state.journals.filter(j=>scope==='all'||String(j.date||'').slice(0,7)===active),rows=[['RUANG LINGKUP',scope==='all'?'SEMUA PERIODE':'PERIODE AKTIF '+active],[],['TANGGAL','NOBUKTI','KETERANGAN','STATUS','SANDI','KETERANGAN BARIS','DEBIT','KREDIT'],...items.flatMap(j=>(j.lines||[]).map(l=>[j.date,j.number,j.description,j.status==='draft'?'DRAFT':(j.status==='cancelled'?'DIBATALKAN / DIPECAH':'POSTED'),l.code,l.note,l.debit||0,l.credit||0]))];exportXlsxSheet('Daftar-Jurnal.xlsx','Daftar Jurnal',rows)}
 function journalTable(items,actions=true,summaryItems=items){
  const totals=summaryItems.reduce((t,j)=>{for(const l of (j.lines||[])){t.debit+=Number(l.debit||0);t.credit+=Number(l.credit||0)}return t},{debit:0,credit:0});
  totals.balance=totals.debit-totals.credit;
