@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#116b49"><meta name="description" content="SBP Accounting V19 — akuntansi offline dan kompatibilitas DBF NPTRANS">
-<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=32"><link rel="stylesheet" href="palm-glass-theme.css?v=45"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
+<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=33"><link rel="stylesheet" href="palm-glass-theme.css?v=45"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
 <title>SBP Accounting V19</title>
 <style id="sbp-journal-print-modal-style">
 .sbp-print-modal{position:fixed!important;inset:0!important;z-index:10050!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;background:rgba(15,23,42,.56)!important;backdrop-filter:blur(3px)!important;box-sizing:border-box!important}
@@ -176,7 +176,7 @@
 <section class="page active" id="page-dashboard">
   <div class="welcome dashboard-welcome">
     <div><div class="eyebrow light">SBP ACCOUNTING · RINGKASAN PEMBUKUAN</div><h2 class="welcome-brandline">Dashboard</h2><p>Pantau aktivitas dan integritas pembukuan dalam satu tampilan.</p></div>
-    <div class="dashboard-period-box"><span>PERIODE KERJA AKTIF</span><b id="dash-period-label">—</b><small id="dash-period-state">Memuat status periode…</small></div>
+    <div class="dashboard-period-box"><span>PERIODE KERJA AKTIF</span><input type="month" id="dash-period-picker" aria-label="Pilih periode kerja aktif" title="Pilih bulan dan tahun periode kerja aktif"><small id="dash-period-state">Memuat status periode…</small></div>
   </div>
   <div class="dashboard-stats">
     <article class="stat dashboard-stat"><span>Total Debit</span><strong id="stat-debit">Rp 0</strong><small>Jurnal POSTED · periode aktif</small></article>
@@ -437,7 +437,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-033</span><span>13-11-2026 · Fix total debit and credit dashboard calculation</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-034</span><span>13-11-2026 · Dashboard active period month picker & synchronized data</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=138"></script>
+<script src="app.js?v=139"></script>
 </body></html>
