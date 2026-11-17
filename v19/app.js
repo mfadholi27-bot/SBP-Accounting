@@ -945,25 +945,31 @@ let selectedAccountFile=null,pendingAccountImport=null;
 $('np-search').addEventListener('input',()=>{npPage=1;renderNptrans()});$('np-prev').onclick=()=>{npPage=Math.max(1,npPage-1);renderNptrans()};$('np-next').onclick=()=>{npPage++;renderNptrans()};$('export-np-csv').onclick=exportNpCsv;$('export-np-xlsx').onclick=exportNpXlsx;$('export-np-dbf').onclick=exportDbf;
 
 function isPostedJournal(j){return String(j?.status??'').trim().toLowerCase()==='posted'}
+function getOpeningBalanceForAccount(period,accountCode){
+ const target=String(period||''),code=String(accountCode??'').trim();
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(target)||!code)return {net:0,source:'Belum ada saldo · Rp0',explicit:false,anchorPeriod:''};
+ const openings=(Array.isArray(state.openingBalances)?state.openingBalances:[]).filter(x=>String(x.accountCode??'').trim()===code&&/^\d{4}-(0[1-9]|1[0-2])$/.test(String(x.period||'')));
+ const exact=openings.filter(x=>String(x.period)===target);
+ if(exact.length){const net=exact.reduce((n,x)=>n+Number(x.debit||0)-Number(x.credit||0),0);return {net,source:'Saldo manual '+target,explicit:true,anchorPeriod:target,note:exact.map(x=>String(x.note||'').trim()).filter(Boolean).join(' · ')}}
+ const prior=openings.filter(x=>String(x.period)<target).map(x=>String(x.period)).sort(),anchor=prior.length?prior[prior.length-1]:'';
+ let net=0;
+ if(anchor)openings.filter(x=>String(x.period)===anchor).forEach(x=>{net+=Number(x.debit||0)-Number(x.credit||0)});
+ (Array.isArray(state.journals)?state.journals:[]).filter(j=>{const month=String(j.date||'').slice(0,7);return isPostedJournal(j)&&/^\d{4}-(0[1-9]|1[0-2])$/.test(month)&&month<target&&(!anchor||month>=anchor)}).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).filter(l=>String(l.code??'').trim()===code).forEach(l=>{net+=Number(l.debit||0)-Number(l.credit||0)}));
+ const hasPriorJournal=(Array.isArray(state.journals)?state.journals:[]).some(j=>isPostedJournal(j)&&String(j.date||'').slice(0,7)<target&&(Array.isArray(j.lines)?j.lines:[]).some(l=>String(l.code??'').trim()===code));
+ return {net,source:anchor?'Dari saldo akhir '+anchor:(hasPriorJournal?'Akumulasi jurnal sebelum '+target:'Belum ada saldo · Rp0'),explicit:false,anchorPeriod:anchor};
+}
 function getTrialBalanceRows(period){
- const openingMap=new Map(),movement=new Map();
- (Array.isArray(state.openingBalances)?state.openingBalances:[]).filter(x=>String(x.period||'')===String(period)).forEach(x=>{
-  const code=String(x.accountCode??'').trim();if(!code)return;
-  const v=openingMap.get(code)||{debit:0,credit:0};
-  v.debit+=Number(x.debit||0);v.credit+=Number(x.credit||0);openingMap.set(code,v);
- });
+ const movement=new Map();
  (Array.isArray(state.journals)?state.journals:[]).filter(j=>isPostedJournal(j)&&String(j.date||'').slice(0,7)===String(period)).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).forEach(l=>{
-  const code=String(l.code??'').trim();if(!code)return;
-  const v=movement.get(code)||{debit:0,credit:0};
-  v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(code,v);
+  const code=String(l.code??'').trim();if(!code)return;const v=movement.get(code)||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(code,v);
  }));
- const codes=new Set([...(state.accounts||[]).map(a=>String(a.code)),...openingMap.keys(),...movement.keys()]);
+ const codes=new Set([...(state.accounts||[]).map(a=>String(a.code??'').trim()),...(state.openingBalances||[]).map(x=>String(x.accountCode??'').trim()),...(state.journals||[]).flatMap(j=>(Array.isArray(j.lines)?j.lines:[]).map(l=>String(l.code??'').trim()))]);codes.delete('');
  return [...codes].sort((a,b)=>a.localeCompare(b)).map(code=>{
-  const account=(state.accounts||[]).find(a=>String(a.code)===code),opening=openingMap.get(code)||{debit:0,credit:0},netOpening=opening.debit-opening.credit,move=movement.get(code)||{debit:0,credit:0},net=netOpening+move.debit-move.credit;
+  const account=(state.accounts||[]).find(a=>String(a.code)===code),opening=getOpeningBalanceForAccount(period,code),netOpening=opening.net,move=movement.get(code)||{debit:0,credit:0},net=netOpening+move.debit-move.credit;
   return {code,name:account?.name||'(Akun tidak ditemukan)',openingDebit:Math.max(netOpening,0),openingCredit:Math.max(-netOpening,0),debit:move.debit,credit:move.credit,endingDebit:Math.max(net,0),endingCredit:Math.max(-net,0),balance:net};
  });
 }
-function ledgerOpeningNet(period,account){return (Array.isArray(state.openingBalances)?state.openingBalances:[]).filter(x=>String(x.period||'')===String(period)&&String(x.accountCode)===String(account.code)).reduce((net,x)=>net+Number(x.debit||0)-Number(x.credit||0),0)}
+function ledgerOpeningNet(period,account){return getOpeningBalanceForAccount(period,account?.code).net}
 function getLedgerTransactionsRange(from,to,code){
  const account=state.accounts.find(a=>String(a.code)===String(code));if(!account)return null;
  const validDate=value=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;const parsed=new Date(value+'T00:00:00Z');return !Number.isNaN(parsed.getTime())&&parsed.toISOString().slice(0,10)===value};
@@ -1169,22 +1175,24 @@ $('opening-import-cancel').onclick=()=>{pendingOpeningImport=null;$('opening-imp
 $('opening-import-confirm').onclick=async()=>{const batch=pendingOpeningImport;if(!batch||!batch.valid.length)return;if(!requireImportPassword('Import Saldo Awal'))return;const valid=batch.valid;if(valid.some(x=>isPeriodLocked(x.period))){toast('Import dibatalkan: ada periode yang sudah ditutup.');return}if(!confirm('Import '+valid.length+' saldo awal baru dari '+batch.fileName+'? Data yang sudah ada tidak akan ditimpa.'))return;const now=new Date().toISOString();if(!Array.isArray(state.openingBalances))state.openingBalances=[];valid.forEach(x=>state.openingBalances.push({period:x.period,accountCode:x.accountCode,debit:x.debit,credit:x.credit,note:x.note,updatedAt:now}));await persist();pendingOpeningImport=null;$('opening-import-review').hidden=true;renderOpeningBalances();toast(valid.length+' saldo awal berhasil diimpor.');$('opening-import-status').textContent=valid.length+' saldo awal berhasil diimpor.'};
 
 function renderOpeningBalances(){
- const period=$('opening-period').value;const items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode)));
- const select=$('opening-account');const current=select.value;select.innerHTML='<option value="">Pilih akun</option>'+state.accounts.slice().sort((a,b)=>a.code.localeCompare(b.code)).map(a=>'<option value="'+esc(a.code)+'">'+esc(a.code)+' · '+esc(a.name||'(Tanpa nama)')+'</option>').join('');if(current)select.value=current;
- const debit=items.reduce((n,x)=>n+Number(x.debit||0),0),credit=items.reduce((n,x)=>n+Number(x.credit||0),0);
- const net=debit-credit;
- $('opening-summary').innerHTML='<div><span>Jumlah akun</span><b>'+items.length+'</b></div><div><span>Total saldo Debit</span><b>'+money(debit)+'</b></div><div><span>Total saldo Kredit</span><b>'+money(credit)+'</b></div><div><span>Saldo bersih</span><b>'+ledgerNetDisplay(net)+'</b></div>';
- $('opening-rows').innerHTML=items.length?items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><b>'+esc(x.accountCode)+'</b></td><td>'+esc(state.accounts.find(a=>a.code===x.accountCode)?.name||'(Akun tidak ditemukan)')+'</td><td>'+esc(x.note||'')+'</td><td class="num">'+ledgerNetDisplay(Number(x.debit||0)-Number(x.credit||0))+'</td><td><button class="btn opening-edit" data-code="'+esc(x.accountCode)+'">Edit</button> <button class="btn opening-delete" data-code="'+esc(x.accountCode)+'">Hapus</button></td></tr>').join(''):'<tr><td colspan="6" class="empty">Belum ada saldo awal pada periode ini.</td></tr>';
- $('opening-foot').innerHTML='<tr><th colspan="4">TOTAL SALDO BERSIH</th><th>'+ledgerNetDisplay(net)+'</th><th></th></tr>';
- document.querySelectorAll('.opening-edit').forEach(b=>b.onclick=()=>{const x=items.find(v=>v.accountCode===b.dataset.code);if(!x)return;select.value=x.accountCode;$('opening-amount').value=Number(x.debit||0)-Number(x.credit||0);$('opening-note').value=x.note||'';$('opening-save').dataset.edit=b.dataset.code;$('opening-save').textContent='Perbarui Saldo Awal'});
- document.querySelectorAll('.opening-delete').forEach(b=>b.onclick=async()=>{if(!periodGuard(period,'menghapus saldo awal'))return;if(!confirm('Hapus saldo awal akun '+b.dataset.code+' untuk periode '+period+'?'))return;state.openingBalances=state.openingBalances.filter(x=>!(x.period===period&&x.accountCode===b.dataset.code));await persist();renderOpeningBalances();toast('Saldo awal dihapus.')});
+ const period=$('opening-period').value,select=$('opening-account'),current=select.value;
+ const codes=new Set([...(state.accounts||[]).map(a=>String(a.code??'').trim()),...(state.openingBalances||[]).map(x=>String(x.accountCode??'').trim()),...(state.journals||[]).filter(j=>isPostedJournal(j)).flatMap(j=>(Array.isArray(j.lines)?j.lines:[]).map(l=>String(l.code??'').trim()))]);codes.delete('');
+ const items=[...codes].sort((a,b)=>a.localeCompare(b)).map(code=>{const account=state.accounts.find(a=>String(a.code)===code),opening=getOpeningBalanceForAccount(period,code);return {accountCode:code,name:account?.name||'(Akun tidak ditemukan)',...opening}});
+ select.innerHTML='<option value="">Pilih akun</option>'+state.accounts.slice().sort((a,b)=>a.code.localeCompare(b.code)).map(a=>'<option value="'+esc(a.code)+'">'+esc(a.code)+' · '+esc(a.name||'(Tanpa nama)')+'</option>').join('');if(current)select.value=current;
+ const debit=items.reduce((n,x)=>n+Math.max(x.net,0),0),credit=items.reduce((n,x)=>n+Math.max(-x.net,0),0),manual=items.filter(x=>x.explicit).length;
+ $('opening-summary').innerHTML='<div><span>Jumlah akun</span><b>'+items.length+'</b></div><div><span>Total saldo Debit</span><b>'+money(debit)+'</b></div><div><span>Total saldo Kredit</span><b>'+money(credit)+'</b></div><div><span>Saldo manual periode ini</span><b>'+manual+'</b></div>';
+ $('opening-rows').innerHTML=items.length?items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><b>'+esc(x.accountCode)+'</b></td><td>'+esc(x.name)+'</td><td><small>'+esc(x.source)+(x.note?' · '+esc(x.note):'')+'</small></td><td class="num">'+ledgerNetDisplay(x.net)+'</td><td>'+(x.explicit?'<button class="btn opening-edit" data-code="'+esc(x.accountCode)+'">Edit</button> <button class="btn opening-delete" data-code="'+esc(x.accountCode)+'">Hapus</button>':'<button class="btn opening-set" data-code="'+esc(x.accountCode)+'">Atur</button>')+'</td></tr>').join(''):'<tr><td colspan="6" class="empty">Belum ada Master Akun, jurnal, atau saldo awal.</td></tr>';
+ $('opening-foot').innerHTML='<tr><th colspan="4">TOTAL SALDO AWAL</th><th>'+ledgerNetDisplay(debit-credit)+'</th><th></th></tr>';
+ document.querySelectorAll('.opening-edit').forEach(b=>b.onclick=()=>{const x=items.find(v=>v.accountCode===b.dataset.code);if(!x)return;select.value=x.accountCode;$('opening-amount').value=x.net;$('opening-note').value=x.note||'';$('opening-save').dataset.edit=b.dataset.code;$('opening-save').textContent='Perbarui Saldo Awal'});
+ document.querySelectorAll('.opening-set').forEach(b=>b.onclick=()=>{const x=items.find(v=>v.accountCode===b.dataset.code);if(!x)return;select.value=x.accountCode;$('opening-amount').value=x.net;$('opening-note').value='Penetapan saldo awal manual';delete $('opening-save').dataset.edit;$('opening-save').textContent='Tetapkan Saldo Awal'});
+ document.querySelectorAll('.opening-delete').forEach(b=>b.onclick=async()=>{if(!periodGuard(period,'menghapus saldo awal'))return;if(!confirm('Hapus saldo awal manual akun '+b.dataset.code+' untuk periode '+period+'? Setelah dihapus, saldo akan dihitung kembali dari periode sebelumnya dan jurnal POSTED.'))return;state.openingBalances=state.openingBalances.filter(x=>!(String(x.period)===period&&String(x.accountCode)===b.dataset.code));await persist();renderOpeningBalances();toast('Saldo manual dihapus; saldo otomatis dihitung kembali.')});
 }
 $('opening-period').value=state.periodControl?.activePeriod||currentMonthKey();
 $('opening-period').addEventListener('change',()=>{delete $('opening-save').dataset.edit;$('opening-save').textContent='Simpan Saldo Awal';renderOpeningBalances()});
 $('opening-save').addEventListener('click',async()=>{
  const period=$('opening-period').value,code=$('opening-account').value,net=Number($('opening-amount').value),note=$('opening-note').value.trim(),editing=$('opening-save').dataset.edit;
   if(!periodGuard(period,'menambah atau mengubah saldo awal'))return;
- if(!isValidPeriodKey(period)||!code||!state.accounts.some(a=>a.code===code)||!Number.isFinite(net)||Math.abs(net)<0.005){toast('Periksa periode (bulan 01–12), akun, dan saldo awal. Positif = Debit, negatif = Kredit.');return}
+ if(!isValidPeriodKey(period)||!code||!state.accounts.some(a=>a.code===code)||!Number.isFinite(net)){toast('Periksa periode (bulan 01–12), akun, dan saldo awal. Positif = Debit, negatif = Kredit; nilai 0 diperbolehkan untuk menetapkan saldo nol.');return}
  const existing=(state.openingBalances||[]).find(x=>x.period===period&&x.accountCode===code);
  if(existing&&!editing){toast('Saldo awal akun ini sudah ada pada periode tersebut. Gunakan Edit.');return}
  if(editing&&editing!==code){toast('Untuk mengganti akun, hapus saldo lama lalu tambahkan akun yang benar.');return}
@@ -1194,7 +1202,7 @@ $('opening-save').addEventListener('click',async()=>{
  await persist();delete $('opening-save').dataset.edit;$('opening-save').textContent='Simpan Saldo Awal';$('opening-amount').value='';$('opening-note').value='';renderOpeningBalances();toast('Saldo awal berhasil disimpan.');
 });
 $('opening-print').onclick=()=>window.print();
-$('opening-export').onclick=()=>{const p=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===p);if(!window.XLSX){toast('Modul Excel belum tersedia.');return}const rows=[['Periode',p],[],['SANDI','NAMA AKUN','KETERANGAN','SALDO AWAL'],...items.map(x=>[x.accountCode,state.accounts.find(a=>a.code===x.accountCode)?.name||'',x.note||'',Number(x.debit||0)-Number(x.credit||0)])];const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Saldo Awal');XLSX.writeFile(wb,'Saldo-Awal-'+p+'.xlsx')};
+$('opening-export').onclick=()=>{const p=$('opening-period').value;if(!window.XLSX){toast('Modul Excel belum tersedia.');return}const codes=new Set([...(state.accounts||[]).map(a=>String(a.code??'').trim()),...(state.openingBalances||[]).map(x=>String(x.accountCode??'').trim()),...(state.journals||[]).filter(j=>isPostedJournal(j)).flatMap(j=>(Array.isArray(j.lines)?j.lines:[]).map(l=>String(l.code??'').trim()))]);codes.delete('');const rows=[['Periode',p],[],['SANDI','NAMA AKUN','SUMBER SALDO','SALDO AWAL'],...[...codes].sort((a,b)=>a.localeCompare(b)).map(code=>{const a=state.accounts.find(x=>String(x.code)===code),o=getOpeningBalanceForAccount(p,code);return [code,a?.name||'(Akun tidak ditemukan)',o.source,o.net]})];const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Saldo Awal');XLSX.writeFile(wb,'Saldo-Awal-'+p+'.xlsx')};
 
 
 /* ACCOUNTING PERIOD CONTROL V1 — synchronized with the existing IndexedDB state. */
@@ -1848,49 +1856,21 @@ function runDataValidation(){
  });
  for(const [key,count] of openingKeys)if(count>1)add('PERINGATAN','Saldo Awal',key,'Terdapat '+count+' baris saldo awal untuk akun dan periode yang sama.','Periksa apakah baris tersebut memang disengaja atau merupakan duplikasi.');
  for(const [period,t] of openingTotals)if(Math.abs(t.debit-t.credit)>.005)add('GAGAL','Keseimbangan Saldo Awal',period,'Total debit '+money(t.debit)+' tidak sama dengan kredit '+money(t.credit)+'.','Rekonsiliasi saldo awal berdasarkan neraca saldo pembukaan yang disetujui.');
- // Rekonsiliasi lintas periode berpatokan pada periode akuntansi aktif.
+ // Rekonsiliasi lintas periode memakai saldo awal hasil carry-forward yang sama dengan Neraca Percobaan.
  const activePeriod=String(state.periodControl?.activePeriod||'');
- const validPeriod=p=>/^\\d{4}-(0[1-9]|1[0-2])$/.test(p);
+ const validPeriod=p=>/^\d{4}-(0[1-9]|1[0-2])$/.test(p);
  const previousPeriodOf=period=>{const [y,m]=period.split('-').map(Number);return m===1?String(y-1)+'-12':String(y)+'-'+String(m-1).padStart(2,'0')};
  if(validPeriod(activePeriod)){
-  const previousPeriod=previousPeriodOf(activePeriod);
-  const previousRows=openings.filter(o=>String(o.period||'')===previousPeriod);
-  const activeRows=openings.filter(o=>String(o.period||'')===activePeriod);
-  if(!previousRows.length){
-   add('PERINGATAN','Rekonsiliasi Lintas Periode',previousPeriod+' → '+activePeriod,
-    'Saldo awal periode sebelumnya ('+previousPeriod+') tidak ditemukan. Saldo akhir periode sebelumnya belum dapat dihitung dengan dasar yang lengkap.',
-    'Periksa apakah saldo awal '+previousPeriod+' sudah diinput atau apakah periode ini merupakan awal pembukuan. Sistem tidak mengasumsikan saldo awal sebesar nol.');
-  }else if(!activeRows.length){
-   add('PERINGATAN','Rekonsiliasi Lintas Periode',previousPeriod+' → '+activePeriod,
-    'Saldo awal untuk periode aktif '+activePeriod+' belum ditemukan. Angka pembanding belum tersedia.',
-    'Input atau impor saldo awal periode aktif setelah memastikan nilainya sama dengan saldo akhir periode sebelumnya. Pemeriksaan tidak mengisi saldo secara otomatis.');
-  }else{
-   const previousOpening=new Map(),activeOpening=new Map(),closingByAccount=new Map();
-   previousRows.forEach(o=>{const code=String(o.accountCode??'').trim();if(!code)return;previousOpening.set(code,(previousOpening.get(code)||0)+Number(o.debit||0)-Number(o.credit||0))});
-   activeRows.forEach(o=>{const code=String(o.accountCode??'').trim();if(!code)return;activeOpening.set(code,(activeOpening.get(code)||0)+Number(o.debit||0)-Number(o.credit||0))});
-   previousOpening.forEach((net,code)=>closingByAccount.set(code,net));
-   journals.filter(j=>isPostedJournal(j)&&String(j.date||'').slice(0,7)===previousPeriod).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).forEach(line=>{const code=String(line.code??'').trim();if(!code)return;closingByAccount.set(code,(closingByAccount.get(code)||0)+Number(line.debit||0)-Number(line.credit||0))}));
-   const codes=new Set([...closingByAccount.keys(),...activeOpening.keys()]);
-   let mismatches=0;
-   for(const code of codes){
-    const closing=closingByAccount.get(code)||0,opening=activeOpening.get(code)||0;
-    if(Math.abs(closing-opening)>.005){
-     mismatches++;
-     const missing=!activeOpening.has(code);
-     add('PERINGATAN','Rekonsiliasi Lintas Periode',previousPeriod+' → '+activePeriod+' · SANDI '+code,
-      'Saldo akhir '+previousPeriod+' '+money(closing)+' tidak sama dengan saldo awal '+activePeriod+' '+money(opening)+(missing?' (baris saldo awal akun tidak ditemukan).':'.'),
-      'Telusuri saldo awal periode aktif, jurnal POSTED bulan sebelumnya, jurnal penyesuaian, dan kemungkinan perbedaan periode. Tidak ada saldo yang diubah otomatis.');
-    }
-   }
-   if(!mismatches)add('PERINGATAN','Rekonsiliasi Lintas Periode',previousPeriod+' → '+activePeriod,
-    'Saldo akhir periode sebelumnya cocok dengan saldo awal periode aktif untuk seluruh '+codes.size+' akun yang diperiksa.',
-    'Tidak diperlukan koreksi berdasarkan pemeriksaan ini. Pastikan seluruh jurnal dan saldo awal sudah lengkap sebelum menutup periode.');
+  const previousPeriod=previousPeriodOf(activePeriod),codes=new Set([...(state.accounts||[]).map(a=>String(a.code??'').trim()),...(openings||[]).map(o=>String(o.accountCode??'').trim()),...(journals||[]).flatMap(j=>(Array.isArray(j.lines)?j.lines:[]).map(line=>String(line.code??'').trim()))]);codes.delete('');
+  let mismatches=0;
+  for(const code of codes){
+   let closing=getOpeningBalanceForAccount(previousPeriod,code).net;
+   journals.filter(j=>isPostedJournal(j)&&String(j.date||'').slice(0,7)===previousPeriod).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).filter(line=>String(line.code??'').trim()===code).forEach(line=>{closing+=Number(line.debit||0)-Number(line.credit||0)}));
+   const activeOpening=getOpeningBalanceForAccount(activePeriod,code).net;
+   if(Math.abs(closing-activeOpening)>.005){mismatches++;add('PERINGATAN','Rekonsiliasi Lintas Periode',previousPeriod+' → '+activePeriod+' · SANDI '+code,'Saldo akhir '+previousPeriod+' '+money(closing)+' tidak sama dengan saldo awal '+activePeriod+' '+money(activeOpening)+'.','Periksa apakah ada saldo awal manual yang berbeda dari hasil carry-forward. Tidak ada saldo yang diubah otomatis.')}
   }
- }else{
-  add('PERINGATAN','Rekonsiliasi Lintas Periode','Periode aktif',
-   'Periode akuntansi aktif belum valid sehingga rekonsiliasi lintas periode tidak dapat dijalankan.',
-   'Pilih periode aktif yang valid melalui menu Periode Akuntansi.');
- }
+  if(!mismatches)add('PERINGATAN','Rekonsiliasi Lintas Periode',previousPeriod+' → '+activePeriod,'Saldo akhir periode sebelumnya cocok dengan saldo awal periode aktif untuk seluruh '+codes.size+' akun yang diperiksa.','Saldo awal otomatis menggunakan saldo akhir bulan sebelumnya; tidak diperlukan input ulang untuk akun yang tidak memiliki penyesuaian manual.')
+ }else{add('PERINGATAN','Rekonsiliasi Lintas Periode','Periode aktif','Periode akuntansi aktif belum valid sehingga rekonsiliasi lintas periode tidak dapat dijalankan.','Pilih periode aktif yang valid melalui menu Periode Akuntansi.')}
  const npKeys=new Map();
  npRows.forEach((r,i)=>{
   const key=[r.tanggal,r.nobukti,r.nourut,r.sandi].map(v=>String(v??'').trim().toLowerCase()).join('|');

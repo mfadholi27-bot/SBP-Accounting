@@ -288,7 +288,7 @@
 </section>
 <section class="page" id="page-opening-balances" hidden>
  <div class="panel">
-  <div class="panel-head"><div><h3>Saldo Awal ACC & Program</h3><p>Catat saldo awal per akun untuk periode pembukuan. Data disimpan lokal dan tidak mengubah jurnal historis.</p></div><span class="tag">MASTER SALDO</span></div>
+  <div class="panel-head"><div><h3>Saldo Awal ACC & Program</h3><p>Semua akun Master Akun tampil otomatis. Saldo periode berikutnya dibawa dari saldo akhir bulan sebelumnya; saldo manual tetap dapat ditetapkan per akun.</p></div><span class="tag">MASTER SALDO</span></div>
   <div class="opening-summary" id="opening-summary"></div>
   <div class="opening-form">
    <label>Periode<input type="month" id="opening-period"></label>
@@ -297,11 +297,11 @@
    <label class="opening-note">Keterangan<input id="opening-note" placeholder="Contoh: Saldo awal periode"></label>
    <button class="btn btn-primary" id="opening-save" type="button">Simpan Saldo Awal</button>
   </div>
-  <div id="opening-message" class="inline-message">Masukkan saldo bersih: angka positif untuk Debit dan negatif untuk Kredit. Satu akun hanya boleh memiliki satu saldo awal per periode.</div>
+  <div id="opening-message" class="inline-message">Saldo otomatis dihitung dari saldo manual terakhir dan seluruh jurnal POSTED sampai bulan sebelumnya. Gunakan Atur untuk membuat penetapan saldo manual; nilai 0 diperbolehkan untuk mereset saldo.</div>
  </div>
  <div class="panel">
   <div class="panel-head"><div><h3>Daftar Saldo Awal</h3><p>Saldo awal berdasarkan periode yang dipilih.</p></div><div class="button-row"><button class="btn" id="opening-print" type="button">Cetak / PDF</button><button class="btn" id="opening-export" type="button">Ekspor Excel</button></div></div>
-  <div class="table-wrap"><table><thead><tr><th>No</th><th>SANDI</th><th>Nama Akun</th><th>Keterangan</th><th>Saldo Awal</th><th>Aksi</th></tr></thead><tbody id="opening-rows"></tbody><tfoot id="opening-foot"></tfoot></table></div>
+  <div class="table-wrap"><table><thead><tr><th>No</th><th>SANDI</th><th>Nama Akun</th><th>Sumber Saldo</th><th>Saldo Awal</th><th>Aksi</th></tr></thead><tbody id="opening-rows"></tbody><tfoot id="opening-foot"></tfoot></table></div>
  </div>
 </section><section class="page" id="page-periods" hidden>
  <div class="panel">
@@ -439,7 +439,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-FINAL-032</span><span>17-11-2026 · Build 032 · Import Saldo Awal Mendukung Saldo Nol</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-FINAL-033</span><span>17-11-2026 · Build 033 · Saldo Awal Otomatis & Carry Forward</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=160"></script>
+<script src="app.js?v=161"></script>
 </body></html>
