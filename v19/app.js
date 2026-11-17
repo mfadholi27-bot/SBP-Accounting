@@ -570,7 +570,7 @@ function journalTable(items,actions=true,summaryItems=items){
  // Rekonsiliasi lintas tanggal berdasarkan nomor bukti dan status yang sama.
  // Draft tidak boleh mengimbangi jurnal POSTED.
  const voucherTotals=new Map();
- summaryItems.forEach(j=>{
+ state.journals.forEach(j=>{
   const status=journalPrintStatus(j),number=String(j.number||'').trim().toLocaleLowerCase('id-ID');
   const key=(number||'__tanpa_nomor__:'+String(j.id||''))+'|'+status;
   const value=voucherTotals.get(key)||{debit:0,credit:0,count:0};
