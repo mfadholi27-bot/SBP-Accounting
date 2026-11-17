@@ -714,8 +714,16 @@ function validateBulkPostJournal(j){
   if(!((d>0&&c===0)||(c>0&&d===0)))return 'Baris '+(i+1)+': isi tepat satu sisi debit atau kredit.';
   debit+=d;credit+=c;
  }
- if(Math.abs(debit-credit)>0.000001)return 'Tidak seimbang. Debit '+money(debit)+' dan kredit '+money(credit)+'.';
- return '';
+ return {debit,credit};
+}
+function bulkVoucherKey(j){return String(j.number||'').trim().toLocaleLowerCase('id-ID')}
+function validateBulkPostGroup(rows){
+ const structural=[];
+ for(const j of rows){const result=validateBulkPostJournal(j);if(typeof result==='string')structural.push({journal:j,reason:result})}
+ if(structural.length)return {valid:false,errors:structural};
+ const debit=rows.reduce((n,j)=>n+validateBulkPostJournal(j).debit,0),credit=rows.reduce((n,j)=>n+validateBulkPostJournal(j).credit,0);
+ if(Math.abs(debit-credit)>0.000001)return {valid:false,debit,credit,reason:'Gabungan '+rows.length+' bagian nomor bukti tidak seimbang. Debit '+money(debit)+' dan kredit '+money(credit)+'.'};
+ return {valid:true,debit,credit};
 }
 function previewBulkPosting(){
  const mode=$('bulk-post-mode').value;let from='',to='';
@@ -724,20 +732,29 @@ function previewBulkPosting(){
  else {from=$('bulk-post-from').value;to=$('bulk-post-to').value}
  if(!from||!to||from>to){toast('Periode tanggal belum benar.');return}
  const drafts=state.journals.filter(j=>j.status==='draft'&&String(j.date||'')>=from&&String(j.date||'')<=to);
+ const groups=new Map();drafts.forEach(j=>{const key=bulkVoucherKey(j);if(!key)return;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(j)});
  const valid=[],invalid=[];
- drafts.forEach(j=>{const reason=validateBulkPostJournal(j);(reason?invalid:valid).push({journal:j,reason})});
- bulkPostCandidates=valid.map(x=>x.journal);
- const totalDebit=valid.reduce((s,j)=>s+(j.lines||[]).reduce((n,l)=>n+Number(l.debit||0),0),0);
- const totalCredit=valid.reduce((s,j)=>s+(j.lines||[]).reduce((n,l)=>n+Number(l.credit||0),0),0);
- const invalidHtml=invalid.length?'<div class="bulk-post-invalid"><b>Draft tidak dapat diposting ('+invalid.length+')</b><ul>'+invalid.map(x=>'<li><b>'+esc(x.journal.number)+'</b> · '+esc(x.reason)+'</li>').join('')+'</ul></div>':'<p class="balance-ok">Semua Draft dalam periode lolos validasi.</p>';
- $('bulk-post-result').innerHTML='<div class="bulk-post-stats"><div><span>Periode</span><b>'+esc(fmtDate(from))+' – '+esc(fmtDate(to))+'</b></div><div><span>Draft ditemukan</span><b>'+drafts.length+'</b></div><div><span>Siap diposting</span><b>'+valid.length+'</b></div><div><span>Total debit / kredit valid</span><b>'+money(totalDebit)+' / '+money(totalCredit)+'</b></div></div>'+invalidHtml;
+ for(const [key,rows] of groups){
+  const outside=state.journals.filter(j=>j.status==='draft'&&bulkVoucherKey(j)===key&&!rows.some(x=>x.id===j.id));
+  if(outside.length){rows.forEach(j=>invalid.push({journal:j,reason:'Nomor bukti ini memiliki bagian Draft lain di luar rentang tanggal yang dipilih. Pilih rentang yang mencakup semua bagian transaksi.'}));continue}
+  const result=validateBulkPostGroup(rows);
+  if(result.valid)rows.forEach(j=>valid.push(j));
+  else if(result.errors)result.errors.forEach(x=>invalid.push(x));
+  else rows.forEach(j=>invalid.push({journal:j,reason:result.reason}));
+ }
+ drafts.filter(j=>!bulkVoucherKey(j)).forEach(j=>invalid.push({journal:j,reason:'Nomor bukti kosong.'}));
+ bulkPostCandidates=valid;
+ const totalDebit=valid.reduce((n,j)=>n+validateBulkPostJournal(j).debit,0),totalCredit=valid.reduce((n,j)=>n+validateBulkPostJournal(j).credit,0);
+ const invalidHtml=invalid.length?'<div class="bulk-post-invalid"><b>Draft tidak dapat diposting ('+invalid.length+')</b><ul>'+invalid.map(x=>'<li><b>'+esc(x.journal.number||'(Tanpa nomor)')+'</b> · '+esc(x.reason)+'</li>').join('')+'</ul></div>':'<p class="balance-ok">Semua Draft dalam periode lolos validasi kelompok nomor bukti.</p>';
+ const groupCount=[...groups.values()].filter(rows=>rows.length>1).length;
+ $('bulk-post-result').innerHTML='<div class="bulk-post-stats"><div><span>Periode</span><b>'+esc(fmtDate(from))+' – '+esc(fmtDate(to))+'</b></div><div><span>Draft ditemukan</span><b>'+drafts.length+'</b></div><div><span>Siap diposting</span><b>'+valid.length+'</b></div><div><span>Total debit / kredit valid</span><b>'+money(totalDebit)+' / '+money(totalCredit)+'</b></div></div>'+(groupCount?'<p class="balance-ok">Terdeteksi '+groupCount+' nomor bukti dengan beberapa bagian. Keseimbangan diperiksa dari total gabungan seluruh bagian.</p>':'')+invalidHtml;
  $('bulk-post-result').hidden=false;$('bulk-post-confirm').disabled=valid.length===0;
 }
 $('bulk-post-mode').addEventListener('change',updateBulkPostMode);
 $('bulk-post-preview').addEventListener('click',previewBulkPosting);
 $('bulk-post-confirm').addEventListener('click',async()=>{
  const ids=[...new Set(bulkPostCandidates.map(j=>String(j.id||'')).filter(Boolean))];if(!ids.length)return;
- const recheck=()=>{const rows=ids.map(id=>state.journals.find(j=>String(j.id)===id));if(rows.some(j=>!j||j.status!=='draft'))return {error:'Daftar Draft berubah sejak pratinjau. Periksa ulang sebelum posting.'};if(new Set(rows.map(j=>String(j.number||'').trim().toLowerCase())).size!==rows.length)return {error:'Ada nomor bukti duplikat di antara Draft terpilih.'};for(const j of rows){if(!String(j.number||'').trim())return {error:'Ada Draft tanpa nomor bukti.'};if(state.journals.some(x=>x.id!==j.id&&String(x.number||'').trim().toLowerCase()===String(j.number||'').trim().toLowerCase()))return {error:'Nomor bukti '+j.number+' sudah digunakan.'};if(!isValidCalendarDate(String(j.date||'')))return {error:'Tanggal jurnal '+j.number+' tidak valid.'};if(isPeriodLocked(String(j.date||'').slice(0,7)))return {error:'Posting diblokir: periode '+String(j.date||'').slice(0,7)+' sudah ditutup.'};const reason=validateBulkPostJournal(j);if(reason)return {error:'Draft '+j.number+' tidak lagi valid: '+reason}}return {rows}};
+ const recheck=()=>{const rows=ids.map(id=>state.journals.find(j=>String(j.id)===id));if(rows.some(j=>!j||j.status!=='draft'))return {error:'Daftar Draft berubah sejak pratinjau. Periksa ulang sebelum posting.'};const selectedIds=new Set(rows.map(j=>String(j.id)));for(const j of rows){const key=bulkVoucherKey(j);if(!key)return {error:'Ada Draft tanpa nomor bukti.'};if(!isValidCalendarDate(String(j.date||'')))return {error:'Tanggal jurnal '+j.number+' tidak valid.'};if(isPeriodLocked(String(j.date||'').slice(0,7)))return {error:'Posting diblokir: periode '+String(j.date||'').slice(0,7)+' sudah ditutup.'};const external=state.journals.filter(x=>x.id!==j.id&&bulkVoucherKey(x)===key&&!selectedIds.has(String(x.id)));if(external.length)return {error:'Nomor bukti '+j.number+' memiliki bagian lain yang tidak termasuk dalam posting ini. Periksa seluruh bagian transaksi.'}}const groups=new Map();rows.forEach(j=>{const key=bulkVoucherKey(j);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(j)});for(const [key,group] of groups){const result=validateBulkPostGroup(group);if(!result.valid)return {error:'Nomor bukti '+group[0].number+' gagal validasi: '+(result.reason||result.errors.map(x=>x.reason).join('; '))}}return {rows}};
  let checked=recheck();if(checked.error){toast(checked.error);previewBulkPosting();return}
  const count=checked.rows.length;if(!confirm('Konfirmasi posting '+count+' jurnal Draft yang sudah lolos validasi ulang?'))return;
  checked=recheck();if(checked.error){toast(checked.error);previewBulkPosting();return}
