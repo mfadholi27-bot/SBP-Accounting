@@ -1246,7 +1246,25 @@ function periodTotals(period){
  const journalCredit=postedJournals.reduce((sum,j)=>sum+(Array.isArray(j.lines)?j.lines:[]).reduce((n,l)=>{const v=Number(l.credit??0);return n+(Number.isFinite(v)&&v>0?v:0)},0),0);
  const drafts=journals.filter(j=>j.status==='draft').length,posted=journals.filter(isPostedJournal).length,noteDrafts=notes.filter(n=>n.status==='draft').length;
  let unbalancedJournals=0,missingAccounts=0,invalidJournals=0;
- journals.filter(isPostedJournal).forEach(j=>{const lines=Array.isArray(j.lines)?j.lines:[];if(lines.length<2)invalidJournals++;let d=0,c=0,invalid=false;lines.forEach(l=>{const code=String(l.code??'').trim(),db=Number(l.debit),cr=Number(l.credit);if(!code||!accounts.has(code))missingAccounts++;if(!Number.isFinite(db)||!Number.isFinite(cr)||db<0||cr<0||(db>0&&cr>0)||(!db&&!cr))invalid=true;if(Number.isFinite(db))d+=db;if(Number.isFinite(cr))c+=cr});if(invalid)invalidJournals++;if(Math.abs(d-c)>.005)unbalancedJournals++});
+ const postedGroups=new Map();
+ postedJournals.forEach(j=>{
+  const lines=Array.isArray(j.lines)?j.lines:[];if(lines.length<2)invalidJournals++;
+  let d=0,c=0,invalid=false;
+  lines.forEach(l=>{const code=String(l.code??'').trim(),db=Number(l.debit),cr=Number(l.credit);if(!code||!accounts.has(code))missingAccounts++;if(!Number.isFinite(db)||!Number.isFinite(cr)||db<0||cr<0||(db>0&&cr>0)||(!db&&!cr))invalid=true;if(Number.isFinite(db))d+=db;if(Number.isFinite(cr))c+=cr});
+  if(invalid)invalidJournals++;
+  const key=String(j.number??'').trim().toLocaleLowerCase('id-ID');
+  if(!key){if(Math.abs(d-c)>.005)unbalancedJournals++;return}
+  if(!postedGroups.has(key))postedGroups.set(key,[]);
+  postedGroups.get(key).push({journal:j,debit:d,credit:c});
+ });
+ postedGroups.forEach(group=>{
+  const dates=new Set(group.map(x=>String(x.journal.date||'').slice(0,10)));
+  const isSplitVoucher=group.length>1&&dates.size>1;
+  if(isSplitVoucher){
+   const debit=group.reduce((n,x)=>n+x.debit,0),credit=group.reduce((n,x)=>n+x.credit,0);
+   if(Math.abs(debit-credit)>.005)unbalancedJournals++;
+  }else group.forEach(x=>{if(Math.abs(x.debit-x.credit)>.005)unbalancedJournals++});
+ });
  const openingRows=(state.openingBalances||[]).filter(x=>x.period===period),openings=openingRows.length,openingSeen=new Set();let duplicateOpenings=0,invalidOpenings=0;
  openingRows.forEach(x=>{const code=String(x.accountCode??'').trim(),d=Number(x.debit),c=Number(x.credit);if(openingSeen.has(code))duplicateOpenings++;openingSeen.add(code);if(!code||!accounts.has(code)||!Number.isFinite(d)||!Number.isFinite(c)||d<0||c<0||(d>0&&c>0)||(!d&&!c))invalidOpenings++});
  return {rows,debit,credit,journalDebit,journalCredit,difference:debit-credit,drafts,posted,openings,noteDrafts,unbalancedJournals,missingAccounts,invalidJournals,duplicateOpenings,invalidOpenings};
