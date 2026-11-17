@@ -394,7 +394,7 @@
 
 </section>
 <section class="page" id="page-validation" hidden>
- <div class="panel validation-hero"><div><span class="tag">READ-ONLY DATA CHECK</span><h3>Pusat Validasi & Integritas Data</h3><p>Periksa konsistensi jurnal, master akun, saldo awal, NPTRANS, dan periode. Pemeriksaan ini hanya membaca data; tidak mengubah atau menghapus transaksi.</p></div><button class="btn btn-primary" id="validation-run" type="button"><i data-lucide="refresh-cw"></i> Jalankan Pemeriksaan</button></div>
+ <div class="panel validation-hero"><div><span class="tag">READ-ONLY DATA CHECK</span><h3>Pusat Validasi & Integritas Data</h3><p>Periksa konsistensi jurnal, master akun terkait, saldo awal, dan NPTRANS pada periode kerja aktif. Pemeriksaan ini hanya membaca data; tidak mengubah atau menghapus transaksi.</p></div><button class="btn btn-primary" id="validation-run" type="button"><i data-lucide="refresh-cw"></i> Jalankan Pemeriksaan</button></div>
  <div class="validation-summary" id="validation-summary"><article><span>Total temuan</span><b id="validation-total">—</b></article><article><span>Gagal</span><b id="validation-errors">—</b></article><article><span>Peringatan</span><b id="validation-warnings">—</b></article><article><span>Status</span><b id="validation-status">Belum diperiksa</b></article></div>
  <div class="panel"><div class="panel-head"><div><h3>Hasil pemeriksaan</h3><p id="validation-meta">Tekan Jalankan Pemeriksaan untuk memulai.</p></div><select id="validation-filter" class="journal-filter"><option value="all">Semua temuan</option><option value="GAGAL">Gagal</option><option value="PERINGATAN">Peringatan</option></select></div>
  <div id="validation-navigation-hint" class="inline-message" aria-live="polite">Gunakan tombol Buka Lokasi pada setiap temuan untuk menuju modul pemeriksaan.</div><div id="validation-results" class="validation-results"><div class="empty">Belum ada hasil pemeriksaan.</div></div>
@@ -439,7 +439,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-FINAL-037</span><span>17-11-2026 · Build 037 · Validasi Tutup Buku Nomor Bukti Gabungan</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-FINAL-038</span><span>17-11-2026 · Build 038 · Validasi Berdasarkan Periode Kerja Aktif</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=163"></script>
+<script src="app.js?v=164"></script>
 </body></html>
