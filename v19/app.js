@@ -748,7 +748,7 @@ function previewBulkPosting(){
  const invalidHtml=invalid.length?'<div class="bulk-post-invalid"><b>Draft tidak dapat diposting ('+invalid.length+')</b><ul>'+invalid.map(x=>'<li><b>'+esc(x.journal.number||'(Tanpa nomor)')+'</b> · '+esc(x.reason)+'</li>').join('')+'</ul></div>':'<p class="balance-ok">Semua Draft dalam periode lolos validasi kelompok nomor bukti.</p>';
  const groupCount=[...groups.values()].filter(rows=>rows.length>1).length;
  $('bulk-post-result').innerHTML='<div class="bulk-post-stats"><div><span>Periode</span><b>'+esc(fmtDate(from))+' – '+esc(fmtDate(to))+'</b></div><div><span>Draft ditemukan</span><b>'+drafts.length+'</b></div><div><span>Siap diposting</span><b>'+valid.length+'</b></div><div><span>Total debit / kredit valid</span><b>'+money(totalDebit)+' / '+money(totalCredit)+'</b></div></div>'+(groupCount?'<p class="balance-ok">Terdeteksi '+groupCount+' nomor bukti dengan beberapa bagian. Keseimbangan diperiksa dari total gabungan seluruh bagian.</p>':'')+invalidHtml;
- $('bulk-post-result').hidden=false;$('bulk-post-confirm').disabled=valid.length===0||invalid.length>0;
+ $('bulk-post-result').hidden=false;$('bulk-post-confirm').disabled=valid.length===0;
 }
 $('bulk-post-mode').addEventListener('change',updateBulkPostMode);
 $('bulk-post-preview').addEventListener('click',previewBulkPosting);
