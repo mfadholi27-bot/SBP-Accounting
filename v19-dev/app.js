@@ -20,7 +20,7 @@ function collectAuditChanges(){if(!auditBaseline){auditBaseline=auditClone({acco
 async function persist(){collectAuditChanges();try{const db=await dbOpen();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(state,STATE_KEY);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close();queueAutoBackup()}catch(e){localStorage.setItem(DB_NAME,JSON.stringify(state));console.warn('Fallback localStorage',e);queueAutoBackup()}if($('dash-period-picker')&&state.periodControl)renderDashboard()}
 let backupDirectoryHandle=null,backupTimer=null,backupBusy=false,lastAutoBackupAt=0;
 function entityBackupSlug(){const raw=(activeEntity?.name||'PEMBUKUAN').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,36)||'PEMBUKUAN';return (activeEntity?.id||'ENTITAS_TIDAK_DIKENAL')+'-'+raw}
-function entityBackupFolderName(){return 'ENTITAS_'+entityBackupSlug()}
+function entityBackupFolderName(){return 'BACKUP_'+entityBackupSlug()}
 function entityBackupPrefix(){return 'SBP-V19-'+entityBackupSlug()}
 function makeBackupPayload(){const safeState=JSON.parse(JSON.stringify(state));if(safeState.npTemplate?.fields)safeState.npTemplate.fields.forEach(f=>{if(f.raw&&typeof f.raw==='object')f.raw=Array.from(f.raw)});return {app:'SBP Accounting',version:19,entity:{id:activeEntity?.id||null,name:activeEntity?.name||null,dbName:DB_NAME},exportedAt:new Date().toISOString(),backupType:'automatic-or-manual',state:safeState}}
 function backupFileName(date=new Date()){const p=n=>String(n).padStart(2,'0');return entityBackupPrefix()+'-'+date.getFullYear()+p(date.getMonth()+1)+p(date.getDate())+'-'+p(date.getHours())+p(date.getMinutes())+p(date.getSeconds())+'.json'}
