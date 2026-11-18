@@ -1,3 +1,4 @@
+/* BUILD 002 — Multi-entity backup & restore UI refinement */
 /* BUILD 047 — Dual-format mass journal import */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
