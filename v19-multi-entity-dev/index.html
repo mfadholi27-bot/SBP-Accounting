@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6b4b">
+<title>SBP Accounting — Multi-Entitas Development</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">SBP</div><div><strong>SBP ACCOUNTING</strong><small>MULTI-ENTITAS · DEVELOPMENT</small></div></div>
+    <div class="side-caption">WORKSPACE</div>
+    <button class="nav active" type="button"><span>▦</span> Daftar Pembukuan</button>
+    <div class="sidebar-note"><span class="dot"></span> Mode pengembangan terisolasi</div>
+    <div class="sidebar-bottom"><strong>BUILD ME-001</strong><small>Local-first · IndexedDB</small></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><span class="eyebrow">PENGELOLAAN DATA</span><h1>Multi-Entitas</h1></div><div class="dev-pill"><i></i> DEVELOPMENT</div></header>
+    <section class="intro"><div><span class="eyebrow light">SATU APLIKASI, BANYAK PEMBUKUAN</span><h2>Kelola setiap unit secara terpisah.</h2><p>Buat pembukuan untuk unit mana pun. Nama dapat diubah kapan saja, sementara database internal setiap pembukuan tetap terpisah.</p></div><div class="intro-icon">▤</div></section>
+    <section class="summary-grid"><article class="summary-card"><span>Total Pembukuan</span><strong id="totalCount">0</strong><small>Termasuk yang diarsipkan</small></article><article class="summary-card"><span>Pembukuan Aktif</span><strong id="activeCount">0</strong><small>Siap dipilih</small></article><article class="summary-card"><span>Data Transaksi</span><strong id="transactionCount">0</strong><small>Di seluruh database development</small></article></section>
+    <section class="section-head"><div><h2>Daftar Pembukuan</h2><p>Setiap kartu mewakili database yang berdiri sendiri.</p></div><button class="primary" id="addBtn">＋ Tambah Pembukuan</button></section>
+    <div id="notice" class="notice" role="status">Memuat workspace lokal…</div><section id="entityGrid" class="entity-grid"></section>
+    <section class="safety-panel"><div class="shield">✓</div><div><strong>Pemisahan data aktif</strong><p>Versi ini menggunakan database khusus DEVELOPMENT. Database produksi <code>sbp-accounting-v19</code> tidak dibaca, diubah, atau dimigrasikan.</p></div></section>
+    <footer>SBP Accounting Multi-Entitas · Tahap 1 — Pengelola Pembukuan <span>Belum terhubung ke modul akuntansi V19</span></footer>
+  </main>
+</div>
+<dialog id="entityDialog"><form id="entityForm" method="dialog"><div class="dialog-head"><div><span class="eyebrow">PENGATURAN WORKSPACE</span><h2 id="dialogTitle">Tambah Pembukuan</h2></div><button class="close" type="button" id="closeDialog">×</button></div><label>Nama Pembukuan <em>*</em><input id="entityName" maxlength="70" required placeholder="Contoh: PKS, Kebun Inti, Kantor Pusat"></label><label>Nama Perusahaan / Unit <input id="companyName" maxlength="100" placeholder="Nama perusahaan atau unit kerja"></label><label>Keterangan <textarea id="entityDescription" maxlength="240" rows="3" placeholder="Keterangan singkat (opsional)"></textarea></label><div class="dialog-actions"><button class="secondary" type="button" id="cancelDialog">Batal</button><button class="primary" type="submit">Simpan Pembukuan</button></div></form></dialog>
+<script src="app.js"></script>
+</body></html>
