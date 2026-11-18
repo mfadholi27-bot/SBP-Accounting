@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#116b49"><meta name="description" content="SBP Accounting V19 — akuntansi offline dan kompatibilitas DBF NPTRANS">
-<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=38"><link rel="stylesheet" href="palm-glass-theme.css?v=45"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
-<title>SBP Accounting V19</title>
+<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=40"><link rel="stylesheet" href="palm-glass-theme.css?v=45"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
+<title>SBP Accounting V19 DEV</title>
 <style id="sbp-journal-print-modal-style">
 .sbp-print-modal{position:fixed!important;inset:0!important;z-index:10050!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;background:rgba(15,23,42,.56)!important;backdrop-filter:blur(3px)!important;box-sizing:border-box!important}
 .sbp-print-modal[hidden]{display:none!important}
@@ -170,7 +170,7 @@
   <div class="sidebar-foot"><span class="dot"></span> Mode lokal · Data di perangkat ini</div>
 </aside>
 <main class="main">
-<header class="topbar"><div><div class="page-brand"><strong id="topbar-company-name">PT. SURYA BRATASENA PLANTATION</strong><span id="topbar-system-version">SBP ACCOUNTING · V19</span></div><h1 id="page-title">Dashboard</h1></div><div class="top-actions"><span class="local-pill"><i class="status-dot"></i> Offline ready</span><button class="btn guide-trigger" id="module-guide-open" type="button" title="Panduan modul"><i data-lucide="circle-help"></i><span>Panduan</span></button><button class="btn" id="print-current-page" type="button" title="Cetak halaman aktif"><i data-lucide="printer"></i><span>Cetak</span></button><button class="btn btn-primary" id="quick-journal"><i data-lucide="plus"></i><span>Jurnal Baru</span></button></div></header>
+<header class="topbar"><div><div class="page-brand"><strong id="topbar-company-name">PT. SURYA BRATASENA PLANTATION</strong><span id="topbar-system-version">SBP ACCOUNTING · V19 DEV</span></div><h1 id="page-title">Dashboard</h1></div><div class="top-actions"><span class="local-pill"><i class="status-dot"></i> Offline ready</span><button class="btn guide-trigger" id="module-guide-open" type="button" title="Panduan modul"><i data-lucide="circle-help"></i><span>Panduan</span></button><button class="btn" id="print-current-page" type="button" title="Cetak halaman aktif"><i data-lucide="printer"></i><span>Cetak</span></button><button class="btn btn-primary" id="quick-journal"><i data-lucide="plus"></i><span>Jurnal Baru</span></button></div></header>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div class="module-guide-backdrop" id="module-guide-modal" hidden><section class="module-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="module-guide-title"><div class="module-guide-head"><div><span class="tag">PANDUAN MODUL</span><h2 id="module-guide-title">Panduan</h2></div><button class="icon-btn" id="module-guide-close" type="button" aria-label="Tutup panduan"><i data-lucide="x"></i></button></div><div id="module-guide-content" class="module-guide-content"></div></section></div>
 <section class="page active" id="page-dashboard">
@@ -288,7 +288,7 @@
 </section>
 <section class="page" id="page-opening-balances" hidden>
  <div class="panel">
-  <div class="panel-head"><div><h3>Saldo Awal ACC & Program</h3><p>Catat saldo awal per akun untuk periode pembukuan. Data disimpan lokal dan tidak mengubah jurnal historis.</p></div><span class="tag">MASTER SALDO</span></div>
+  <div class="panel-head"><div><h3>Saldo Awal ACC & Program</h3><p>Semua akun Master Akun tampil otomatis. Saldo periode berikutnya dibawa dari saldo akhir bulan sebelumnya; saldo manual tetap dapat ditetapkan per akun.</p></div><span class="tag">MASTER SALDO</span></div>
   <div class="opening-summary" id="opening-summary"></div>
   <div class="opening-form">
    <label>Periode<input type="month" id="opening-period"></label>
@@ -297,11 +297,11 @@
    <label class="opening-note">Keterangan<input id="opening-note" placeholder="Contoh: Saldo awal periode"></label>
    <button class="btn btn-primary" id="opening-save" type="button">Simpan Saldo Awal</button>
   </div>
-  <div id="opening-message" class="inline-message">Masukkan saldo bersih: angka positif untuk Debit dan negatif untuk Kredit. Satu akun hanya boleh memiliki satu saldo awal per periode.</div>
+  <div id="opening-message" class="inline-message">Saldo otomatis dihitung dari saldo manual terakhir dan seluruh jurnal POSTED sampai bulan sebelumnya. Gunakan Atur untuk membuat penetapan saldo manual; nilai 0 diperbolehkan untuk mereset saldo.</div>
  </div>
  <div class="panel">
   <div class="panel-head"><div><h3>Daftar Saldo Awal</h3><p>Saldo awal berdasarkan periode yang dipilih.</p></div><div class="button-row"><button class="btn" id="opening-print" type="button">Cetak / PDF</button><button class="btn" id="opening-export" type="button">Ekspor Excel</button></div></div>
-  <div class="table-wrap"><table><thead><tr><th>No</th><th>SANDI</th><th>Nama Akun</th><th>Keterangan</th><th>Saldo Awal</th><th>Aksi</th></tr></thead><tbody id="opening-rows"></tbody><tfoot id="opening-foot"></tfoot></table></div>
+  <div class="table-wrap"><table><thead><tr><th>No</th><th>SANDI</th><th>Nama Akun</th><th>Sumber Saldo</th><th>Saldo Awal</th><th>Aksi</th></tr></thead><tbody id="opening-rows"></tbody><tfoot id="opening-foot"></tfoot></table></div>
  </div>
 </section><section class="page" id="page-periods" hidden>
  <div class="panel">
@@ -394,7 +394,7 @@
 
 </section>
 <section class="page" id="page-validation" hidden>
- <div class="panel validation-hero"><div><span class="tag">READ-ONLY DATA CHECK</span><h3>Pusat Validasi & Integritas Data</h3><p>Periksa konsistensi jurnal, master akun, saldo awal, NPTRANS, dan periode. Pemeriksaan ini hanya membaca data; tidak mengubah atau menghapus transaksi.</p></div><button class="btn btn-primary" id="validation-run" type="button"><i data-lucide="refresh-cw"></i> Jalankan Pemeriksaan</button></div>
+ <div class="panel validation-hero"><div><span class="tag">READ-ONLY DATA CHECK</span><h3>Pusat Validasi & Integritas Data</h3><p>Periksa konsistensi jurnal, master akun terkait, saldo awal, dan NPTRANS pada periode kerja aktif. Pemeriksaan ini hanya membaca data; tidak mengubah atau menghapus transaksi.</p></div><button class="btn btn-primary" id="validation-run" type="button"><i data-lucide="refresh-cw"></i> Jalankan Pemeriksaan</button></div>
  <div class="validation-summary" id="validation-summary"><article><span>Total temuan</span><b id="validation-total">—</b></article><article><span>Gagal</span><b id="validation-errors">—</b></article><article><span>Peringatan</span><b id="validation-warnings">—</b></article><article><span>Status</span><b id="validation-status">Belum diperiksa</b></article></div>
  <div class="panel"><div class="panel-head"><div><h3>Hasil pemeriksaan</h3><p id="validation-meta">Tekan Jalankan Pemeriksaan untuk memulai.</p></div><select id="validation-filter" class="journal-filter"><option value="all">Semua temuan</option><option value="GAGAL">Gagal</option><option value="PERINGATAN">Peringatan</option></select></div>
  <div id="validation-navigation-hint" class="inline-message" aria-live="polite">Gunakan tombol Buka Lokasi pada setiap temuan untuk menuju modul pemeriksaan.</div><div id="validation-results" class="validation-results"><div class="empty">Belum ada hasil pemeriksaan.</div></div>
@@ -439,7 +439,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-048</span><span>13-11-2026 · Build 048 · Stay on Input Jurnal after save</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 DEV · DEVELOPMENT · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEV-SYNC-001</span><span>18-11-2026 · DEV Sync 001 · Validasi Berdasarkan Periode Kerja Aktif</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=158"></script>
+<script src="app.js?v=164"></script>
 </body></html>
