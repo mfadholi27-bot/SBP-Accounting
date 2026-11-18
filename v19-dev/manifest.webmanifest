@@ -1,11 +1,11 @@
 {
-  "name": "SBP Accounting V19",
-  "short_name": "SBP Accounting",
+  "name": "SBP Accounting V19 DEV",
+  "short_name": "SBP V19 DEV",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8faf9",
   "theme_color": "#166534",
-  "description": "Aplikasi akuntansi offline SBP",
+  "description": "Lingkungan pengembangan terisolasi SBP Accounting V19",
   "icons": [
     {
       "src": "assets/sbp-app-icon.svg",
