@@ -519,3 +519,40 @@ button.dashboard-integrity-item:hover{border-color:#b9dfc8;background:#f4faf6}
 #page-journal .entry-table td:nth-child(4) input.line-amount::placeholder{font-size:11px;color:#9aaac0;text-align:left}
 #page-journal .entry-table td:nth-child(5){text-align:center}
 #page-journal .entry-table td:nth-child(5) .remove-line{margin:auto}
+
+
+/* V19 Daftar Jurnal — refined summary hierarchy */
+#page-journal-list .journal-overview{margin:14px 0 18px;padding:16px;border:1px solid #dfe9e2;border-radius:15px;background:linear-gradient(135deg,#f7faf8 0%,#f0f6f1 100%);color:#26382e}
+#page-journal-list .journal-overview-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#page-journal-list .journal-metric{min-width:0;padding:13px 14px;border:1px solid #e1eae3;border-radius:11px;background:rgba(255,255,255,.88);box-shadow:0 2px 7px rgba(24,60,39,.035)}
+#page-journal-list .journal-metric>span{display:flex;align-items:center;gap:6px;color:#607267;font-size:10px;font-weight:700;letter-spacing:.035em;text-transform:uppercase}
+#page-journal-list .journal-metric>span i{font-style:normal;font-size:8px;font-weight:800;letter-spacing:.04em;color:#18734c;background:#e8f4ec;border-radius:4px;padding:3px 5px}
+#page-journal-list .journal-metric>b{display:block;margin-top:7px;color:#263b30;font-size:clamp(16px,1.55vw,21px);font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#page-journal-list .journal-metric>b.balance-ok{color:#167348!important}
+#page-journal-list .journal-metric>b.balance-warn{color:#b45309!important}
+#page-journal-list .journal-metric>small{display:block;margin-top:5px;color:#89968d;font-size:10px;line-height:1.35}
+#page-journal-list .journal-overview-status{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding:11px 13px;border:1px solid #dfe9e2;border-radius:10px;background:rgba(255,255,255,.72)}
+#page-journal-list .journal-status-label{color:#65766b;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+#page-journal-list .journal-status-chips{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+#page-journal-list .journal-status-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid #e3eae5;border-radius:7px;background:#fff;color:#53645a;font-size:10px;font-weight:700}
+#page-journal-list .journal-status-chip i{width:6px;height:6px;border-radius:50%;background:#94a39a}
+#page-journal-list .journal-status-chip b{color:#26382e;font-variant-numeric:tabular-nums}
+#page-journal-list .journal-status-chip.posted i{background:#198754}
+#page-journal-list .journal-status-chip.draft i{background:#d69a2d}
+#page-journal-list .journal-status-chip.cancelled i{background:#c46a6a}
+#page-journal-list .journal-status-chip.other i{background:#8a96a0}
+#page-journal-list .journal-overview-note{margin:10px 2px 0;color:#829087;font-size:10px;line-height:1.5}
+#page-journal-list .journal-table-wrap{border:1px solid var(--line);border-radius:11px}
+#page-journal-list .journal-list-table thead th{background:#f3f7f4;color:#52645a}
+#page-journal-list .journal-list-table tbody tr.journal-main-row:hover{background:#f0f7f2}
+@media(max-width:980px){#page-journal-list .journal-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){#page-journal-list .journal-overview{padding:11px}#page-journal-list .journal-overview-grid{gap:7px}#page-journal-list .journal-metric{padding:10px}#page-journal-list .journal-metric>b{font-size:15px}#page-journal-list .journal-overview-status{align-items:flex-start;flex-direction:column}}
+
+
+/* V19 Daftar Jurnal — prevent voucher aggregate labels from colliding */
+#page-journal-list .journal-list-table .journal-voucher-group{display:block;position:static;clear:both;margin-top:3px;font-size:9px;line-height:1.25;font-weight:600;white-space:normal;overflow-wrap:anywhere;color:#7b8980}
+#page-journal-list .journal-list-table td:nth-child(2) .journal-voucher-group{max-width:100%;text-align:left}
+#page-journal-list .journal-list-table td.num .journal-voucher-group{text-align:right}
+#page-journal-list .journal-list-table .journal-description{max-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#page-journal-list .journal-list-table tbody tr.journal-main-row{height:auto;min-height:48px}
+#page-journal-list .journal-list-table td{overflow-wrap:normal}
