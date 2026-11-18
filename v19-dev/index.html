@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#116b49"><meta name="description" content="SBP Accounting V19 — akuntansi offline dan kompatibilitas DBF NPTRANS">
-<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=41"><link rel="stylesheet" href="palm-glass-theme.css?v=45"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
+<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=42"><link rel="stylesheet" href="palm-glass-theme.css?v=45"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
 <title>SBP Accounting V19 DEV</title>
 <style id="sbp-journal-print-modal-style">
 .sbp-print-modal{position:fixed!important;inset:0!important;z-index:10050!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;background:rgba(15,23,42,.56)!important;backdrop-filter:blur(3px)!important;box-sizing:border-box!important}
@@ -146,6 +146,34 @@
 @media(max-width:520px){
  #page-periods>.panel:first-child .panel-head{align-items:flex-start!important;flex-direction:column!important}
  #page-periods>.panel:first-child .period-active-status{padding:11px 13px!important}
+}
+</style>
+
+<style id="backup-build-002-contrast">
+/* Final cascade: Backup panel must remain readable with Palm Glass theme enabled. */
+#page-backup .backup-entity-banner{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;gap:14px!important;min-height:76px!important;margin:0 0 16px!important;padding:15px 18px!important;border:1px solid #cfe4d5!important;border-radius:13px!important;background:#f1faf4!important}
+#page-backup .backup-entity-mark{display:grid!important;place-items:center!important;flex:0 0 42px!important;width:42px!important;height:42px!important;background:#dcefe2!important;color:#176b48!important}
+#page-backup .backup-entity-copy{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;gap:3px!important;min-width:0!important;opacity:1!important}
+#page-backup .backup-entity-copy span{color:#52715f!important;font-size:10px!important;font-weight:800!important;letter-spacing:.08em!important}
+#page-backup .backup-entity-copy strong{color:#183b2b!important;font-size:16px!important;line-height:1.4!important;font-weight:800!important;overflow-wrap:anywhere!important}
+#page-backup .backup-entity-copy small{color:#52695b!important;font-size:11px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+#page-backup .backup-entity-policy{color:#176b48!important;background:#fff!important;border:1px solid #cfe5d6!important;font-size:11px!important;font-weight:750!important}
+#page-backup .panel-head h3{color:#183329!important}
+#page-backup .panel-head p{color:#52685b!important;opacity:1!important;font-size:12px!important;line-height:1.6!important}
+#page-backup .backup-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:15px!important;align-items:stretch!important}
+#page-backup .backup-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:10px!important;min-width:0!important;min-height:218px!important;padding:21px!important;border:1px solid #dce8df!important;border-radius:14px!important;background:#fff!important}
+#page-backup .backup-card h4{margin:0!important;color:#183329!important;font-size:16px!important;font-weight:800!important;line-height:1.4!important}
+#page-backup .backup-card p{display:block!important;flex:1 1 auto!important;min-height:0!important;margin:0 0 8px!important;color:#52685b!important;opacity:1!important;font-size:12px!important;line-height:1.7!important;font-weight:400!important}
+#page-backup .backup-card .btn,#page-backup .backup-card .file-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:43px!important;margin:0 7px 0 0!important;padding:10px 15px!important;color:#244c38!important;font-size:12px!important;font-weight:750!important;line-height:1.35!important;white-space:normal!important}
+#page-backup .backup-card .btn-primary{color:#fff!important}
+#page-backup .backup-card .file-btn{margin-top:auto!important;color:#176b48!important}
+#page-backup #backup-message{color:#315b43!important;opacity:1!important;font-size:12px!important;line-height:1.65!important}
+#page-backup .footnote{color:#5c7063!important;opacity:1!important;font-size:11px!important;line-height:1.7!important}
+@media(max-width:760px){
+ #page-backup .backup-grid{grid-template-columns:minmax(0,1fr)!important}
+ #page-backup .backup-card{min-height:0!important;padding:17px!important}
+ #page-backup .backup-entity-banner{align-items:flex-start!important;flex-wrap:wrap!important}
+ #page-backup .backup-entity-policy{margin-left:56px!important}
 }
 </style>
 </head>
@@ -439,7 +467,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 DEV · DEVELOPMENT · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEV-MULTI-ENTITY-001</span><span>18-11-2026 · BUILD DEV MULTI-ENTITAS 001 · UJI COBA</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 DEV · DEVELOPMENT · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEV-MULTI-ENTITY-002</span><span>18-11-2026 · BUILD DEV MULTI-ENTITAS 001 · UJI COBA</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=167"></script>
+<script src="app.js?v=168"></script>
 </body></html>
