@@ -700,6 +700,21 @@ async function executeSplit(source,chunks,reason){
 
 let journalPage=0;
 function editJournal(id){const j=state.journals.find(x=>x.id===id);if(!j||j.status!=='draft'){toast('Hanya Draft yang dapat diedit.');return}editingId=id;journalNumberAuto=false;pendingJournalAttachments=Array.isArray(j.attachments)?j.attachments.map(f=>({...f})):[];$('j-date').value=j.date;$('j-number').value=j.number;$('j-description').value=j.description;$('journal-lines').innerHTML='';j.lines.forEach(l=>addJournalLine(l));renderJournalAttachments();$('journal-template-select').value='';$('save-journal').textContent='Simpan perubahan Draft';$('post-journal').textContent='Posting Jurnal';go('journal')}
+function openInvalidDraftJournal(id,lineNumber){
+ const j=state.journals.find(x=>String(x.id)===String(id));
+ if(!j||j.status!=='draft'){toast('Jurnal tidak ditemukan atau bukan Draft yang dapat diedit.');return}
+ editJournal(id);
+ if(lineNumber>0){
+  const rows=[...document.querySelectorAll('#journal-lines .entry-row')],target=rows[lineNumber-1];
+  if(target){
+   target.classList.add('journal-line-error');
+   target.scrollIntoView({behavior:'smooth',block:'center'});
+   const field=target.querySelector('.line-amount')||target.querySelector('.line-code');
+   if(field)field.focus({preventScroll:true});
+   setMessage('journal-message','Baris '+lineNumber+' pada jurnal '+j.number+' ditandai untuk diperiksa.','bad');
+  }else setMessage('journal-message','Jurnal terbuka, tetapi baris '+lineNumber+' tidak ditemukan. Periksa struktur baris jurnal.','bad');
+ }
+}
 let bulkPostCandidates=[];
 function updateBulkPostMode(){
  const mode=$('bulk-post-mode').value;
@@ -751,10 +766,13 @@ function previewBulkPosting(){
  drafts.filter(j=>!bulkVoucherKey(j)).forEach(j=>invalid.push({journal:j,reason:'Nomor bukti kosong.'}));
  bulkPostCandidates=valid;
  const totalDebit=valid.reduce((n,j)=>n+validateBulkPostJournal(j).debit,0),totalCredit=valid.reduce((n,j)=>n+validateBulkPostJournal(j).credit,0);
- const invalidHtml=invalid.length?'<div class="bulk-post-invalid"><b>Draft tidak dapat diposting ('+invalid.length+')</b><ul>'+invalid.map(x=>'<li><b>'+esc(x.journal.number||'(Tanpa nomor)')+'</b> · '+esc(x.reason)+'</li>').join('')+'</ul></div>':'<p class="balance-ok">Semua Draft dalam periode lolos validasi kelompok nomor bukti.</p>';
+ const invalidHtml=invalid.length?'<div class="bulk-post-invalid"><b>Draft tidak dapat diposting ('+invalid.length+')</b><ul>'+invalid.map(x=>{const match=String(x.reason||'').match(/Baris\\s+(\\d+)/i),line=match?Number(match[1]):0;return '<li><b>'+esc(x.journal.number||'(Tanpa nomor)')+'</b> · '+esc(x.reason)+' <button type="button" class="btn btn-small bulk-post-open-journal" data-journal-id="'+esc(x.journal.id||'')+'" data-line-number="'+line+'">Buka Jurnal'+(line?' · Baris '+line:'')+'</button></li>'}).join('')+'</ul></div>':'<p class="balance-ok">Semua Draft dalam periode lolos validasi kelompok nomor bukti.</p>';
  const groupCount=[...groups.values()].filter(rows=>rows.length>1).length;
  $('bulk-post-result').innerHTML='<div class="bulk-post-stats"><div><span>Periode</span><b>'+esc(fmtDate(from))+' – '+esc(fmtDate(to))+'</b></div><div><span>Draft ditemukan</span><b>'+drafts.length+'</b></div><div><span>Siap diposting</span><b>'+valid.length+'</b></div><div><span>Total debit / kredit valid</span><b>'+money(totalDebit)+' / '+money(totalCredit)+'</b></div></div>'+(groupCount?'<p class="balance-ok">Terdeteksi '+groupCount+' nomor bukti dengan beberapa bagian. Keseimbangan diperiksa dari total gabungan seluruh bagian.</p>':'')+invalidHtml;
  $('bulk-post-result').hidden=false;$('bulk-post-confirm').disabled=valid.length===0;
+ $('bulk-post-result').querySelectorAll('.bulk-post-open-journal').forEach(button=>button.addEventListener('click',()=>{
+  openInvalidDraftJournal(button.dataset.journalId,Number(button.dataset.lineNumber||0));
+ }));
 }
 $('bulk-post-mode').addEventListener('change',updateBulkPostMode);
 $('bulk-post-preview').addEventListener('click',previewBulkPosting);
