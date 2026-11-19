@@ -1,4 +1,4 @@
-/* BUILD 048 — Signed opening balance import template */
+/* BUILD 049 — Delete all manual opening balances for selected period */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19', STORE='app', STATE_KEY='main';
@@ -1226,6 +1226,22 @@ function renderOpeningBalances(){
 }
 $('opening-period').value=state.periodControl?.activePeriod||currentMonthKey();
 $('opening-period').addEventListener('change',()=>{delete $('opening-save').dataset.edit;$('opening-save').textContent='Simpan Saldo Awal';renderOpeningBalances()});
+$('opening-delete-all').addEventListener('click',async()=>{
+ const period=$('opening-period').value;
+ if(!periodGuard(period,'menghapus semua saldo awal manual'))return;
+ const records=(state.openingBalances||[]).filter(x=>String(x.period)===period);
+ if(!records.length){toast('Tidak ada saldo awal manual pada periode '+period+'.');return}
+ const ok=confirm('PERINGATAN: Hapus SEMUA '+records.length+' saldo awal manual pada periode '+period+'? Data saldo awal manual periode lain, Master Akun, dan seluruh jurnal TIDAK akan dihapus. Saldo yang tampil setelah penghapusan akan dihitung kembali dari periode sebelumnya dan jurnal POSTED.');
+ if(!ok)return;
+ state.openingBalances=(state.openingBalances||[]).filter(x=>String(x.period)!==period);
+ delete $('opening-save').dataset.edit;
+ $('opening-save').textContent='Simpan Saldo Awal';
+ $('opening-amount').value='';
+ $('opening-note').value='';
+ await persist();
+ renderOpeningBalances();
+ toast(records.length+' saldo awal manual periode '+period+' berhasil dihapus. Jurnal dan periode lain tetap aman.');
+});
 $('opening-save').addEventListener('click',async()=>{
  const period=$('opening-period').value,code=$('opening-account').value,net=Number($('opening-amount').value),note=$('opening-note').value.trim(),editing=$('opening-save').dataset.edit;
   if(!periodGuard(period,'menambah atau mengubah saldo awal'))return;
