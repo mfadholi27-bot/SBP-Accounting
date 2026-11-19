@@ -1,4 +1,4 @@
-/* BUILD 047 — Dual-format mass journal import */
+/* BUILD 048 — Signed opening balance import template */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19', STORE='app', STATE_KEY='main';
@@ -1186,12 +1186,26 @@ $('download-budget-import-template').onclick=()=>{
  XLSX.writeFile(wb,'Template-Import-Anggaran-SBP-Accounting.xlsx');toast('Template import anggaran berhasil diunduh.');
 };
 $('opening-import-template').onclick=()=>{
- const rows=[['PERIODE','SANDI','SALDO AWAL DEBIT','SALDO AWAL KREDIT','KETERANGAN']];
- const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:14},{wch:18},{wch:22},{wch:23},{wch:42}];ws['!freeze']={xSplit:0,ySplit:1};ws['!autofilter']={ref:'A1:E1'};
+ const rows=[['PERIODE','SANDI','SALDO AWAL','KETERANGAN']];
+ const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:14},{wch:18},{wch:24},{wch:42}];ws['!freeze']={xSplit:0,ySplit:1};ws['!autofilter']={ref:'A1:D1'};
  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Saldo Awal');
- const guide=XLSX.utils.aoa_to_sheet([['PETUNJUK PENGISIAN IMPORT SALDO AWAL'],['PERIODE','Gunakan format YYYY-MM, contoh 2026-01.'],['SANDI','Harus sama persis dengan SANDI pada Master Akun. Pertahankan format teks agar titik dan angka tidak berubah.'],['SALDO AWAL DEBIT','Isi angka positif jika akun memiliki saldo Debit. Jika tidak ada saldo Debit, isi 0.'],['SALDO AWAL KREDIT','Isi angka positif jika akun memiliki saldo Kredit. Jika tidak ada saldo Kredit, isi 0.'],['SALDO NOL','Jika Debit dan Kredit sama-sama 0, baris akan ditandai NOL · TIDAK DIIMPOR dan tidak dianggap kesalahan.'],['ATURAN','Dalam satu baris, hanya satu sisi yang boleh bernilai positif. Jangan isi Debit dan Kredit sekaligus dengan angka positif.'],['CONTOH DEBIT','2026-01 | 111.100 | 1000000 | 0 | Contoh saldo Debit.'],['CONTOH KREDIT','2026-01 | 211.100 | 0 | 1000000 | Contoh saldo Kredit.'],['CONTOH NOL','2026-01 | 112.100 | 0 | 0 | Baris ini dilewati otomatis.'],['KETERANGAN','Opsional.'],['PENTING','Satu baris untuk setiap kombinasi periode dan SANDI. Data saldo yang sudah ada tidak akan ditimpa saat import. Hapus baris contoh dari petunjuk jika menyalin data secara manual; sheet Saldo Awal sengaja hanya berisi header.']]);
+ const guide=XLSX.utils.aoa_to_sheet([
+  ['PETUNJUK PENGISIAN IMPORT SALDO AWAL — FORMAT POSITIF / NEGATIF'],
+  ['PERIODE','Gunakan format YYYY-MM, contoh 2026-01.'],
+  ['SANDI','Harus sama persis dengan SANDI pada Master Akun. Pertahankan format teks agar titik dan angka tidak berubah.'],
+  ['SALDO AWAL','Gunakan satu kolom angka bersih: POSITIF = Debit; NEGATIF = Kredit.'],
+  ['CONTOH DEBIT','2026-01 | 111.100 | 1000000 | Saldo Debit Rp1.000.000.'],
+  ['CONTOH KREDIT','2026-01 | 211.100 | -1000000 | Saldo Kredit Rp1.000.000.'],
+  ['CONTOH NOL','2026-01 | 112.100 | 0 | Saldo nol; baris dilewati otomatis.'],
+  ['NOMINAL','Masukkan angka tanpa simbol Rp. Contoh: 1500000 atau -1500000. Tanda minus (-) berarti Kredit.'],
+  ['FORMAT EXCEL','Nilai boleh berupa angka atau teks angka negatif. Jangan gunakan tanda kurung untuk angka negatif.'],
+  ['KETERANGAN','Opsional.'],
+  ['ATURAN','Satu baris untuk setiap kombinasi PERIODE dan SANDI. Saldo bersih hanya boleh memiliki satu sisi: Debit atau Kredit.'],
+  ['PENTING','Jangan isi Debit dan Kredit dalam dua kolom. Nilai positif/negatif akan otomatis dipetakan menjadi Debit/Kredit saat pratinjau import. Data saldo yang sudah ada tidak akan ditimpa. Sheet Saldo Awal hanya berisi header agar aman untuk diisi.']
+ ]);
  guide['!cols']=[{wch:28},{wch:115}];XLSX.utils.book_append_sheet(wb,guide,'Petunjuk');
- XLSX.writeFile(wb,'Format-Import-Saldo-Awal-SBP.xlsx')
+ XLSX.writeFile(wb,'Format-Import-Saldo-Awal-SBP.xlsx');
+ toast('Template Saldo Awal positif/negatif berhasil diunduh.');
 };
 $('opening-import-file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{let rows;if(/\.xlsx?$/i.test(f.name)){if(!window.XLSX)throw Error('Mesin Excel lokal belum siap.');const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});rows=null;for(const n of wb.SheetNames){const data=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:'',raw:true});try{parseOpeningImportRows(data);rows=data;break}catch{}}if(!rows)throw Error('Header saldo awal tidak ditemukan di sheet Excel.')}else rows=parseCSV(await f.text());showOpeningImportPreview(parseOpeningImportRows(rows),f.name)}catch(err){pendingOpeningImport=null;$('opening-import-review').hidden=true;$('opening-import-status').textContent='Gagal membaca file: '+err.message}finally{e.target.value=''}};
 $('opening-import-cancel').onclick=()=>{pendingOpeningImport=null;$('opening-import-review').hidden=true;$('opening-import-status').textContent='Pratinjau dibatalkan; data belum berubah.'};
