@@ -576,3 +576,9 @@ button.dashboard-integrity-item:hover{border-color:#b9dfc8;background:#f4faf6}
 #page-backup #backup-message{margin-top:16px;color:#315b43!important;font-size:12px;line-height:1.65;opacity:1!important}
 #page-backup .footnote{color:#5c7063!important;font-size:11px;line-height:1.7;opacity:1!important}
 @media(max-width:760px){#page-backup .panel{padding:17px}#page-backup .backup-grid{grid-template-columns:minmax(0,1fr)}#page-backup .backup-card{min-height:0;padding:17px}#page-backup .backup-entity-banner{align-items:flex-start;flex-wrap:wrap}#page-backup .backup-entity-policy{margin-left:56px}}
+
+/* Build 042 — direct navigation to invalid draft journal line */
+.bulk-post-invalid li{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:7px 0}
+.bulk-post-open-journal{flex:0 0 auto;min-height:28px;padding:4px 9px;font-size:11px}
+#journal-lines .entry-row.journal-line-error{outline:3px solid #dc6b32;outline-offset:-2px;background:#fff3e8}
+#journal-lines .entry-row.journal-line-error td{background:#fff3e8}
