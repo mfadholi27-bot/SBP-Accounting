@@ -633,3 +633,16 @@ h1,h2,h3,h4,.brand b,.nav-item,.dashboard-stat strong{font-family:var(--ep-font)
  vertical-align:middle!important;
 }
 .topbar h1#page-title::after{content:none!important;display:none!important}
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-012 — enforce icon-first heading structure. */
+.topbar h1#page-title{
+ display:inline-flex!important;align-items:center!important;flex-direction:row!important;
+ justify-content:flex-start!important;gap:.28em!important;
+}
+.topbar h1#page-title>.page-title-symbol{
+ order:0!important;display:block!important;flex:0 0 1em!important;
+ width:1em!important;height:1em!important;margin:0!important;
+ stroke-width:1.9!important;color:#0f766e!important;
+}
+.topbar h1#page-title::after{content:none!important;display:none!important}
