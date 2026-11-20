@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#116b49"><meta name="description" content="SBP Accounting V19 — akuntansi offline dan kompatibilitas DBF NPTRANS">
-<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=42"><link rel="stylesheet" href="palm-glass-theme.css?v=45"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
+<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=42"><link rel="stylesheet" href="palm-glass-theme.css?v=48"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
 <title>SBP Accounting V19</title>
 <style id="sbp-journal-print-modal-style">
 .sbp-print-modal{position:fixed!important;inset:0!important;z-index:10050!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;background:rgba(15,23,42,.56)!important;backdrop-filter:blur(3px)!important;box-sizing:border-box!important}
@@ -173,6 +173,7 @@
 <header class="topbar"><div><div class="page-brand"><strong id="topbar-company-name">PT. SURYA BRATASENA PLANTATION</strong><span id="topbar-system-version">SBP ACCOUNTING · V19</span></div><h1 id="page-title">Dashboard</h1></div><div class="top-actions"><span class="local-pill"><i class="status-dot"></i> Offline ready</span><button class="btn guide-trigger" id="module-guide-open" type="button" title="Panduan modul"><i data-lucide="circle-help"></i><span>Panduan</span></button><button class="btn" id="print-current-page" type="button" title="Cetak halaman aktif"><i data-lucide="printer"></i><span>Cetak</span></button><button class="btn btn-primary" id="quick-journal"><i data-lucide="plus"></i><span>Jurnal Baru</span></button></div></header>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div class="module-guide-backdrop" id="module-guide-modal" hidden><section class="module-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="module-guide-title"><div class="module-guide-head"><div><span class="tag">PANDUAN MODUL</span><h2 id="module-guide-title">Panduan</h2></div><button class="icon-btn" id="module-guide-close" type="button" aria-label="Tutup panduan"><i data-lucide="x"></i></button></div><div id="module-guide-content" class="module-guide-content"></div></section></div>
+<div class="page-scroll-area" id="page-scroll-area">
 <section class="page active" id="page-dashboard">
   <div class="welcome dashboard-welcome">
     <div><div class="eyebrow light"><span id="dashboard-company-name">PT. SURYA BRATASENA PLANTATION</span> · RINGKASAN PEMBUKUAN</div><h2 class="welcome-brandline">Dashboard</h2><p>Pantau aktivitas dan integritas pembukuan dalam satu tampilan.</p></div>
@@ -439,7 +440,8 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-FINAL-042</span><span>19-11-2026 · Build 042 · Navigasi Langsung Jurnal Bermasalah</span><span class="build-loaded">Kode build termuat</span></span></footer>
+</div>
+<footer class="app-footer"><span>SBP Accounting V19 · Offline-first</span><span id="build-stamp" class="build-stamp" data-build="43"><b>VERSI APLIKASI V.02</b><span>SBP-V19-FINAL-043</span><span>19-11-2026 · Integrasi V19 Development</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
 <script src="app.js?v=168"></script>
 </body></html>
