@@ -1146,3 +1146,51 @@ body{overscroll-behavior:none!important}
  color:#475569!important;
  opacity:1!important;
 }
+
+
+/* BUILD LAYOUT-003 — cross-page secondary text readability audit */
+.page-scroll-area .page :where(
+  .journal-overview-note,
+  .page-description,
+  .module-description,
+  .form-description,
+  .field-hint,
+  .input-hint,
+  .table-note,
+  .table-caption,
+  .empty-state p,
+  .empty,
+  .footnote,
+  .file-status,
+  .np-page-info,
+  .inline-help
+){
+  color:#475569!important;
+  opacity:1!important;
+}
+.page-scroll-area .page :where(label,.field-label,.form-label){
+  color:#334155!important;
+  opacity:1!important;
+}
+.page-scroll-area .page :where(input,select,textarea)::placeholder{
+  color:#64748b!important;
+  opacity:1!important;
+}
+.sidebar :where(.side-label,.nav-group-label){
+  color:#475569!important;
+  opacity:1!important;
+}
+.sidebar :where(.brand small,.sidebar-foot){
+  color:#475569!important;
+  opacity:1!important;
+}
+.app-footer,
+.app-footer :where(span,.build-stamp){
+  color:#475569!important;
+  opacity:1!important;
+}
+@media(forced-colors:active){
+  .page-scroll-area .page :where(p,small,label,th,td,.footnote,.hint,.empty){
+    forced-color-adjust:auto;
+  }
+}
