@@ -17,11 +17,15 @@ Kloning terpisah dari sumber V19 Build 042. Folder ini hanya untuk eksperimen da
 - Jalur aplikasi: `v19-development/`.
 
 ## Akses GitHub Pages
-Setelah Pages menerbitkan branch/folder ini, alamatnya:
-`https://mfadholi27-bot.github.io/SBP-Accounting/v19-development/`
+Workflow gabungan ada di `.github/workflows/pages-combined.yml`. Setelah pemilik repository mengaktifkan GitHub Actions sebagai Pages source dan workflow berhasil, alamatnya:
+- ORIGINAL: https://mfadholi27-bot.github.io/SBP-Accounting/v19/
+- DEVELOPMENT: https://mfadholi27-bot.github.io/SBP-Accounting/v19-development/
+
+Workflow menyusun situs dari `main:v19/` dan `development:v19-development/`; tidak menggabungkan branch dan tidak menyalin kode development ke produksi.
 
 ## Aturan kerja
 1. Semua eksperimen dilakukan hanya pada `v19-development/`.
-2. Jangan mengedit `v19/` atau melakukan commit ke `main`.
+2. Jangan mengedit `v19/` atau melakukan commit ke `main` untuk pekerjaan fitur.
 3. Jangan merge ke ORIGINAL tanpa persetujuan eksplisit.
 4. Uji restore/backup hanya dengan data uji atau salinan.
+5. Sebelum merge fitur, audit perubahan dan uji seluruh modul serta buat backup produksi.
