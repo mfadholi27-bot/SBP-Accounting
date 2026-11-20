@@ -1,0 +1,17 @@
+{
+  "name": "SBP Enterprise Enterprise Prototype",
+  "short_name": "SBP Enterprise",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8faf9",
+  "theme_color": "#17212f",
+  "description": "Kloning pengembangan SBP Enterprise V19 dengan penyimpanan lokal terpisah",
+  "icons": [
+    {
+      "src": "assets/sbp-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

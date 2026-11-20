@@ -1,0 +1,17 @@
+{
+  "name": "SBP Accounting DEV V19 DEVELOPMENT",
+  "short_name": "SBP Accounting",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8faf9",
+  "theme_color": "#166534",
+  "description": "Kloning pengembangan SBP Accounting V19 dengan penyimpanan lokal terpisah",
+  "icons": [
+    {
+      "src": "assets/sbp-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
