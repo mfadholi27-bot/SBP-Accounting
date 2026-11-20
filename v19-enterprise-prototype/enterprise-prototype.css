@@ -1,41 +1,41 @@
-/* SBP Accounting — Enterprise Hybrid Prototype 001
-   Visual-only layer. Original app styles and accounting logic remain untouched. */
-:root{--background:#f5f7fa;--foreground:#182230;--card:#fff;--border:#e4e9f0;--primary:#0f766e;--muted-foreground:#64748b}
-html,body{background:#f5f7fa!important;color:#182230!important}
-.shell{grid-template-columns:250px minmax(0,1fr)!important;background:#f5f7fa!important}
-.sidebar{background:#17212f!important;color:#dbe4ef!important;border-right:1px solid #263446!important;box-shadow:none!important;padding:22px 15px!important}
-.brand,.brand b{color:#f8fafc!important}.brand small{color:#a8b6c8!important}
-.brand-mark{background:#0f766e!important;color:#fff!important}
-.side-label{color:#8fa0b5!important}
-.nav-item{color:#c0ccda!important;background:transparent!important;border:1px solid transparent!important;border-radius:9px!important}
-.nav-item .nav-icon{color:#9aabc0!important}
-.nav-item:hover{background:#263548!important;color:#fff!important}
-.nav-item.active{background:#0f766e!important;color:#fff!important;border-color:#23978d!important}
-.nav-item.active .nav-icon{color:#fff!important}
-.sidebar-foot{color:#91a1b5!important}
-.main{max-width:1760px!important;padding:25px clamp(18px,2.5vw,40px)!important}
-.topbar{border-bottom:1px solid #e1e7ef!important;padding-bottom:17px!important}
+/* SBP Accounting — Enterprise Hybrid Prototype 002
+   Conservative visual pass: preserve V19 Development geometry, spacing and component layout.
+   Only apply the enterprise color system to navigation and restrained accents. */
+:root{
+ --background:#f8faf9;--foreground:#111827;--card:#fff;--border:#e2e8f0;
+ --primary:#0f766e;--muted-foreground:#64748b;
+}
+html,body{background:var(--background)!important;color:var(--foreground)!important}
+/* Keep the original V19 Development shell, sidebar width, content padding and scroll model. */
+.sidebar{
+ background:#17212f!important;color:#dbe4ef!important;
+ border-right:1px solid #263446!important;box-shadow:none!important;
+}
+.brand,.brand b{color:#f8fafc!important}
+.brand small{color:#a8b6c8!important}
+.brand-mark{background:#0f766e!important;color:#fff!important;box-shadow:none!important}
+.side-label{color:#91a2b7!important}
+.sidebar .nav-item{color:#c0ccda!important;background:transparent!important;border-color:transparent!important}
+.sidebar .nav-item .nav-icon{color:#9aabc0!important}
+.sidebar .nav-item:hover{background:#263548!important;color:#fff!important}
+.sidebar .nav-item:hover .nav-icon{color:#7dd3c7!important}
+.sidebar .nav-item.active{
+ background:#0f766e!important;color:#fff!important;border-color:#23978d!important;
+ box-shadow:none!important;
+}
+.sidebar .nav-item.active .nav-icon{color:#fff!important}
+.sidebar .sidebar-foot{color:#91a1b5!important}
+.sidebar .dot,.sidebar .status-dot{background:#2dd4bf!important}
+/* Accent-only treatment: component dimensions and grid definitions remain inherited. */
 .page-brand strong{color:#0f766e!important}
-.topbar h1{color:#17212f!important;font-size:25px!important;font-weight:700!important}
-.local-pill,.tag{background:#e8f5f3!important;color:#0f766e!important;border-color:#cce9e4!important}
+.local-pill,.tag{color:#0f766e!important;background:#e8f5f3!important;border-color:#cce9e4!important}
 .btn-primary{background:#0f766e!important;border-color:#0f766e!important}
-.btn-primary:hover{background:#115e59!important}
-.welcome{background:linear-gradient(115deg,#17212f,#263b50)!important;border:0!important;color:#fff!important;border-radius:16px!important;box-shadow:0 12px 28px #17212f18!important}
-.welcome h2,.welcome p,.welcome .eyebrow{color:#f8fafc!important}
-.welcome p{opacity:.84!important}.welcome .eyebrow{color:#7dd3c7!important}
-.stats{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important}
-.stat{border-radius:14px!important;padding:18px!important;box-shadow:0 3px 12px #17212f08!important}
-.stat span{color:#64748b!important}.stat strong{color:#17212f!important}
-.quick-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important}
-.quick-card{border-radius:14px!important;box-shadow:0 3px 12px #17212f08!important}
+.btn-primary:hover{background:#115e59!important;border-color:#115e59!important}
 .quick-icon{background:#e8f5f3!important;color:#0f766e!important}
-.panel,.card,.accounts-card,.bulk-post-panel,.bulk-journal-panel{border-radius:14px!important;box-shadow:0 3px 14px #17212f08!important;border-color:#e4e9f0!important}
-.panel h3,.panel-head h3,.section-heading h3{color:#17212f!important}
-.table-wrap{border-radius:10px!important;border-color:#e3e8ef!important}
-thead th{background:#f1f5f9!important;color:#475569!important}
-tbody tr:hover{background:#f0fdfa!important}
-.btn{border-radius:9px!important}
-input:focus,select:focus,textarea:focus{border-color:#0f766e!important;box-shadow:0 0 0 3px #0f766e18!important}
+.nav-item:focus-visible,.btn:focus-visible,button:focus-visible{
+ outline:2px solid #0f766e!important;outline-offset:2px!important;
+}
+input:focus,select:focus,textarea:focus{
+ border-color:#0f766e!important;box-shadow:0 0 0 3px #0f766e18!important;
+}
 .page-scroll-area{scrollbar-color:#b8c5d1 transparent}
-@media(max-width:1000px){.stats,.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-@media(max-width:720px){.sidebar{background:#17212f!important}.main{padding:16px 12px!important}.stats,.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
