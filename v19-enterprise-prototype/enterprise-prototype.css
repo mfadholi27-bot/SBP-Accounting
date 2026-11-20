@@ -609,3 +609,27 @@ h1,h2,h3,h4,.brand b,.nav-item,.dashboard-stat strong{font-family:var(--ep-font)
  #page-title{gap:.12em!important}
  #page-title::after{flex-basis:1em!important;width:1em!important;height:1em!important}
 }
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-011 — put the live module icon BEFORE its title.
+   app.js appends .page-title-symbol after the title text; flex order corrects
+   the visual position without changing the navigation or title-generation logic. */
+.topbar h1#page-title{
+ display:inline-flex!important;
+ align-items:center!important;
+ flex-direction:row!important;
+ justify-content:flex-start!important;
+ gap:.28em!important;
+}
+.topbar h1#page-title>.page-title-symbol{
+ order:-1!important;
+ display:block!important;
+ flex:0 0 1em!important;
+ width:1em!important;
+ height:1em!important;
+ margin:0!important;
+ stroke-width:1.9!important;
+ color:#0f766e!important;
+ vertical-align:middle!important;
+}
+.topbar h1#page-title::after{content:none!important;display:none!important}
