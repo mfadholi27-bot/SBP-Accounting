@@ -635,3 +635,35 @@ h1,h2,h3,h4,.brand b,.nav-item,.dashboard-stat strong{font-family:var(--ep-font)
  .page-brand strong{font-size:14px!important}
  .page-brand>span{font-size:10px!important}
 }
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-P014 — keep active entity switch aligned with guide and print actions. */
+.topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important}
+.topbar>div:first-child{flex:1 1 auto!important;min-width:0!important}
+.topbar .top-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:9px!important;flex:0 1 auto!important;min-width:0!important;flex-wrap:wrap!important}
+.topbar .top-actions #v19-entity-switch.entity-switch-btn{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ gap:7px!important;flex:0 0 auto!important;min-height:39px!important;height:39px!important;
+ max-width:min(260px,32vw)!important;margin:0!important;padding:0 12px!important;
+ border:1px solid #cfe2d6!important;border-radius:10px!important;background:#f5fbf7!important;
+ color:#176b49!important;font:700 12px/1.2 inherit!important;white-space:nowrap!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;cursor:pointer!important;
+ box-shadow:0 1px 2px rgba(15,23,42,.04)!important;transition:background .16s,border-color .16s,transform .16s!important;
+}
+.topbar .top-actions #v19-entity-switch.entity-switch-btn:hover{
+ background:#eaf6ee!important;border-color:#9bc9aa!important;transform:translateY(-1px)!important;
+}
+.topbar .top-actions #v19-entity-switch.entity-switch-btn:focus-visible{
+ outline:3px solid rgba(22,128,75,.18)!important;outline-offset:2px!important;
+}
+@media(max-width:900px){
+ .topbar{align-items:flex-start!important;flex-direction:column!important;gap:10px!important}
+ .topbar .top-actions{width:100%!important;justify-content:flex-start!important;gap:8px!important}
+ .topbar .top-actions #v19-entity-switch.entity-switch-btn{max-width:min(260px,100%)!important}
+}
+@media(max-width:520px){
+ .topbar .top-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:stretch!important}
+ .topbar .top-actions>*{min-width:0!important;width:100%!important;box-sizing:border-box!important}
+ .topbar .top-actions #v19-entity-switch.entity-switch-btn{max-width:none!important;justify-content:center!important}
+ .topbar .top-actions .local-pill{grid-column:1/-1!important;justify-self:start!important;width:auto!important}
+}
