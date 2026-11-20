@@ -667,3 +667,60 @@ h1,h2,h3,h4,.brand b,.nav-item,.dashboard-stat strong{font-family:var(--ep-font)
  .topbar .top-actions #v19-entity-switch.entity-switch-btn{max-width:none!important;justify-content:center!important}
  .topbar .top-actions .local-pill{grid-column:1/-1!important;justify-self:start!important;width:auto!important}
 }
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-P015 — place every contextual question marker inline with its section title. */
+.page .sbp-title-help-wrap{
+ display:inline-flex!important;
+ flex-direction:row!important;
+ align-items:center!important;
+ justify-content:flex-start!important;
+ gap:8px!important;
+ position:relative!important;
+ width:max-content!important;
+ max-width:100%!important;
+ min-width:0!important;
+ vertical-align:middle!important;
+ white-space:normal!important;
+}
+.page .sbp-title-help-wrap>h2,
+.page .sbp-title-help-wrap>h3,
+.page .sbp-title-help-wrap>h4{
+ display:inline-flex!important;
+ align-items:center!important;
+ flex:0 1 auto!important;
+ min-width:0!important;
+ width:auto!important;
+ margin:0!important;
+ line-height:1.3!important;
+}
+.page .sbp-title-help-wrap>.sbp-context-help-button,
+.page .journal-budget-title-line>.budget-help-button{
+ display:inline-grid!important;
+ flex:0 0 27px!important;
+ width:27px!important;
+ min-width:27px!important;
+ height:27px!important;
+ margin:0!important;
+ vertical-align:middle!important;
+ align-self:center!important;
+}
+.page .sbp-title-help-wrap>.sbp-context-help{
+ position:absolute!important;
+ top:calc(100% + 8px)!important;
+ left:0!important;
+ z-index:10020!important;
+ width:min(360px,calc(100vw - 48px))!important;
+ max-width:calc(100vw - 48px)!important;
+ white-space:normal!important;
+}
+.page .panel-head,
+.page .section-heading,
+.page .budget-month-head,
+.page .import-center-section-title,
+.page .accounts-card-title,
+.page .opening-import-head,
+.page .validation-hero,
+.page .debit-note-intro{
+ align-items:center!important;
+}
