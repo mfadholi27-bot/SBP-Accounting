@@ -253,3 +253,103 @@ html,body{width:100%!important;min-width:0!important;max-width:100%!important;ov
  .page-scroll-area :where(.button-row,.form-actions)>.btn{flex:1 1 auto!important}
  #page-dashboard .dashboard-stats,#page-dashboard .dashboard-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-005 — restore V19 Development dashboard geometry.
+   Keep Enterprise colors and card finish; restore the proven app shell, scroll model,
+   dashboard chart spans, integrity grid, and responsive breakpoints. Visual-only. */
+.shell{
+ display:grid!important;grid-template-columns:270px minmax(0,1fr)!important;
+ width:100%!important;height:100vh!important;height:100dvh!important;
+ min-width:0!important;min-height:0!important;overflow:hidden!important;
+}
+.sidebar{
+ position:relative!important;top:auto!important;left:auto!important;
+ width:auto!important;height:100vh!important;height:100dvh!important;
+ min-height:0!important;min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;
+ overscroll-behavior:contain!important;scrollbar-gutter:stable!important;
+}
+.main{
+ display:flex!important;flex-direction:column!important;
+ width:100%!important;height:100vh!important;height:100dvh!important;
+ min-width:0!important;min-height:0!important;max-width:none!important;
+ margin:0!important;padding:18px clamp(14px,2vw,30px) 0!important;
+ overflow:hidden!important;box-sizing:border-box!important;
+}
+.topbar{
+ position:relative!important;top:auto!important;z-index:5!important;
+ flex:0 0 auto!important;min-width:0!important;
+ margin:0 0 12px!important;padding:0 0 12px!important;
+}
+.page-scroll-area{
+ display:block!important;position:relative!important;flex:1 1 auto!important;
+ min-width:0!important;min-height:0!important;width:100%!important;height:auto!important;
+ max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;
+ overscroll-behavior:contain!important;scrollbar-gutter:stable!important;
+ padding:0 2px 18px 0!important;
+}
+.page-scroll-area>.page{min-width:0!important;max-width:100%!important}
+.page-scroll-area>.page.active{display:block!important}
+.app-footer{
+ position:relative!important;z-index:5!important;display:flex!important;
+ align-items:center!important;justify-content:space-between!important;
+ flex:0 0 auto!important;gap:12px!important;flex-wrap:wrap!important;
+ min-width:0!important;margin:0!important;padding:8px 2px 9px!important;
+}
+#page-dashboard .dashboard-welcome{
+ min-height:124px!important;padding:27px 32px!important;
+}
+#page-dashboard .dashboard-welcome h2{
+ font-size:clamp(25px,2.2vw,36px)!important;
+}
+#page-dashboard .dashboard-chart-grid{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+#page-dashboard .dashboard-chart-panel.dashboard-chart-wide{
+ grid-column:1/-1!important;
+}
+#page-dashboard .dashboard-chart{min-height:210px!important}
+#page-dashboard .dashboard-chart svg{
+ height:230px!important;min-height:230px!important;
+}
+#page-dashboard .dashboard-main-grid{
+ grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr)!important;
+}
+#page-dashboard .dashboard-integrity-list{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+@media(max-width:900px){
+ .shell{grid-template-columns:220px minmax(0,1fr)!important}
+ .main{padding:14px 12px 0!important}
+ .topbar{align-items:flex-start!important;flex-wrap:wrap!important}
+ .top-actions{flex-wrap:wrap!important;gap:6px!important}
+ #page-dashboard .dashboard-main-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:620px){
+ .shell{grid-template-columns:64px minmax(0,1fr)!important}
+ .sidebar{padding:10px 6px!important}
+ .brand{justify-content:center!important;padding:4px 0 14px!important}
+ .brand>span,.sidebar .side-label,.sidebar .nav-item:not(.active){font-size:0!important}
+ .brand-mark{width:38px!important;height:38px!important}
+ .sidebar nav{display:flex!important;flex-direction:column!important;gap:5px!important}
+ .sidebar .nav-item{justify-content:center!important;min-height:42px!important;padding:8px 4px!important;font-size:0!important}
+ .sidebar .nav-item .nav-icon{width:24px!important;height:24px!important}
+ .sidebar .nav-item.active{font-size:0!important}
+ .sidebar .sidebar-foot{display:none!important}
+ .main{padding:10px 8px 0!important}
+ .topbar{gap:8px!important;margin-bottom:8px!important;padding-bottom:8px!important}
+ .page-brand{display:none!important}
+ .topbar h1{font-size:18px!important;margin:0!important}
+ .top-actions{width:100%!important}
+ .top-actions .local-pill{display:none!important}
+ .top-actions .btn{min-height:32px!important;padding:6px 8px!important;font-size:10px!important}
+ .page-scroll-area{padding-right:1px!important}
+ .app-footer{align-items:flex-start!important;flex-direction:column!important;gap:3px!important;padding:6px 1px!important;font-size:9px!important}
+ .app-footer .build-stamp{gap:2px 7px!important;font-size:9px!important}
+ #page-dashboard .dashboard-chart-grid{grid-template-columns:minmax(0,1fr)!important}
+ #page-dashboard .dashboard-chart-panel.dashboard-chart-wide{grid-column:1!important}
+ #page-dashboard .dashboard-integrity-list{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .page-scroll-area>.page.active{animation:none!important}
+}
