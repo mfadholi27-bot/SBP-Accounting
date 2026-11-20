@@ -2047,7 +2047,7 @@ async function init(){await loadState();state.journalTemplates=Array.isArray(sta
   button.setAttribute('aria-label','Keterangan kontrol anggaran');
   button.setAttribute('aria-expanded','false');
   button.setAttribute('aria-controls','journal-budget-help-popover');
-  button.textContent='?';
+  button.innerHTML=window.lucide?.icon('circle-help')||'?';
   title.insertAdjacentElement('afterend',button);
  }
  if(!popover){
@@ -2108,7 +2108,7 @@ async function init(){await loadState();state.journalTemplates=Array.isArray(sta
   pop.className='budget-help-popover sbp-context-help';pop.hidden=true;
   pop.textContent=message;
   const id='sbp-context-help-'+index;
-  pop.id=id;button.setAttribute('aria-controls',id);button.textContent='?';
+  pop.id=id;button.setAttribute('aria-controls',id);button.innerHTML=window.lucide?.icon('circle-help')||'?';
   wrap.appendChild(button);
   wrap.appendChild(pop);
   button.addEventListener('click',event=>{
