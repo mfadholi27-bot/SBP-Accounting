@@ -237,6 +237,9 @@ function go(page){
  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
  const labels={'company-identity':'Identitas Perusahaan','annual-budget':'Anggaran Tahunan','import-center':'Pusat Import Data','journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program','debit-notes':'Nota Debet',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Laporan',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data','print-settings':'Pengaturan Cetak'};
  $('page-title').textContent=labels[page]||page;
+ const pageTitleIcons={dashboard:'layout-dashboard',journal:'plus-circle','journal-list':'clipboard-list','debit-notes':'file-text',accounts:'users','opening-balances':'wallet-cards','annual-budget':'chart-no-axes-combined',periods:'calendar-check',ledger:'book-open',reports:'chart-no-axes-combined',backup:'database-zap',audit:'history',validation:'shield-check',nptrans:'database-zap','print-settings':'printer'};
+ const pageTitleIcon=window.lucide?.icon(pageTitleIcons[page]||'file-text','page-title-symbol');
+ if(pageTitleIcon)$('page-title').insertAdjacentHTML('beforeend',pageTitleIcon);
  if(page==='periods')renderPeriodControl();if(page==='company-identity')renderCompanyIdentity();if(page==='annual-budget')renderAnnualBudgets();
  if(page==='dashboard')renderDashboard();if(page==='journal-list')renderJournals();
  if(page==='journal-list')renderJournals();
