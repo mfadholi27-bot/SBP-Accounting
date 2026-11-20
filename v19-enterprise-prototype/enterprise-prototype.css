@@ -151,3 +151,105 @@ input:focus,select:focus,textarea:focus{border-color:#0f766e!important;box-shado
 @media(prefers-reduced-motion:reduce){
  .page-scroll-area .page .panel,.dashboard-quick-grid .quick-card{transition:none!important}
 }
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-004 — global alignment and responsive geometry repair.
+   Visual-only overrides. Keep all original module markup, IDs and accounting behavior. */
+html,body{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:hidden!important}
+*,*::before,*::after{box-sizing:border-box}
+.shell{
+ display:grid!important;
+ grid-template-columns:250px minmax(0,1fr)!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ margin:0!important;gap:0!important;align-items:stretch!important;
+}
+.sidebar{
+ position:sticky!important;left:auto!important;right:auto!important;
+ width:auto!important;min-width:0!important;max-width:none!important;
+ margin:0!important;box-sizing:border-box!important;
+}
+.main{
+ display:block!important;position:relative!important;
+ width:100%!important;min-width:0!important;max-width:none!important;
+ margin:0!important;padding:24px clamp(18px,2.2vw,34px) 28px!important;
+ overflow-x:clip!important;box-sizing:border-box!important;
+}
+.topbar{
+ width:100%!important;min-width:0!important;max-width:none!important;
+ margin:0 0 18px!important;box-sizing:border-box!important;
+}
+.topbar>*{min-width:0!important}
+.topbar h1{overflow-wrap:anywhere!important}
+.page-scroll-area,.page-scroll-area>.page,.page-scroll-area>.page.active,
+.main>.page,.main>.page.active{
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ margin-left:0!important;margin-right:0!important;box-sizing:border-box!important;
+}
+.page-scroll-area .page>*{min-width:0!important;max-width:100%!important}
+.page-scroll-area .panel,.page-scroll-area .card,.page-scroll-area .accounts-card,
+.page-scroll-area .bulk-post-panel,.page-scroll-area .bulk-journal-panel{
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ margin-left:0!important;margin-right:0!important;box-sizing:border-box!important;
+}
+.page-scroll-area .panel-head,.page-scroll-area .section-heading{
+ min-width:0!important;max-width:100%!important;flex-wrap:wrap!important;
+}
+.page-scroll-area .panel-head>*,.page-scroll-area .section-heading>*{min-width:0!important}
+.page-scroll-area .table-wrap,.page-scroll-area .dashboard-recent-table{
+ display:block!important;width:100%!important;max-width:100%!important;
+ min-width:0!important;overflow-x:auto!important;overscroll-behavior-x:contain!important;
+}
+.page-scroll-area table{max-width:100%!important}
+.page-scroll-area :where(input,select,textarea,button,.btn,.file-btn){
+ max-width:100%!important;box-sizing:border-box!important;
+}
+.page-scroll-area :where(.form-grid,.opening-form,.accounts-form-grid,.company-identity-grid,
+.print-settings-grid,.bulk-import-controls,.bulk-post-controls,.journal-toolbar,
+.ledger-filters,.ledger-period-filters,.backup-grid,.import-grid,.validation-summary){
+ min-width:0!important;max-width:100%!important;
+}
+.page-scroll-area :where(.form-grid,.opening-form,.accounts-form-grid,.company-identity-grid,
+.print-settings-grid,.backup-grid,.import-grid,.validation-summary)>*{min-width:0!important}
+.page-scroll-area :where(.button-row,.form-actions,.journal-toolbar,.top-actions){
+ min-width:0!important;max-width:100%!important;flex-wrap:wrap!important;
+}
+.page-scroll-area :where(.search){width:min(100%,320px)!important;min-width:0!important}
+#page-dashboard .dashboard-welcome{width:100%!important;min-width:0!important;box-sizing:border-box!important}
+#page-dashboard .dashboard-stats,#page-dashboard .dashboard-chart-grid,
+#page-dashboard .dashboard-main-grid,#page-dashboard .dashboard-quick-grid{
+ width:100%!important;min-width:0!important;max-width:100%!important;
+}
+#page-dashboard .dashboard-chart-panel,#page-dashboard .dashboard-stat,
+#page-dashboard .dashboard-main-grid>.panel,#page-dashboard .dashboard-quick-grid>*{
+ min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+}
+#page-dashboard .dashboard-chart{min-width:0!important;max-width:100%!important}
+#page-dashboard .dashboard-chart svg{max-width:100%!important}
+.app-footer{width:100%!important;min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important}
+@media(max-width:1100px){
+ .shell{grid-template-columns:220px minmax(0,1fr)!important}
+ .main{padding:20px 18px 24px!important}
+ .page-scroll-area :where(.form-grid,.opening-form,.accounts-form-grid,.company-identity-grid,
+ .print-settings-grid,.import-grid,.backup-grid){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+ .shell{display:block!important;grid-template-columns:minmax(0,1fr)!important}
+ .sidebar{position:relative!important;top:auto!important;left:auto!important;
+  width:100%!important;height:auto!important;min-height:0!important;
+  padding:12px!important;border-radius:0!important}
+ .sidebar nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ .main{padding:16px 12px 22px!important}
+ .topbar{align-items:flex-start!important;flex-direction:column!important;gap:10px!important}
+ .top-actions{width:100%!important;justify-content:flex-start!important;flex-wrap:wrap!important}
+ .page-scroll-area :where(.form-grid,.opening-form,.accounts-form-grid,.company-identity-grid,
+ .print-settings-grid,.import-grid,.backup-grid){grid-template-columns:minmax(0,1fr)!important}
+ .page-scroll-area .panel{padding:15px!important}
+}
+@media(max-width:480px){
+ .sidebar nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .main{padding:12px 9px 18px!important}
+ .page-scroll-area .panel{padding:12px!important}
+ .page-scroll-area .panel-head{align-items:flex-start!important}
+ .page-scroll-area :where(.button-row,.form-actions)>.btn{flex:1 1 auto!important}
+ #page-dashboard .dashboard-stats,#page-dashboard .dashboard-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
