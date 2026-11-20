@@ -1,54 +1,27 @@
-# SBP Accounting V19 — HTML / CSS / JavaScript
+# SBP Accounting V19 — DEVELOPMENT CLONE
 
-V19 is an additive browser-based development line inside `/v19`. The previous application files at repository root are intentionally preserved.
+Kloning terpisah dari sumber V19 Build 042. Folder ini hanya untuk eksperimen dan pengembangan pada branch `development`.
 
-## Technology
-- HTML, CSS, vanilla JavaScript (no Java, C#, PHP, server, or SQL server).
-- IndexedDB for local browser storage, with a limited localStorage fallback.
-- PWA service worker for caching the application shell.
-- Built-in DBF reader/writer for the supported dBASE-style record structure.
-- No external JavaScript CDN dependency.
+## Pemisahan dari ORIGINAL
+- Aplikasi asli tetap berada di `/v19/` dan branch `main`.
+- Kloning ini berada di `/v19-development/`.
+- Database IndexedDB dan fallback localStorage menggunakan namespace `sbp-accounting-v19-development`.
+- Registry entitas juga memakai database terpisah: `sbp-accounting-v19-development-entities`.
+- Service worker menggunakan cache khusus development dan tidak menghapus cache V19 asli.
+- Jangan menyalin file backup V19 asli ke DEVELOPMENT kecuali memang ingin menguji data salinan secara sengaja.
 
-## Current modules
-- Dashboard.
-- Manual multi-line journal entry with debit-credit balance validation.
-- Journal listing, search, edit, and delete.
-- Account master (SANDI, account name, normal balance).
-- NPTRANS CSV import using the six expected columns.
-- DBF import and schema-template capture.
-- NPSALDO / account CSV or DBF import (basic field-name mapping; verify the actual NPSALDO schema).
-- NPTRANS CSV export.
-- NPTRANS DBF export using the field descriptors captured from an original DBF template.
-- Trial-balance summary from manually posted journals.
-- JSON backup and restore.
+## Sumber
+- Sumber: V19 Build 042.
+- Commit sumber: `bae3222a5951b57de65bba7e4e57d8344bb4553d`.
+- Branch kerja: `development`.
+- Jalur aplikasi: `v19-development/`.
 
-## Open the V19 app
-After this branch is merged and GitHub Pages publishes the repository, open:
+## Akses GitHub Pages
+Setelah Pages menerbitkan branch/folder ini, alamatnya:
+`https://mfadholi27-bot.github.io/SBP-Accounting/v19-development/`
 
-`https://mfadholi27-bot.github.io/SBP-Accounting/v19/`
-
-The source can be edited directly in GitHub's web interface, including from iPhone.
-
-## NPTRANS compatibility safety
-The six known logical columns are `SANDI, TANGGAL, NOBUKTI, NOURUT, KET, JUMLAH`. That list does **not** prove the original DBF field widths, types, decimals, encoding, deleted-record behavior, indexes, or NPTRANS-specific rules.
-
-For this reason:
-1. Upload an original `NPTRANS.DBF` as the export schema template before using DBF export.
-2. The exporter reuses the template's field descriptors instead of inventing field widths.
-3. Exported files must first be tested against a disposable copy of the old NPTRANS program and old DBF files.
-4. This first V19 build does not automatically turn NPTRANS legacy rows into balanced debit-credit journals. The accounting rules and any counterpart logic must be verified first.
-5. The exporter currently writes a DBF data file only; it does not regenerate CDX/NDX indexes or companion files.
-
-## Data and offline notes
-- Data is stored in the browser profile on the device where the app is used.
-- Browser data does not automatically sync to another device.
-- Clearing website/browser storage can remove local data. Download JSON backups regularly.
-- PWA offline caching requires the app to be opened once while online and a browser that supports service workers.
-- Test with disposable data before official bookkeeping use.
-
-## Suggested verification before production
-- Confirm the exact NPTRANS and NPSALDO DBF schemas.
-- Verify character encoding and numeric precision with real legacy samples.
-- Compare exported DBF records and totals against the old system.
-- Validate all journal, ledger, opening balance, closing period, correction, and report rules.
-- Test backup/restore and browser storage behavior on target Windows browsers and iPhone Safari.
+## Aturan kerja
+1. Semua eksperimen dilakukan hanya pada `v19-development/`.
+2. Jangan mengedit `v19/` atau melakukan commit ke `main`.
+3. Jangan merge ke ORIGINAL tanpa persetujuan eksplisit.
+4. Uji restore/backup hanya dengan data uji atau salinan.
