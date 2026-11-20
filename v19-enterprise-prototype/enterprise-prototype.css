@@ -593,3 +593,45 @@ h1,h2,h3,h4,.brand b,.nav-item,.dashboard-stat strong{font-family:var(--ep-font)
  stroke-width:1.9!important;color:#0f766e!important;
 }
 .topbar h1#page-title::after{content:none!important;display:none!important}
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-P013 — compact, aligned two-line company identity. */
+.topbar{
+ padding-inline:clamp(14px,1.6vw,24px)!important;
+}
+.topbar>div:first-child{
+ padding-inline:0!important;
+ margin-inline:0!important;
+}
+.page-brand{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:flex-start!important;
+ justify-content:center!important;
+ gap:2px!important;
+ margin:0 0 9px!important;
+ padding:0!important;
+}
+.page-brand strong{
+ display:block!important;
+ margin:0!important;
+ font-size:15px!important;
+ line-height:1.25!important;
+ font-weight:800!important;
+ letter-spacing:.015em!important;
+}
+.page-brand>span{
+ display:block!important;
+ min-height:0!important;
+ margin:0!important;
+ padding:0!important;
+ font-size:11px!important;
+ line-height:1.3!important;
+ font-weight:650!important;
+ letter-spacing:.075em!important;
+}
+@media(max-width:720px){
+ .topbar{padding-inline:12px!important}
+ .page-brand strong{font-size:14px!important}
+ .page-brand>span{font-size:10px!important}
+}
