@@ -1,5 +1,5 @@
 /* SBP Accounting V19 — safe same-origin offline cache */
-const CACHE='sbp-accounting-v19-release-v15';
+const CACHE='sbp-accounting-v19-development-release-v1';
 const FILES=[
  './','./index.html','./styles.css?v=42','./app.js?v=168',
  './vendor/xlsx.full.min.js','./manifest.webmanifest',
@@ -12,7 +12,7 @@ self.addEventListener('install',event=>{
 });
 self.addEventListener('activate',event=>{
  event.waitUntil(caches.keys().then(keys=>Promise.all(
-  keys.filter(key=>key.startsWith('sbp-accounting-v19-')&&key!==CACHE).map(key=>caches.delete(key))
+  keys.filter(key=>key.startsWith('sbp-accounting-v19-development-')&&key!==CACHE).map(key=>caches.delete(key))
  )).then(()=>self.clients.claim()));
 });
 self.addEventListener('fetch',event=>{
