@@ -580,3 +580,32 @@ h1,h2,h3,h4,.brand b,.nav-item,.dashboard-stat strong{font-family:var(--ep-font)
  .topbar h1#page-title{font-size:26px!important;gap:9px!important}
  .top-actions .btn{min-height:40px!important}
 }
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-P010 — exact page-title icon placement.
+   The icon is rendered after the live page title, so it remains correct
+   when navigation changes the title text. Its box tracks the title font size. */
+#page-title{
+ display:inline-flex!important;
+ align-items:center!important;
+ justify-content:flex-start!important;
+ gap:.12em!important;
+ vertical-align:middle!important;
+}
+#page-title::after{
+ content:""!important;
+ display:inline-block!important;
+ flex:0 0 1em!important;
+ width:1em!important;
+ height:1em!important;
+ margin:0 0 0 .02em!important;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%230f766e' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='9' rx='1'/%3E%3Crect x='14' y='3' width='7' height='5' rx='1'/%3E%3Crect x='14' y='12' width='7' height='9' rx='1'/%3E%3Crect x='3' y='16' width='7' height='5' rx='1'/%3E%3C/svg%3E")!important;
+ background-position:center!important;
+ background-repeat:no-repeat!important;
+ background-size:contain!important;
+ vertical-align:middle!important;
+}
+@media(max-width:520px){
+ #page-title{gap:.12em!important}
+ #page-title::after{flex-basis:1em!important;width:1em!important;height:1em!important}
+}
