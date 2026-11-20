@@ -724,3 +724,142 @@ h1,h2,h3,h4,.brand b,.nav-item,.dashboard-stat strong{font-family:var(--ep-font)
 .page .debit-note-intro{
  align-items:center!important;
 }
+
+
+/* BUILD ENTERPRISE-PROTOTYPE-P016 — unified dashboard visual language across every submenu. */
+:root{
+ --sbp-ui-ink:#172b3f;
+ --sbp-ui-muted:#64748b;
+ --sbp-ui-line:#e3eaf1;
+ --sbp-ui-soft:#f5f8fb;
+ --sbp-ui-accent:#0f766e;
+ --sbp-ui-accent-soft:#eaf6f3;
+ --sbp-ui-radius:16px;
+ --sbp-ui-shadow:0 5px 18px rgba(23,43,63,.045);
+ --sbp-ui-shadow-hover:0 10px 26px rgba(23,43,63,.075);
+}
+/* Every submenu uses the same spacing rhythm and text hierarchy as Dashboard. */
+.page-scroll-area .page:not(#page-dashboard){
+ color:var(--sbp-ui-ink)!important;
+}
+.page-scroll-area .page:not(#page-dashboard)>*+*{margin-top:16px}
+.page-scroll-area .page:not(#page-dashboard) :where(.panel,.card,.accounts-card,.bulk-post-panel,.bulk-journal-panel,.backup-card,.import-box,.archive-card,.validation-card){
+ min-width:0!important;
+ border:1px solid var(--sbp-ui-line)!important;
+ border-radius:var(--sbp-ui-radius)!important;
+ background:#fff!important;
+ box-shadow:var(--sbp-ui-shadow)!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.panel,.card,.accounts-card,.bulk-post-panel,.bulk-journal-panel,.backup-card){
+ transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.panel,.card,.accounts-card):hover{
+ border-color:#d5e1eb!important;
+ box-shadow:var(--sbp-ui-shadow-hover)!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.panel-head,.section-heading,.accounts-card-title,.accounts-entry-head,.accounts-list-head,.opening-import-head,.import-center-section-title,.budget-month-head,.validation-hero){
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ flex-wrap:wrap!important;gap:12px!important;min-width:0!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.panel-head h2,.panel-head h3,.section-heading h2,.section-heading h3,.accounts-card-title h2,.accounts-card-title h3,.accounts-entry-head h2,.accounts-entry-head h3,.accounts-list-head h2,.accounts-list-head h3,.opening-import-head h2,.opening-import-head h3,.import-center-section-title h2,.import-center-section-title h3,.budget-month-head h2,.budget-month-head h3,.validation-hero h2,.validation-hero h3){
+ color:var(--sbp-ui-ink)!important;font-family:var(--ep-font)!important;
+ font-size:clamp(15px,1.15vw,18px)!important;font-weight:760!important;
+ letter-spacing:-.035em!important;line-height:1.35!important;margin:0!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.panel-head p,.section-heading p,.accounts-card-title p,.accounts-entry-head p,.accounts-list-head p,.opening-import-head p,.import-center-section-title p,.budget-month-head p,.validation-hero p){
+ color:var(--sbp-ui-muted)!important;font-size:12px!important;line-height:1.55!important;margin:3px 0 0!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.panel-head,.section-heading){margin-bottom:15px!important}
+.page-scroll-area .page:not(#page-dashboard) :where(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),select,textarea){
+ min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+ border:1px solid #dbe4ed!important;border-radius:10px!important;
+ background:#fff!important;color:var(--sbp-ui-ink)!important;
+ font-family:var(--ep-font)!important;font-size:13px!important;
+ box-shadow:0 1px 2px rgba(23,43,63,.025)!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),select){
+ min-height:40px!important;padding:8px 11px!important;
+}
+.page-scroll-area .page:not(#page-dashboard) textarea{padding:10px 12px!important;line-height:1.5!important}
+.page-scroll-area .page:not(#page-dashboard) :where(input,select,textarea):focus{
+ outline:0!important;border-color:#66a99d!important;
+ box-shadow:0 0 0 3px rgba(15,118,110,.11)!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(label,.field-label){
+ color:#526477!important;font-size:12px!important;font-weight:680!important;line-height:1.45!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.btn,button:not(.icon-btn):not(.budget-help-button):not(.sbp-context-help-button):not(.dashboard-chart-help),.file-btn){
+ min-height:38px!important;border-radius:10px!important;font-family:var(--ep-font)!important;
+ font-size:12px!important;font-weight:700!important;letter-spacing:-.012em!important;
+ transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.btn:not(.btn-primary),button:not(.btn-primary):not(.icon-btn):not(.budget-help-button):not(.sbp-context-help-button):not(.dashboard-chart-help),.file-btn){
+ border-color:#dbe4ed!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.btn,button,.file-btn):hover{
+ transform:translateY(-1px)!important;box-shadow:0 5px 12px rgba(23,43,63,.075)!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.btn-primary){
+ background:linear-gradient(135deg,#0f766e,#138b78)!important;
+ border-color:#0f766e!important;color:#fff!important;
+ box-shadow:0 3px 8px rgba(15,118,110,.16)!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.btn-primary):hover{
+ background:linear-gradient(135deg,#0b625c,#0f766e)!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.table-wrap,.table-container,.accounts-table-wrap,.journal-table-wrap,.ledger-table-wrap){
+ overflow:auto!important;border:1px solid var(--sbp-ui-line)!important;border-radius:12px!important;
+ background:#fff!important;
+}
+.page-scroll-area .page:not(#page-dashboard) table{
+ border-collapse:separate!important;border-spacing:0!important;
+ font-variant-numeric:tabular-nums!important;
+}
+.page-scroll-area .page:not(#page-dashboard) table thead th{
+ background:#f2f6f9!important;color:#526477!important;
+ border-bottom:1px solid #e1e8ef!important;
+ font-size:10.5px!important;font-weight:800!important;
+ letter-spacing:.025em!important;line-height:1.4!important;
+ padding:11px 12px!important;white-space:nowrap!important;
+}
+.page-scroll-area .page:not(#page-dashboard) table tbody td{
+ border-bottom:1px solid #edf1f5!important;
+ color:#33465a!important;font-size:11.5px!important;
+ line-height:1.5!important;padding:10px 12px!important;
+}
+.page-scroll-area .page:not(#page-dashboard) table tbody tr:last-child td{border-bottom:0!important}
+.page-scroll-area .page:not(#page-dashboard) table tbody tr:hover td{background:#f6faf9!important}
+.page-scroll-area .page:not(#page-dashboard) :where(.tag,.badge,.status-pill,.validation-badge){
+ border-radius:999px!important;font-size:10px!important;font-weight:800!important;letter-spacing:.025em!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.footnote,.hint,.helper-text,.empty,.file-status,.muted){
+ color:var(--sbp-ui-muted)!important;font-size:11px!important;line-height:1.55!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.form-grid,.opening-form,.accounts-form-grid,.company-identity-grid,.print-settings-grid){
+ gap:13px!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.button-row,.form-actions,.journal-toolbar,.accounts-head-actions,.accounts-tools,.backup-actions){
+ gap:9px!important;align-items:center!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.empty,.validation-clear){
+ border:1px dashed #d7e2eb!important;border-radius:12px!important;
+ background:#f8fafc!important;color:#718096!important;padding:20px!important;
+}
+.page-scroll-area .page:not(#page-dashboard) :where(.notice,.inline-message,.message,.info-box){
+ border-radius:11px!important;line-height:1.55!important;
+}
+.page-scroll-area .page:not(#page-dashboard) .sbp-title-help-wrap{
+ gap:8px!important;vertical-align:middle!important;
+}
+.page-scroll-area .page:not(#page-dashboard) .sbp-title-help-wrap>.sbp-context-help-button{
+ flex:0 0 26px!important;width:26px!important;height:26px!important;
+}
+@media(max-width:760px){
+ .page-scroll-area .page:not(#page-dashboard)>*+*{margin-top:12px}
+ .page-scroll-area .page:not(#page-dashboard) :where(.panel,.card,.accounts-card,.bulk-post-panel,.bulk-journal-panel){border-radius:13px!important}
+ .page-scroll-area .page:not(#page-dashboard) :where(.panel-head,.section-heading){align-items:flex-start!important}
+ .page-scroll-area .page:not(#page-dashboard) :where(.button-row,.form-actions,.journal-toolbar){flex-wrap:wrap!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .page-scroll-area .page:not(#page-dashboard) :where(.panel,.card,.accounts-card,.btn,button){transition:none!important}
+}
