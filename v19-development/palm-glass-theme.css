@@ -1063,3 +1063,86 @@ body{overscroll-behavior:none!important}
 @media(prefers-reduced-motion:reduce){
  .page-scroll-area>.page.active{animation:none!important}
 }
+
+
+/* BUILD LAYOUT-002 — dashboard text contrast correction */
+#page-dashboard .welcome{
+ color:#fff!important;
+}
+#page-dashboard .welcome p,
+#page-dashboard .dashboard-welcome p,
+.page-scroll-area #page-dashboard .welcome p{
+ color:#f0fdf4!important;
+ opacity:1!important;
+}
+#page-dashboard .welcome .eyebrow,
+#page-dashboard .welcome .eyebrow.light,
+.page-scroll-area #page-dashboard .welcome .eyebrow{
+ color:#dcfce7!important;
+ opacity:1!important;
+}
+#page-dashboard .dashboard-period-box>span{
+ color:#ecfdf5!important;
+}
+#page-dashboard .dashboard-period-box small{
+ color:#f0fdf4!important;
+}
+#page-dashboard .dashboard-stat>span,
+#page-dashboard .dashboard-stat>small,
+#page-dashboard .stat>span,
+#page-dashboard .stat>small{
+ color:#475569!important;
+ opacity:1!important;
+}
+#page-dashboard .dashboard-stat>strong,
+#page-dashboard .stat>strong{
+ color:#14291e!important;
+}
+#page-dashboard .dashboard-integrity-item>span,
+#page-dashboard .dashboard-integrity-item>small,
+#page-dashboard .dashboard-panel-foot>span,
+#page-dashboard .dashboard-status-list>div>span{
+ color:#475569!important;
+ opacity:1!important;
+}
+#page-dashboard .dashboard-integrity-item>b,
+#page-dashboard .dashboard-status-list>div>b{
+ color:#1f2937!important;
+}
+#page-dashboard .dashboard-chart-legend>span,
+#page-dashboard .dashboard-chart-summary>span{
+ color:#334155!important;
+ opacity:1!important;
+}
+#page-dashboard .dashboard-chart-summary b{
+ color:#172b20!important;
+}
+#page-dashboard .dashboard-chart-empty,
+#page-dashboard .dashboard-chart-note{
+ color:#475569!important;
+ opacity:1!important;
+}
+#page-dashboard .chart-axis-label{
+ fill:#475569!important;
+}
+#page-dashboard .chart-value-label{
+ fill:#1f2937!important;
+ stroke:#fff!important;
+}
+#page-dashboard .dashboard-chart-data-table th{
+ color:#334155!important;
+}
+#page-dashboard .dashboard-chart-data-table td{
+ color:#1f2937!important;
+}
+#page-dashboard .quick-card b{
+ color:#172b20!important;
+}
+#page-dashboard .quick-card small{
+ color:#475569!important;
+}
+#page-dashboard .panel-head p,
+#page-dashboard .section-heading p{
+ color:#475569!important;
+ opacity:1!important;
+}
