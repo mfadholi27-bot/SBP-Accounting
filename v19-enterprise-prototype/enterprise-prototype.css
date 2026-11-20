@@ -489,3 +489,57 @@ button,.btn{font-weight:650!important;letter-spacing:-.01em}
 @keyframes ep-page-enter{from{opacity:.65;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @media(hover:none){.nav-item:hover,#page-dashboard .dashboard-stat:hover,#page-dashboard .dashboard-chart-panel:hover{transform:none!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* BUILD P008 — icon runtime repair + visible motion design. */
+:root{--ep-font:"Segoe UI Variable","Segoe UI",system-ui,-apple-system,sans-serif}
+html,body,button,input,select,textarea{font-family:var(--ep-font)!important}
+body{font-size:14px!important;line-height:1.55!important;letter-spacing:-.012em!important}
+h1,h2,h3,h4,.brand b,.nav-item,.dashboard-stat strong{font-family:var(--ep-font)!important;font-optical-sizing:auto!important}
+.topbar h1{font-size:clamp(25px,2vw,32px)!important;font-weight:760!important;letter-spacing:-.055em!important}
+#page-dashboard .dashboard-welcome h2{font-size:clamp(31px,2.7vw,42px)!important;font-weight:780!important;letter-spacing:-.06em!important}
+#page-dashboard .dashboard-welcome p{font-size:14px!important;line-height:1.65!important}
+.nav-item{font-size:13.5px!important;font-weight:680!important;letter-spacing:-.02em!important}
+.nav-item .nav-icon{background:rgba(15,118,110,.10)!important;color:#0f766e!important;border:1px solid rgba(15,118,110,.10)!important}
+.nav-item .nav-icon svg{display:block!important;width:20px!important;height:20px!important;stroke-width:1.85!important}
+.nav-item.active .nav-icon{background:#e8fbf7!important;color:#087f72!important;border-color:rgba(255,255,255,.3)!important}
+.nav-item.active .nav-icon svg{stroke-width:2.1!important}
+.nav-item:not(.active):hover .nav-icon{background:#e7f4f2!important;color:#087f72!important}
+.brand-mark{object-fit:contain!important}
+.top-actions .btn svg{display:block!important;flex:0 0 auto!important}
+#page-dashboard .dashboard-stat{border-radius:17px!important;box-shadow:0 5px 18px rgba(15,35,55,.045)!important}
+#page-dashboard .dashboard-stat>span{font-size:11.5px!important;letter-spacing:.015em!important}
+#page-dashboard .dashboard-stat>strong{font-size:clamp(23px,2vw,29px)!important;line-height:1.2!important}
+#page-dashboard .dashboard-chart-panel,#page-dashboard .dashboard-control-panel,#page-dashboard .dashboard-status-panel,#page-dashboard .dashboard-recent-panel{border-radius:17px!important;box-shadow:0 5px 20px rgba(15,35,55,.045)!important}
+#page-dashboard .dashboard-chart-panel .panel-head h3,#page-dashboard .dashboard-control-panel .panel-head h3,#page-dashboard .dashboard-status-panel .panel-head h3{font-size:17px!important;font-weight:760!important;letter-spacing:-.035em!important}
+#page-dashboard .dashboard-period-box{border:1px solid rgba(255,255,255,.16)!important;box-shadow:0 12px 28px rgba(0,0,0,.12)!important;backdrop-filter:blur(12px)!important}
+#page-dashboard .dashboard-period-box input{font-family:var(--ep-font)!important;font-weight:650!important}
+#page-dashboard .dashboard-quick-grid .quick-card{border-radius:15px!important}
+#page-dashboard .dashboard-quick-grid .quick-icon{width:44px!important;height:44px!important;border-radius:13px!important;background:#e9f6f4!important;color:#0f766e!important}
+#page-dashboard .dashboard-quick-grid .quick-icon svg{display:block!important;width:22px!important;height:22px!important}
+#page-dashboard .dashboard-integrity-list>div{border-radius:12px!important}
+#page-dashboard .dashboard-status-list>div{min-height:46px!important}
+#page-dashboard .dashboard-welcome{position:relative!important;overflow:hidden!important;isolation:isolate!important}
+#page-dashboard .dashboard-welcome:after{content:"";position:absolute;z-index:-1;inset:-55% auto auto 62%;width:420px;height:420px;border:1px solid rgba(255,255,255,.09);border-radius:50%;box-shadow:0 0 0 34px rgba(255,255,255,.035),0 0 0 72px rgba(255,255,255,.025);animation:ep-orbit 18s linear infinite}
+#page-dashboard .dashboard-welcome:before{content:"";position:absolute;z-index:-1;right:8%;bottom:-80px;width:190px;height:190px;border-radius:50%;background:rgba(35,190,166,.12);filter:blur(30px);animation:ep-glow 7s ease-in-out infinite alternate}
+#page-dashboard .dashboard-welcome>*{position:relative;z-index:1}
+#page-dashboard .dashboard-stat{animation:ep-card-in .65s cubic-bezier(.2,.75,.25,1) both}
+#page-dashboard .dashboard-stat:nth-child(2){animation-delay:80ms}
+#page-dashboard .dashboard-stat:nth-child(3){animation-delay:160ms}
+#page-dashboard .dashboard-stat:nth-child(4){animation-delay:240ms}
+#page-dashboard .dashboard-chart-panel{animation:ep-card-in .72s cubic-bezier(.2,.75,.25,1) both}
+#page-dashboard .dashboard-chart-panel:nth-child(2){animation-delay:90ms}
+#page-dashboard .dashboard-chart-panel:nth-child(3){animation-delay:180ms}
+#page-dashboard .dashboard-chart-panel:nth-child(4){animation-delay:270ms}
+#page-dashboard .dashboard-control-panel,#page-dashboard .dashboard-status-panel{animation:ep-card-in .72s 180ms cubic-bezier(.2,.75,.25,1) both}
+#page-dashboard .dashboard-quick-grid .quick-card{transition:transform .25s cubic-bezier(.2,.75,.25,1),box-shadow .25s ease,border-color .25s ease!important}
+#page-dashboard .dashboard-quick-grid .quick-card:hover{transform:translateY(-5px)!important}
+#page-dashboard .dashboard-stat:hover{transform:translateY(-5px) scale(1.008)!important}
+#page-dashboard .dashboard-chart-panel:hover{transform:translateY(-2px)!important}
+.nav-item .nav-icon svg,.top-actions .btn svg{transition:transform .22s ease,stroke .22s ease!important}
+.nav-item:hover .nav-icon svg{transform:scale(1.08)!important}
+.top-actions .btn:hover svg{transform:translateY(-1px)!important}
+@keyframes ep-card-in{from{opacity:0;transform:translateY(16px) scale(.985);filter:blur(2px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes ep-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes ep-glow{from{transform:translate3d(0,0,0) scale(.9);opacity:.55}to{transform:translate3d(-25px,-12px,0) scale(1.12);opacity:1}}
+@media(prefers-reduced-motion:reduce){#page-dashboard .dashboard-welcome:after,#page-dashboard .dashboard-welcome:before{animation:none!important}#page-dashboard .dashboard-stat,#page-dashboard .dashboard-chart-panel,#page-dashboard .dashboard-control-panel,#page-dashboard .dashboard-status-panel{animation:none!important}}
