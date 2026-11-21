@@ -1,4 +1,4 @@
-/* BUILD 049 — Delete all manual opening balances for selected period */
+/* BUILD 059 — Report-specific print layout refinement */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
