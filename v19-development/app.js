@@ -1149,25 +1149,53 @@ $('comparison-generate').onclick=renderBalanceComparison;
 $('comparison-export').onclick=exportBalanceComparison;
 $('comparison-print').onclick=printBalanceComparison;
 
+
+const BALANCE_MAPPING_GROUPS=['Aktiva Lancar','Aktiva Tidak Lancar','Kontra Aktiva','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Ekuitas'];
+let balanceMappingDraft={};
+function initBalanceMapping(){
+ state.balanceMappings=state.balanceMappings&&typeof state.balanceMappings==='object'?state.balanceMappings:{};
+ balanceMappingDraft={...state.balanceMappings};
+ $('mapping-search').oninput=renderBalanceMapping;
+ $('mapping-filter').onchange=renderBalanceMapping;
+ $('mapping-select-all').onchange=e=>document.querySelectorAll('#mapping-rows .mapping-select:visible').forEach(x=>x.checked=e.target.checked);
+ $('mapping-apply-bulk').onclick=()=>{
+  const group=$('mapping-bulk-group').value,selected=[...document.querySelectorAll('#mapping-rows .mapping-select:checked')];
+  if(!group)return toast('Pilih kelompok tujuan terlebih dahulu.');
+  if(!selected.length)return toast('Centang akun yang akan dipetakan.');
+  selected.forEach(box=>{balanceMappingDraft[box.dataset.code]=group});
+  renderBalanceMapping();toast(selected.length+' akun masuk antrean pemetaan. Tekan Simpan Pemetaan.');
+ };
+ $('mapping-save').onclick=async()=>{
+  const clean={};Object.entries(balanceMappingDraft).forEach(([code,group])=>{if(BALANCE_MAPPING_GROUPS.includes(group))clean[String(code)]=group});
+  state.balanceMappings=clean;await persist();balanceMappingDraft={...clean};
+  setMessage('mapping-message','Pemetaan berhasil disimpan. '+Object.keys(clean).length+' akun telah memiliki kelompok.','good');
+  renderBalanceMapping();toast('Pemetaan SANDI tersimpan.');
+ };
+ renderBalanceMapping();
+}
+function renderBalanceMapping(){
+ if(!$('mapping-rows'))return;
+ const q=($('mapping-search').value||'').trim().toLowerCase(),filter=$('mapping-filter').value;
+ const rows=[...(state.accounts||[])].sort((x,y)=>String(x.code).localeCompare(String(y.code)));
+ const filtered=rows.filter(acc=>{
+  const group=balanceMappingDraft[String(acc.code)]||'';
+  return (!q||(String(acc.code)+' '+String(acc.name)).toLowerCase().includes(q))&&(filter==='all'||(filter==='unmapped'&&!group)||(filter==='mapped'&&!!group));
+ });
+ const mapped=rows.filter(x=>BALANCE_MAPPING_GROUPS.includes(balanceMappingDraft[String(x.code)])).length;
+ $('mapping-status').textContent=rows.length+' akun Master Akun · '+mapped+' sudah dipetakan · '+(rows.length-mapped)+' belum dipetakan · '+filtered.length+' ditampilkan';
+ $('mapping-rows').innerHTML=filtered.length?filtered.map(acc=>{
+  const code=String(acc.code),group=balanceMappingDraft[code]||'';
+  return '<tr><td><input class="mapping-select" type="checkbox" data-code="'+esc(code)+'" aria-label="Pilih '+esc(code)+'"></td><td><b>'+esc(code)+'</b></td><td>'+esc(acc.name)+'</td><td><select class="mapping-row-group" data-code="'+esc(code)+'"><option value="">— Belum dipetakan —</option>'+BALANCE_MAPPING_GROUPS.map(g=>'<option value="'+esc(g)+'"'+(group===g?' selected':'')+'>'+esc(g)+'</option>').join('')+'</select></td><td><span class="mapping-pill '+(group?'mapped':'unmapped')+'">'+(group?'Sudah dipetakan':'Belum dipetakan')+'</span></td></tr>';
+ }).join(''):'<tr><td colspan="5" class="empty">Tidak ada akun yang sesuai dengan pencarian atau filter.</td></tr>';
+ document.querySelectorAll('.mapping-row-group').forEach(select=>select.onchange=()=>{balanceMappingDraft[select.dataset.code]=select.value;renderBalanceMapping()});
+ $('mapping-select-all').checked=false;
+}
 function comparisonAsOf(date){
  const month=String(date||'').slice(0,7),rows=getTrialBalanceRows(month),movement=new Map();
  (Array.isArray(state.journals)?state.journals:[]).filter(j=>isPostedJournal(j)&&String(j.date||'')>=month+'-01'&&String(j.date||'')<=date).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).forEach(l=>{const code=String(l.code??'').trim();if(!code)return;const v=movement.get(code)||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(code,v)}));
  return rows.map(r=>{const opening=getOpeningBalanceForAccount(month,r.code).net,mv=movement.get(r.code)||{debit:0,credit:0};return {...r,balance:opening+mv.debit-mv.credit}});
 }
-function comparisonClassify(code,account){
- const explicit=String(account?.reportGroup||account?.balanceGroup||account?.neracaGroup||'').trim();
- if(explicit)return explicit;
- const c=String(code||'').replace(/[^0-9]/g,'');
- if(c.startsWith('129'))return 'Akumulasi Penyusutan';
- if(c.startsWith('11'))return 'Aktiva Lancar';
- if(c.startsWith('12'))return 'Aktiva Tidak Lancar';
- if(c.startsWith('211'))return 'Liabilitas Jangka Pendek';
- if(c.startsWith('212'))return 'Liabilitas Jangka Panjang';
- if(c.startsWith('2'))return 'Liabilitas · Perlu Pemetaan';
- if(c.startsWith('3'))return 'Ekuitas';
- if(c.startsWith('1'))return 'Aktiva · Perlu Pemetaan';
- return 'Perlu Pemetaan';
-}
+function comparisonClassify(code,account){return BALANCE_MAPPING_GROUPS.includes(balanceMappingDraft[String(code)]||state.balanceMappings?.[String(code)])?(balanceMappingDraft[String(code)]||state.balanceMappings[String(code)]):'Belum Dipetakan';}
 function comparisonPercent(a,b){if(Math.abs(a)<.005)return '—';const pct=(b-a)/Math.abs(a)*100;return (pct>0?'+':'')+pct.toLocaleString('id-ID',{maximumFractionDigits:2})+'%'}
 function comparisonMoney(v){return Math.abs(Number(v)||0)<.005?'—':(v<0?'-':'')+money(Math.abs(v))}
 function comparisonMonthLabel(value){const [year,month]=String(value).split('-').map(Number);return new Date(year,month-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'}).toUpperCase()}
@@ -1178,21 +1206,21 @@ function buildBalanceComparison(){
  const a=comparisonMonthEnd(monthA),b=comparisonMonthEnd(monthB);
  const rowsA=comparisonAsOf(a),rowsB=comparisonAsOf(b),mapA=new Map(rowsA.map(r=>[String(r.code),r.balance])),mapB=new Map(rowsB.map(r=>[String(r.code),r.balance]));
  const codes=[...new Set([...mapA.keys(),...mapB.keys()])],accounts=codes.map(code=>{const acc=(state.accounts||[]).find(x=>String(x.code)===code)||{},v1=mapA.get(code)||0,v2=mapB.get(code)||0;return {code,name:acc.name||'(Akun tidak ditemukan)',group:comparisonClassify(code,acc),a:v1,b:v2,change:v2-v1}});
- const order=['Aktiva Lancar','Aktiva Tidak Lancar','Akumulasi Penyusutan','Aktiva · Perlu Pemetaan','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Liabilitas · Perlu Pemetaan','Ekuitas','Perlu Pemetaan'];
+ const order=['Aktiva Lancar','Aktiva Tidak Lancar','Kontra Aktiva','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Ekuitas','Belum Dipetakan'];
  const groupNames=[...order.filter(g=>accounts.some(x=>x.group===g)),...new Set(accounts.map(x=>x.group).filter(g=>!order.includes(g)))];const groups=groupNames.map(g=>({name:g,rows:accounts.filter(x=>x.group===g).sort((x,y)=>x.code.localeCompare(y.code))}));
  return {a,b,groups,accounts};
 }
 function renderBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
- const sum=items=>items.reduce((n,r)=>n+r,0),assetGroups=data.groups.filter(g=>g.name.startsWith('Aktiva')||g.name==='Akumulasi Penyusutan'),liabilityGroups=data.groups.filter(g=>g.name.startsWith('Liabilitas')),equityGroups=data.groups.filter(g=>g.name==='Ekuitas');
+ const sum=items=>items.reduce((n,r)=>n+r,0),assetGroups=data.groups.filter(g=>g.name.startsWith('Aktiva')||g.name==='Kontra Aktiva'),liabilityGroups=data.groups.filter(g=>g.name.startsWith('Liabilitas')),equityGroups=data.groups.filter(g=>g.name==='Ekuitas');
  const groupTotal=g=>sum(g.rows.map(r=>r.a));
  const totalAssetsA=sum(assetGroups.map(groupTotal)),totalAssetsB=sum(assetGroups.map(g=>sum(g.rows.map(r=>r.b))));
  const totalLiabA=sum(liabilityGroups.map(groupTotal)),totalLiabB=sum(liabilityGroups.map(g=>sum(g.rows.map(r=>r.b))));
  const totalEquityA=sum(equityGroups.map(groupTotal)),totalEquityB=sum(equityGroups.map(g=>sum(g.rows.map(r=>r.b))));
  const card=(label,x,y)=>'<div class="comparison-card"><span>'+label+'</span><b>'+comparisonMoney(x)+'</b><small>Periode kedua: '+comparisonMoney(y)+'</small></div>';
  $('comparison-summary').innerHTML=card('Total Aktiva',totalAssetsA,totalAssetsB)+card('Total Liabilitas',totalLiabA,totalLiabB)+card('Total Ekuitas',totalEquityA,totalEquityB);
- const renderGroups=selected=>selected.map(g=>'<section class="comparison-group"><h4>'+esc(g.name)+'</h4><table><thead><tr><th>SANDI</th><th>AKUN</th><th>'+esc(data.a.slice(0,4))+'</th><th>'+esc(data.b.slice(0,4))+'</th><th>%</th></tr></thead><tbody>'+g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+comparisonMoney(r.a)+'</td><td class="num">'+comparisonMoney(r.b)+'</td><td class="num">'+comparisonPercent(r.a,r.b)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.a)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.b)))+'</th><th class="num">'+comparisonPercent(sum(g.rows.map(r=>r.a)),sum(g.rows.map(r=>r.b)))+'</th></tr></tfoot></table></section>');
- $('comparison-report').innerHTML='<div class="comparison-report-heading"><b>LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF</b><span>PER '+fmtDate(data.a).toUpperCase()+' DAN '+fmtDate(data.b).toUpperCase()+'</span><small>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</small></div>'+renderGroups(assetGroups)+'<div class="comparison-grand-total"><b>TOTAL AKTIVA</b><b>'+comparisonMoney(totalAssetsA)+'</b><b>'+comparisonMoney(totalAssetsB)+'</b><b>'+comparisonPercent(totalAssetsA,totalAssetsB)+'</b></div>'+renderGroups(liabilityGroups)+renderGroups(equityGroups)+'<div class="comparison-grand-total"><b>TOTAL LIABILITAS & EKUITAS</b><b>'+comparisonMoney(totalLiabA+totalEquityA)+'</b><b>'+comparisonMoney(totalLiabB+totalEquityB)+'</b><b>'+comparisonPercent(totalLiabA+totalEquityA,totalLiabB+totalEquityB)+'</b></div><p class="comparison-footnote">Catatan: pengelompokan awal menggunakan awalan SANDI sebagai aturan sementara. Periksa kelompok “Perlu Pemetaan” dan konfirmasi struktur Master Akun sebelum menggunakan laporan ini sebagai laporan resmi.</p>';
+ const renderGroups=selected=>selected.map(g=>'<section class="comparison-group"><h4>'+esc(g.name)+'</h4><table><thead><tr><th>SANDI</th><th>AKUN</th><th>'+esc(comparisonMonthLabel(data.a.slice(0,7)))+'</th><th>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+'</th><th>%</th></tr></thead><tbody>'+g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+comparisonMoney(r.a)+'</td><td class="num">'+comparisonMoney(r.b)+'</td><td class="num">'+comparisonPercent(r.a,r.b)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.a)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.b)))+'</th><th class="num">'+comparisonPercent(sum(g.rows.map(r=>r.a)),sum(g.rows.map(r=>r.b)))+'</th></tr></tfoot></table></section>');
+ $('comparison-report').innerHTML='<div class="comparison-report-heading"><b>LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF</b><span>PER '+fmtDate(data.a).toUpperCase()+' DAN '+fmtDate(data.b).toUpperCase()+'</span><small>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</small></div>'+renderGroups(assetGroups)+'<div class="comparison-grand-total"><b>TOTAL AKTIVA</b><b>'+comparisonMoney(totalAssetsA)+'</b><b>'+comparisonMoney(totalAssetsB)+'</b><b>'+comparisonPercent(totalAssetsA,totalAssetsB)+'</b></div>'+renderGroups(liabilityGroups)+renderGroups(equityGroups)+'<div class="comparison-grand-total"><b>TOTAL LIABILITAS & EKUITAS</b><b>'+comparisonMoney(totalLiabA+totalEquityA)+'</b><b>'+comparisonMoney(totalLiabB+totalEquityB)+'</b><b>'+comparisonPercent(totalLiabA+totalEquityA,totalLiabB+totalEquityB)+'</b></div><p class="comparison-footnote">Catatan: kelompok akun mengikuti konfigurasi Pemetaan SANDI Neraca. Akun berstatus Belum Dipetakan tidak dimasukkan ke subtotal.</p>';
  return data;
 }
 function exportBalanceComparison(){
@@ -1204,7 +1232,7 @@ function exportBalanceComparison(){
 function printBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
  const groups=data.groups.map(g=>'<h3 style="margin:5mm 0 2mm;font-size:10pt">'+esc(g.name)+'</h3>'+printTable(['SANDI','AKUN',comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'%'],g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+esc(comparisonMoney(r.a))+'</td><td class="num">'+esc(comparisonMoney(r.b))+'</td><td class="num">'+esc(comparisonPercent(r.a,r.b))+'</td></tr>'),'<tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'a')))+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'b')))+'</th><th></th></tr>')).join('');
- const body='<div class="comparison-print-title"><b>LAPORAN POSISI KEUANGAN</b><h2>NERACA KOMPARATIF</h2><b>PER '+esc(fmtDate(data.a).toUpperCase())+' DAN '+esc(fmtDate(data.b).toUpperCase())+'</b><p>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</p></div>'+groups;
+ const body='<div class="comparison-print-title"><b>LAPORAN POSISI KEUANGAN</b><h2>NERACA KOMPARATIF</h2><b>PER '+esc(comparisonMonthLabel(data.a.slice(0,7)))+' DAN '+esc(comparisonMonthLabel(data.b.slice(0,7)))+'</b><p>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</p></div>'+groups;
  printDocument('NERACA KOMPARATIF','Per '+comparisonMonthLabel(data.a.slice(0,7))+' dan '+comparisonMonthLabel(data.b.slice(0,7)),body,'landscape');
 }
 function sumComparison(rows,key){return rows.reduce((n,r)=>n+Number(r[key]||0),0)}
@@ -2093,7 +2121,7 @@ let pendingBackupRestore=null;
  $('backup-import-confirm').onclick=async()=>{const b=pendingBackupRestore;if(!b)return;if(!requireImportPassword('Pemulihan / Import Backup'))return;if(!confirm('PERINGATAN AKHIR: Ganti seluruh database lokal dengan backup '+b.fileName+'?'))return;try{if(!b.entity?.id||b.entity.id!==activeEntity?.id)throw Error('Identitas entitas tidak cocok. Restore dibatalkan.');const safety=makeBackupPayload('pre-restore-safety');const safetyName=backupFileName(new Date(),'SEBELUM-RESTORE');try{if(backupDirectoryHandle&&await directoryPermission(backupDirectoryHandle,false)==='granted')await writeEntityBackup('BACKUP_SEBELUM_TUTUP',safetyName,safety)}catch(safetyError){console.warn('Backup pengaman folder gagal; unduh lokal tetap dibuat',safetyError)}downloadBlob(new Blob([JSON.stringify(safety,null,2)],{type:'application/json'}),safetyName);const candidate=b.candidate,prior=Array.isArray(state.auditLogs)?state.auditLogs:[];state={...emptyState(),...candidate};state.auditLogs=[...new Map([...prior,...(Array.isArray(candidate.auditLogs)?candidate.auditLogs:[])].map(x=>[x.id||JSON.stringify(x),x])).values()].sort((x,y)=>String(y.at).localeCompare(String(x.at)));if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();pendingBackupRestore=null;$('backup-import-review').hidden=true;$('backup-file').value='';renderDashboard();renderAccounts();renderNptrans();renderJournals();renderOpeningBalances();renderPeriodControl();setMessage('backup-message','Backup '+b.fileName+' berhasil dipulihkan. Database aktif telah diganti.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}};
 
 
-async function init(){await loadState();state.journalTemplates=Array.isArray(state.journalTemplates)?state.journalTemplates:[];ensureCompanyProfile();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();renderJournalTemplates();resetJournalForm();initAnnualBudget();renderCompanyIdentity();renderDashboard();renderAccounts();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}
+async function init(){await loadState();state.journalTemplates=Array.isArray(state.journalTemplates)?state.journalTemplates:[];ensureCompanyProfile();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();renderJournalTemplates();resetJournalForm();initAnnualBudget();renderCompanyIdentity();renderDashboard();renderAccounts();initBalanceMapping();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}
  const startupNotice=$('startup-backup-notice');if(startupNotice)startupNotice.hidden=false;
  if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
 /* init ditunda sampai database entitas aktif dipilih. */
