@@ -1266,6 +1266,6 @@ body{overscroll-behavior:none!important}
 
 /* BUILD 053 · Per-column report filters */
 .comparison-column-filters th{padding:5px 6px;background:#f7faf8;vertical-align:top}
-.comparison-column-filter{display:block;width:100%;min-width:54px;max-width:100%;box-sizing:border-box;padding:6px 7px;border:1px solid #d7e1dc;border-radius:6px;background:#fff;color:#18352b;font:inherit;font-size:10px;outline:none}
+.comparison-column-filter{display:block;width:100%;min-width:54px;max-width:100%;box-sizing:border-box;padding:6px 5px;border:1px solid #d7e1dc;border-radius:6px;background:#fff;color:#18352b;font:inherit;font-size:10px;outline:none;cursor:pointer}
 .comparison-column-filter:focus{border-color:#23835f;box-shadow:0 0 0 2px rgba(35,131,95,.12)}
 @media print{.comparison-column-filters{display:none!important}}
