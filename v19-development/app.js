@@ -1,4 +1,4 @@
-/* BUILD 056 — Visible print-fix build marker and iframe print diagnostics */
+/* BUILD 057 — Open dedicated print window directly from user action */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1592,16 +1592,14 @@ function printTable(headers,rows,foot=''){return '<table class="sbp-print-table"
 function printSummary(items){return PRINT_CONFIG.summary?'<section class="sbp-print-summary">'+items.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>').join('')+'</section>':''}
 function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-print-signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':''}
 function printDocument(title,subtitle,body,orientation='portrait',afterPrint=null){
- const old=document.getElementById('sbp-print-frame');if(old)old.remove();
- const frame=document.createElement('iframe');frame.id='sbp-print-frame';frame.title='Pratinjau cetak '+title;
- frame.style.cssText='position:fixed;left:0;top:0;width:100vw;height:100vh;border:0;opacity:0;pointer-events:none;z-index:-1';document.body.appendChild(frame);
  const paperMap={A4:'210mm 297mm',F4:'215mm 330mm',Letter:'8.5in 11in',Legal:'8.5in 14in'};
  const pageOrientation=PRINT_CONFIG.orientation==='auto'?orientation:PRINT_CONFIG.orientation;
- const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4, pageSize=pageOrientation==='landscape'?paper.split(' ').reverse().join(' '):paper;
+ const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4,pageSize=pageOrientation==='landscape'?paper.split(' ').reverse().join(' '):paper;
  const margin=Math.max(5,Math.min(25,Number(PRINT_CONFIG.margin)||10))+'mm';
  const printed=new Date().toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
- const style='@page{size:'+pageSize+';margin:'+margin+'}'+
- '.journal-line-notes{min-width:38mm;white-space:normal;line-height:1.35}.journal-line-note{margin:0 0 1mm;break-inside:avoid}.journal-line-note b{white-space:nowrap}.muted{color:#64748b;font-style:italic}'+ '@page{@bottom-right{content:"Halaman "+counter(page);font:8pt Arial;color:#64748b}}'+
+ let style='@page{size:'+pageSize+';margin:'+margin+'}'+
+ '.journal-line-notes{min-width:38mm;white-space:normal;line-height:1.35}.journal-line-note{margin:0 0 1mm;break-inside:avoid}.journal-line-note b{white-space:nowrap}.muted{color:#64748b;font-style:italic}'+
+ '@page{@bottom-right{content:"Halaman "+counter(page);font:8pt Arial;color:#64748b}}'+
  '*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#17212b;font:'+Number(PRINT_CONFIG.fontSize||8)+'pt Arial,Helvetica,sans-serif}'+
  '.sheet{width:100%}.header{border-bottom:2px solid #176b4a;padding:0 0 5mm;margin-bottom:3mm}'+
  '.brand{font-size:15pt;font-weight:800;letter-spacing:.5px;color:#145c40}.brand small{display:block;font-size:7.5pt;font-weight:500;letter-spacing:1px;color:#64748b;margin-top:1mm}'+
@@ -1613,20 +1611,24 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  'th,td{'+(PRINT_CONFIG.tableLines?'border:1px solid #aebbb4;':'border:0;')+'padding:'+Math.max(.5,Math.min(4,Number(PRINT_CONFIG.rowPadding)||1.4))+'mm 1.2mm;vertical-align:top}td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}tbody tr{break-inside:avoid;page-break-inside:avoid}tfoot{display:table-row-group;font-weight:700}'+
  '.signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm;margin:12mm 0 0;text-align:center;break-inside:avoid;page-break-inside:avoid}.signatures span,.signatures small{display:block;font-size:8pt}.signatures b{display:block;height:20mm}'+
  '.footer{border-top:1px solid #cbd5e1;margin-top:6mm;padding-top:2mm;color:#64748b;font-size:7pt;text-align:center}';
- if(title==='NERACA KOMPARATIF'){style+='@page{margin-top:29mm}.repeat-print-brand{position:fixed;top:-24mm;left:0;right:0;height:19mm;padding:0 0 2mm;border-bottom:1.5px solid #176b4a;background:#fff;color:#145c40;font-size:11pt;font-weight:800;line-height:1.25}.repeat-print-brand small{display:block;color:#64748b;font-size:6.5pt;font-weight:400}.comparison-print-group{break-inside:avoid;page-break-inside:avoid;margin:0 0 3mm}.comparison-print-group h3{font-size:9pt;margin:2mm 0 1mm;break-after:avoid;page-break-after:avoid}.comparison-print-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:7.2pt}.comparison-print-table th,.comparison-print-table td{padding:1.2mm 1.5mm;overflow-wrap:anywhere}.comparison-print-table td.num{white-space:nowrap;text-align:right}.comparison-print-table tr{break-inside:avoid;page-break-inside:avoid}}';}const profile=ensureCompanyProfile();const brand=PRINT_CONFIG.brand?'<div class="brand"><b>'+esc(profile.name)+'</b><small>'+esc(profile.systemName)+' · V19</small>'+(profile.address?'<small>'+esc(profile.address)+'</small>':'')+(profile.unit?'<small>'+esc(profile.unit)+'</small>':'')+'<small>'+esc(profile.tagline)+'</small></div>':'';
- const repeatBrand=title==='NERACA KOMPARATIF'&&PRINT_CONFIG.brand?'<div class="repeat-print-brand">'+esc(profile.name)+'<small>'+esc(profile.systemName)+' · V19</small>'+(profile.address?'<small>'+esc(profile.address)+'</small>':'')+(profile.unit?'<small>'+esc(profile.unit)+'</small>':'')+'</div>':'';const meta=PRINT_CONFIG.printedAt?'<div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>':'';
+ if(title==='NERACA KOMPARATIF'){style+='@page{margin-top:29mm}.repeat-print-brand{position:fixed;top:-24mm;left:0;right:0;height:19mm;padding:0 0 2mm;border-bottom:1.5px solid #176b4a;background:#fff;color:#145c40;font-size:11pt;font-weight:800;line-height:1.25}.repeat-print-brand small{display:block;color:#64748b;font-size:6.5pt;font-weight:400}.comparison-print-group{break-inside:avoid;page-break-inside:avoid;margin:0 0 3mm}.comparison-print-group h3{font-size:9pt;margin:2mm 0 1mm;break-after:avoid;page-break-after:avoid}.comparison-print-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:7.2pt}.comparison-print-table th,.comparison-print-table td{padding:1.2mm 1.5mm;overflow-wrap:anywhere}.comparison-print-table td.num{white-space:nowrap;text-align:right}.comparison-print-table tr{break-inside:avoid;page-break-inside:avoid}}';}
+ const profile=ensureCompanyProfile();
+ const brand=PRINT_CONFIG.brand?'<div class="brand"><b>'+esc(profile.name)+'</b><small>'+esc(profile.systemName)+' · V19</small>'+(profile.address?'<small>'+esc(profile.address)+'</small>':'')+(profile.unit?'<small>'+esc(profile.unit)+'</small>':'')+'<small>'+esc(profile.tagline)+'</small></div>':'';
+ const repeatBrand=title==='NERACA KOMPARATIF'&&PRINT_CONFIG.brand?'<div class="repeat-print-brand">'+esc(profile.name)+'<small>'+esc(profile.systemName)+' · V19</small>'+(profile.address?'<small>'+esc(profile.address)+'</small>':'')+(profile.unit?'<small>'+esc(profile.unit)+'</small>':'')+'</div>':'';
+ const meta=PRINT_CONFIG.printedAt?'<div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>':'';
  const signatures=PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'';
  const footer=PRINT_CONFIG.footer?'<footer class="footer">'+esc(profile.name)+' · '+esc(profile.systemName)+' V19 · Dokumen hasil cetak sistem</footer>':'';
- const doc=frame.contentDocument;doc.open();frame.onload=()=>{setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(err){toast('Gagal membuka cetak: '+err.message)}},150)};doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body>'+repeatBrand+'<main class="sheet"><header class="header">'+brand+'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
+ const printWindow=window.open('','_blank');
+ if(!printWindow){toast('Jendela cetak diblokir browser. Izinkan pop-up untuk situs SBP Accounting, lalu tekan Cetak kembali.');return null}
+ printWindow.document.open();
+ printWindow.document.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body>'+repeatBrand+'<main class="sheet"><header class="header">'+brand+'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header>'+meta+body+signatures+footer+'</main></body></html>');
+ printWindow.document.close();
  let printHandled=false;
- const cleanup=()=>{
-  if(printHandled)return;printHandled=true;
-  if(typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}
-  frame.remove();window.removeEventListener('afterprint',cleanup);
- };
- frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
- window.addEventListener('afterprint',cleanup,{once:true});
- return frame;
+ const cleanup=()=>{if(printHandled)return;printHandled=true;if(typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}};
+ printWindow.addEventListener('afterprint',cleanup,{once:true});
+ printWindow.addEventListener('load',()=>{setTimeout(()=>{try{printWindow.focus();printWindow.print()}catch(err){toast('Gagal membuka dialog cetak: '+err.message)}},250)},{once:true});
+ setTimeout(()=>{try{if(!printWindow.closed&&!printHandled){printWindow.focus();printWindow.print()}}catch(err){toast('Gagal membuka dialog cetak: '+err.message)}},700);
+ return printWindow;
 }
 function printTrialBalance(){
  const period=$('report-period').value,rows=getTrialBalanceRows(period);
