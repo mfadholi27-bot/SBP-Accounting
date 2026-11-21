@@ -1,4 +1,4 @@
-/* BUILD 057 — Open dedicated print window directly from user action */
+/* BUILD 058 — Invoke print dialog synchronously without delayed page navigation */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1618,7 +1618,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  const meta=PRINT_CONFIG.printedAt?'<div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>':'';
  const signatures=PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'';
  const footer=PRINT_CONFIG.footer?'<footer class="footer">'+esc(profile.name)+' · '+esc(profile.systemName)+' V19 · Dokumen hasil cetak sistem</footer>':'';
- const printWindow=window.open('','_blank');
+ const printWindow=window.open('','sbp-print','popup=yes,width=1100,height=800');
  if(!printWindow){toast('Jendela cetak diblokir browser. Izinkan pop-up untuk situs SBP Accounting, lalu tekan Cetak kembali.');return null}
  printWindow.document.open();
  printWindow.document.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body>'+repeatBrand+'<main class="sheet"><header class="header">'+brand+'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header>'+meta+body+signatures+footer+'</main></body></html>');
@@ -1626,8 +1626,12 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  let printHandled=false;
  const cleanup=()=>{if(printHandled)return;printHandled=true;if(typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}};
  printWindow.addEventListener('afterprint',cleanup,{once:true});
- printWindow.addEventListener('load',()=>{setTimeout(()=>{try{printWindow.focus();printWindow.print()}catch(err){toast('Gagal membuka dialog cetak: '+err.message)}},250)},{once:true});
- setTimeout(()=>{try{if(!printWindow.closed&&!printHandled){printWindow.focus();printWindow.print()}}catch(err){toast('Gagal membuka dialog cetak: '+err.message)}},700);
+ try{
+  printWindow.focus();
+  printWindow.print();
+ }catch(err){
+  toast('Dialog cetak gagal dibuka: '+err.message);
+ }
  return printWindow;
 }
 function printTrialBalance(){
