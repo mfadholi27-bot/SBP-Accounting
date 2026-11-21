@@ -1177,7 +1177,7 @@ function buildBalanceComparison(){
  const rowsA=comparisonAsOf(a),rowsB=comparisonAsOf(b),mapA=new Map(rowsA.map(r=>[String(r.code),r.balance])),mapB=new Map(rowsB.map(r=>[String(r.code),r.balance]));
  const codes=[...new Set([...mapA.keys(),...mapB.keys()])],accounts=codes.map(code=>{const acc=(state.accounts||[]).find(x=>String(x.code)===code)||{},v1=mapA.get(code)||0,v2=mapB.get(code)||0;return {code,name:acc.name||'(Akun tidak ditemukan)',group:comparisonClassify(code,acc),a:v1,b:v2,change:v2-v1}});
  const order=['Aktiva Lancar','Aktiva Tidak Lancar','Akumulasi Penyusutan','Aktiva · Perlu Pemetaan','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Liabilitas · Perlu Pemetaan','Ekuitas','Perlu Pemetaan'];
- const groups=order.filter(g=>accounts.some(x=>x.group===g)).map(g=>({name:g,rows:accounts.filter(x=>x.group===g).sort((x,y)=>x.code.localeCompare(y.code))}));
+ const groupNames=[...order.filter(g=>accounts.some(x=>x.group===g)),...new Set(accounts.map(x=>x.group).filter(g=>!order.includes(g)))];const groups=groupNames.map(g=>({name:g,rows:accounts.filter(x=>x.group===g).sort((x,y)=>x.code.localeCompare(y.code))}));
  return {a,b,groups,accounts};
 }
 function renderBalanceComparison(){
