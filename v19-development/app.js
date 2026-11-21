@@ -1143,8 +1143,8 @@ function renderTrialBalance(){
 }
 $('report-period').value=state.periodControl?.activePeriod||currentMonthKey();
 $('report-period').addEventListener('change',renderTrialBalance);
-$('comparison-date-a').value=new Date().getFullYear()-1+'-'+new Date().toISOString().slice(5,10);
-$('comparison-date-b').value=new Date().toISOString().slice(0,10);
+const comparisonNow=new Date();$('comparison-date-a').value=(comparisonNow.getFullYear()-1)+'-'+String(comparisonNow.getMonth()+1).padStart(2,'0');
+$('comparison-date-b').value=comparisonNow.toISOString().slice(0,7);
 $('comparison-generate').onclick=renderBalanceComparison;
 $('comparison-export').onclick=exportBalanceComparison;
 $('comparison-print').onclick=printBalanceComparison;
@@ -1170,10 +1170,12 @@ function comparisonClassify(code,account){
 }
 function comparisonPercent(a,b){if(Math.abs(a)<.005)return '—';const pct=(b-a)/Math.abs(a)*100;return (pct>0?'+':'')+pct.toLocaleString('id-ID',{maximumFractionDigits:2})+'%'}
 function comparisonMoney(v){return Math.abs(Number(v)||0)<.005?'—':(v<0?'-':'')+money(Math.abs(v))}
+function comparisonMonthLabel(value){const [year,month]=String(value).split('-').map(Number);return new Date(year,month-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'}).toUpperCase()}
+function comparisonMonthEnd(value){const [year,month]=String(value).split('-').map(Number);return new Date(year,month,0).toISOString().slice(0,10)}
 function buildBalanceComparison(){
- const a=$('comparison-date-a').value,b=$('comparison-date-b').value;
- if(!a||!b||a===b||!/^(\d{4})-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(a)||!/^(\d{4})-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(b)){toast('Pilih dua tanggal laporan yang valid dan berbeda.');return null}
- const validDate=value=>{const d=new Date(value+'T00:00:00');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===value};if(!validDate(a)||!validDate(b)){toast('Tanggal laporan tidak valid.');return null}
+ const monthA=$('comparison-date-a').value,monthB=$('comparison-date-b').value;
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthA)||!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthB)||monthA===monthB){toast('Pilih dua bulan dan tahun yang valid serta berbeda.');return null}
+ const a=comparisonMonthEnd(monthA),b=comparisonMonthEnd(monthB);
  const rowsA=comparisonAsOf(a),rowsB=comparisonAsOf(b),mapA=new Map(rowsA.map(r=>[String(r.code),r.balance])),mapB=new Map(rowsB.map(r=>[String(r.code),r.balance]));
  const codes=[...new Set([...mapA.keys(),...mapB.keys()])],accounts=codes.map(code=>{const acc=(state.accounts||[]).find(x=>String(x.code)===code)||{},v1=mapA.get(code)||0,v2=mapB.get(code)||0;return {code,name:acc.name||'(Akun tidak ditemukan)',group:comparisonClassify(code,acc),a:v1,b:v2,change:v2-v1}});
  const order=['Aktiva Lancar','Aktiva Tidak Lancar','Akumulasi Penyusutan','Aktiva · Perlu Pemetaan','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Liabilitas · Perlu Pemetaan','Ekuitas','Perlu Pemetaan'];
@@ -1195,7 +1197,7 @@ function renderBalanceComparison(){
 }
 function exportBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
- const rows=[['LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF'],['TANGGAL 1',data.a],['TANGGAL 2',data.b],[],['KELOMPOK','SANDI','NAMA AKUN',data.a,data.b,'PERUBAHAN','PERSENTASE']];
+ const rows=[['LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF'],['BULAN & TAHUN 1',comparisonMonthLabel(data.a.slice(0,7))],['BULAN & TAHUN 2',comparisonMonthLabel(data.b.slice(0,7))],[],['KELOMPOK','SANDI','NAMA AKUN',comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'PERUBAHAN','PERSENTASE']];
  data.groups.forEach(g=>{rows.push([g.name]);g.rows.forEach(r=>rows.push([g.name,r.code,r.name,r.a,r.b,r.change,Math.abs(r.a)<.005?'':(r.change/Math.abs(r.a))]));rows.push(['TOTAL '+g.name,'','',g.rows.reduce((n,r)=>n+r.a,0),g.rows.reduce((n,r)=>n+r.b,0)])});
  exportXlsxSheet('Neraca-Komparatif-'+data.a+'-'+data.b+'.xlsx','Neraca Komparatif',rows);
 }
@@ -1203,7 +1205,7 @@ function printBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
  const groups=data.groups.map(g=>'<h3 style="margin:5mm 0 2mm;font-size:10pt">'+esc(g.name)+'</h3>'+printTable(['SANDI','AKUN',data.a,data.b,'%'],g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+esc(comparisonMoney(r.a))+'</td><td class="num">'+esc(comparisonMoney(r.b))+'</td><td class="num">'+esc(comparisonPercent(r.a,r.b))+'</td></tr>'),'<tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'a')))+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'b')))+'</th><th></th></tr>')).join('');
  const body='<div class="comparison-print-title"><b>LAPORAN POSISI KEUANGAN</b><h2>NERACA KOMPARATIF</h2><b>PER '+esc(fmtDate(data.a).toUpperCase())+' DAN '+esc(fmtDate(data.b).toUpperCase())+'</b><p>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</p></div>'+groups;
- printDocument('NERACA KOMPARATIF','Per '+data.a+' dan '+data.b,body,'landscape');
+ printDocument('NERACA KOMPARATIF','Per '+comparisonMonthLabel(data.a.slice(0,7))+' dan '+comparisonMonthLabel(data.b.slice(0,7)),body,'landscape');
 }
 function sumComparison(rows,key){return rows.reduce((n,r)=>n+Number(r[key]||0),0)}
 
