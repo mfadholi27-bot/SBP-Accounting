@@ -1194,3 +1194,38 @@ body{overscroll-behavior:none!important}
     forced-color-adjust:auto;
   }
 }
+
+/* V19 DEVELOPMENT — Neraca Komparatif */
+#page-balance-comparison{display:flex;flex-direction:column;gap:16px}
+#page-balance-comparison .comparison-hero{padding:22px}
+#page-balance-comparison .comparison-hero>.panel-head{display:flex;align-items:center;justify-content:space-between;gap:18px}
+#page-balance-comparison .comparison-hero h3{margin:7px 0 5px;font-size:20px}
+#page-balance-comparison .comparison-hero p{margin:0;color:#64748b;font-size:13px;line-height:1.6}
+.comparison-mark{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#e9f5ee;color:#176b4a;font-size:27px;flex:0 0 auto}
+.comparison-controls{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr)) auto auto auto;align-items:end;gap:10px;padding:16px;border:1px solid #e2e8f0;border-radius:13px;background:#fbfdfb}
+.comparison-controls label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#475569}
+.comparison-controls input{height:40px;min-width:0;padding:0 10px;border:1px solid #cbd5e1;border-radius:8px;background:white;color:#17212b}
+.comparison-controls .btn{height:40px;white-space:nowrap}
+.comparison-note{display:flex;gap:9px;align-items:flex-start;padding:11px 13px;border:1px solid #dce9e0;border-radius:10px;background:#f4faf6;color:#526458;font-size:11px;line-height:1.6}
+.comparison-note i{flex:0 0 auto;color:#176b4a}
+.comparison-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.comparison-card{display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;min-width:0}
+.comparison-card span,.comparison-card small{font-size:11px;color:#64748b}
+.comparison-card b{font-size:15px;color:#173c2d;overflow-wrap:anywhere}
+.comparison-report{overflow:auto}
+.comparison-report-heading{text-align:center;display:flex;flex-direction:column;gap:5px;padding:10px 0 16px;color:#17212b}
+.comparison-report-heading b{font-size:15px}.comparison-report-heading span{font-size:13px;font-weight:800;text-decoration:underline}.comparison-report-heading small{font-size:11px;color:#64748b}
+.comparison-group{margin:0 0 15px;overflow-x:auto}
+.comparison-group h4{margin:0;padding:9px 10px;background:#f0f5cf;border:1px solid #d9dfad;color:#25351e;font-size:13px;text-decoration:underline}
+.comparison-group table{width:100%;min-width:650px;border-collapse:collapse;font-size:12px}
+.comparison-group th,.comparison-group td{padding:8px 9px;border:1px solid #d6ddd7}
+.comparison-group thead th{background:#f7f8e7;color:#34452c;text-align:center}
+.comparison-group td:nth-child(2){min-width:190px}
+.comparison-group .num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.comparison-group tfoot th{background:#f1f5f2;text-align:right}
+.comparison-grand-total{display:grid;grid-template-columns:minmax(220px,1fr) repeat(3,minmax(110px,auto));gap:12px;padding:12px 10px;margin:8px 0 18px;border:2px solid #9eb5a7;background:#eaf2f5;font-size:12px;font-weight:800}
+.comparison-grand-total>*:not(:first-child){text-align:right;white-space:nowrap}
+.comparison-footnote{font-size:11px;line-height:1.6;color:#64748b}
+.comparison-print-title{text-align:center;margin-bottom:5mm}.comparison-print-title h2{margin:2mm 0;font-size:13pt}
+@media(max-width:1000px){.comparison-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.comparison-controls .btn{width:100%}}
+@media(max-width:600px){#page-balance-comparison .comparison-hero{padding:15px}.comparison-controls{grid-template-columns:1fr}.comparison-summary{grid-template-columns:1fr}.comparison-grand-total{grid-template-columns:1fr 1fr}.comparison-grand-total>*:not(:first-child){text-align:left}}
