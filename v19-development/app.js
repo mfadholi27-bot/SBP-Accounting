@@ -235,7 +235,7 @@ function go(page){
   if(isTarget)p.removeAttribute('hidden');
  });
  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
- const labels={'company-identity':'Identitas Perusahaan','annual-budget':'Anggaran Tahunan','import-center':'Pusat Import Data','journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program','debit-notes':'Nota Debet',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Laporan',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data','print-settings':'Pengaturan Cetak'};
+ const labels={'company-identity':'Identitas Perusahaan','annual-budget':'Anggaran Tahunan','import-center':'Pusat Import Data','journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program','debit-notes':'Nota Debet',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Neraca Percobaan / Laporan','balance-comparison':'Neraca Komparatif',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data','print-settings':'Pengaturan Cetak'};
  $('page-title').textContent=labels[page]||page;
  if(page==='periods')renderPeriodControl();if(page==='company-identity')renderCompanyIdentity();if(page==='annual-budget')renderAnnualBudgets();
  if(page==='dashboard')renderDashboard();if(page==='journal-list')renderJournals();
@@ -245,6 +245,7 @@ function go(page){
  if(page==='opening-balances')renderOpeningBalances();
  if(page==='nptrans')renderNptrans();
  if(page==='reports')renderTrialBalance();
+ if(page==='balance-comparison')renderBalanceComparison();
  if(page==='ledger')renderLedger();
  if(page==='audit')renderAuditLogs();
  if(page==='validation')renderValidation();
@@ -1142,6 +1143,69 @@ function renderTrialBalance(){
 }
 $('report-period').value=state.periodControl?.activePeriod||currentMonthKey();
 $('report-period').addEventListener('change',renderTrialBalance);
+$('comparison-date-a').value=new Date().getFullYear()-1+'-'+new Date().toISOString().slice(5,10);
+$('comparison-date-b').value=new Date().toISOString().slice(0,10);
+$('comparison-generate').onclick=renderBalanceComparison;
+$('comparison-export').onclick=exportBalanceComparison;
+$('comparison-print').onclick=printBalanceComparison;
+
+function comparisonAsOf(date){
+ const month=String(date||'').slice(0,7),rows=getTrialBalanceRows(month),movement=new Map();
+ (Array.isArray(state.journals)?state.journals:[]).filter(j=>isPostedJournal(j)&&String(j.date||'')>=month+'-01'&&String(j.date||'')<=date).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).forEach(l=>{const code=String(l.code??'').trim();if(!code)return;const v=movement.get(code)||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(code,v)}));
+ return rows.map(r=>{const opening=getOpeningBalanceForAccount(month,r.code).net,mv=movement.get(r.code)||{debit:0,credit:0};return {...r,balance:opening+mv.debit-mv.credit}});
+}
+function comparisonClassify(code,account){
+ const explicit=String(account?.reportGroup||account?.balanceGroup||account?.neracaGroup||'').trim();
+ if(explicit)return explicit;
+ const c=String(code||'').replace(/[^0-9]/g,'');
+ if(c.startsWith('129'))return 'Akumulasi Penyusutan';
+ if(c.startsWith('11'))return 'Aktiva Lancar';
+ if(c.startsWith('12'))return 'Aktiva Tidak Lancar';
+ if(c.startsWith('211'))return 'Liabilitas Jangka Pendek';
+ if(c.startsWith('212'))return 'Liabilitas Jangka Panjang';
+ if(c.startsWith('2'))return 'Liabilitas · Perlu Pemetaan';
+ if(c.startsWith('3'))return 'Ekuitas';
+ if(c.startsWith('1'))return 'Aktiva · Perlu Pemetaan';
+ return 'Perlu Pemetaan';
+}
+function comparisonPercent(a,b){if(Math.abs(a)<.005)return '—';const pct=(b-a)/Math.abs(a)*100;return (pct>0?'+':'')+pct.toLocaleString('id-ID',{maximumFractionDigits:2})+'%'}
+function comparisonMoney(v){return Math.abs(Number(v)||0)<.005?'—':(v<0?'-':'')+money(Math.abs(v))}
+function buildBalanceComparison(){
+ const a=$('comparison-date-a').value,b=$('comparison-date-b').value;
+ if(!a||!b||a===b||!/^(\d{4})-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(a)||!/^(\d{4})-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(b)){toast('Pilih dua tanggal laporan yang valid dan berbeda.');return null}
+ const rowsA=comparisonAsOf(a),rowsB=comparisonAsOf(b),mapA=new Map(rowsA.map(r=>[String(r.code),r.balance])),mapB=new Map(rowsB.map(r=>[String(r.code),r.balance]));
+ const codes=[...new Set([...mapA.keys(),...mapB.keys()])],accounts=codes.map(code=>{const acc=(state.accounts||[]).find(x=>String(x.code)===code)||{},v1=mapA.get(code)||0,v2=mapB.get(code)||0;return {code,name:acc.name||'(Akun tidak ditemukan)',group:comparisonClassify(code,acc),a:v1,b:v2,change:v2-v1}});
+ const order=['Aktiva Lancar','Aktiva Tidak Lancar','Akumulasi Penyusutan','Aktiva · Perlu Pemetaan','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Liabilitas · Perlu Pemetaan','Ekuitas','Perlu Pemetaan'];
+ const groups=order.filter(g=>accounts.some(x=>x.group===g)).map(g=>({name:g,rows:accounts.filter(x=>x.group===g).sort((x,y)=>x.code.localeCompare(y.code))}));
+ return {a,b,groups,accounts};
+}
+function renderBalanceComparison(){
+ const data=buildBalanceComparison();if(!data)return;
+ const sum=items=>items.reduce((n,r)=>n+r,0),assetGroups=data.groups.filter(g=>g.name.startsWith('Aktiva')||g.name==='Akumulasi Penyusutan'),liabilityGroups=data.groups.filter(g=>g.name.startsWith('Liabilitas')),equityGroups=data.groups.filter(g=>g.name==='Ekuitas'||g.name==='Perlu Pemetaan');
+ const groupTotal=g=>sum(g.rows.map(r=>r.a));
+ const totalAssetsA=sum(assetGroups.map(groupTotal)),totalAssetsB=sum(assetGroups.map(g=>sum(g.rows.map(r=>r.b))));
+ const totalLiabA=sum(liabilityGroups.map(groupTotal)),totalLiabB=sum(liabilityGroups.map(g=>sum(g.rows.map(r=>r.b))));
+ const totalEquityA=sum(equityGroups.map(groupTotal)),totalEquityB=sum(equityGroups.map(g=>sum(g.rows.map(r=>r.b))));
+ const card=(label,x,y)=>'<div class="comparison-card"><span>'+label+'</span><b>'+comparisonMoney(x)+'</b><small>Periode kedua: '+comparisonMoney(y)+'</small></div>';
+ $('comparison-summary').innerHTML=card('Total Aktiva',totalAssetsA,totalAssetsB)+card('Total Liabilitas',totalLiabA,totalLiabB)+card('Total Ekuitas',totalEquityA,totalEquityB);
+ const renderGroups=selected=>selected.map(g=>'<section class="comparison-group"><h4>'+esc(g.name)+'</h4><table><thead><tr><th>SANDI</th><th>AKUN</th><th>'+esc(data.a.slice(0,4))+'</th><th>'+esc(data.b.slice(0,4))+'</th><th>%</th></tr></thead><tbody>'+g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+comparisonMoney(r.a)+'</td><td class="num">'+comparisonMoney(r.b)+'</td><td class="num">'+comparisonPercent(r.a,r.b)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.a)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.b)))+'</th><th class="num">'+comparisonPercent(sum(g.rows.map(r=>r.a)),sum(g.rows.map(r=>r.b)))+'</th></tr></tfoot></table></section>');
+ $('comparison-report').innerHTML='<div class="comparison-report-heading"><b>LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF</b><span>PER '+fmtDate(data.a).toUpperCase()+' DAN '+fmtDate(data.b).toUpperCase()+'</span><small>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</small></div>'+renderGroups(assetGroups)+'<div class="comparison-grand-total"><b>TOTAL AKTIVA</b><b>'+comparisonMoney(totalAssetsA)+'</b><b>'+comparisonMoney(totalAssetsB)+'</b><b>'+comparisonPercent(totalAssetsA,totalAssetsB)+'</b></div>'+renderGroups(liabilityGroups)+renderGroups(equityGroups)+'<div class="comparison-grand-total"><b>TOTAL LIABILITAS & EKUITAS</b><b>'+comparisonMoney(totalLiabA+totalEquityA)+'</b><b>'+comparisonMoney(totalLiabB+totalEquityB)+'</b><b>'+comparisonPercent(totalLiabA+totalEquityA,totalLiabB+totalEquityB)+'</b></div><p class="comparison-footnote">Catatan: pengelompokan awal menggunakan awalan SANDI sebagai aturan sementara. Periksa kelompok “Perlu Pemetaan” dan konfirmasi struktur Master Akun sebelum menggunakan laporan ini sebagai laporan resmi.</p>';
+ return data;
+}
+function exportBalanceComparison(){
+ const data=buildBalanceComparison();if(!data)return;
+ const rows=[['LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF'],['TANGGAL 1',data.a],['TANGGAL 2',data.b],[],['KELOMPOK','SANDI','NAMA AKUN',data.a,data.b,'PERUBAHAN','PERSENTASE']];
+ data.groups.forEach(g=>{rows.push([g.name]);g.rows.forEach(r=>rows.push([g.name,r.code,r.name,r.a,r.b,r.change,Math.abs(r.a)<.005?'':(r.change/Math.abs(r.a))]));rows.push(['TOTAL '+g.name,'','',g.rows.reduce((n,r)=>n+r.a,0),g.rows.reduce((n,r)=>n+r.b,0)])});
+ exportXlsxSheet('Neraca-Komparatif-'+data.a+'-'+data.b+'.xlsx','Neraca Komparatif',rows);
+}
+function printBalanceComparison(){
+ const data=buildBalanceComparison();if(!data)return;
+ const groups=data.groups.map(g=>'<h3 style="margin:5mm 0 2mm;font-size:10pt">'+esc(g.name)+'</h3>'+printTable(['SANDI','AKUN',data.a,data.b,'%'],g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+esc(comparisonMoney(r.a))+'</td><td class="num">'+esc(comparisonMoney(r.b))+'</td><td class="num">'+esc(comparisonPercent(r.a,r.b))+'</td></tr>'),'<tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'a')))+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'b')))+'</th><th></th></tr>')).join('');
+ const body='<div class="comparison-print-title"><b>LAPORAN POSISI KEUANGAN</b><h2>NERACA KOMPARATIF</h2><b>PER '+esc(fmtDate(data.a).toUpperCase())+' DAN '+esc(fmtDate(data.b).toUpperCase())+'</b><p>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</p></div>'+groups;
+ printDocument('NERACA KOMPARATIF','Per '+data.a+' dan '+data.b,body,'landscape');
+}
+function sumComparison(rows,key){return rows.reduce((n,r)=>n+Number(r[key]||0),0)}
+
 
 $('force-delete-mode').addEventListener('change',()=>{const mode=$('force-delete-mode').value,input=$('force-delete-value'),label=$('force-delete-value-label');input.type=mode==='date'?'date':mode==='month'?'month':'number';if(mode==='year'){input.min='1900';input.max='2200';input.step='1';input.placeholder='YYYY';input.value=''}else{input.removeAttribute('min');input.removeAttribute('max');input.removeAttribute('step');input.value=''}label.firstChild.textContent=mode==='date'?'Tanggal':mode==='month'?'Bulan':'Tahun'});
 function journalDeleteMatches(mode,value){
