@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#116b49"><meta name="description" content="SBP Accounting V19 DEVELOPMENT — kloning terisolasi untuk pengembangan">
-<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=42"><link rel="stylesheet" href="palm-glass-theme.css?v=50"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
+<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=42"><link rel="stylesheet" href="palm-glass-theme.css?v=51"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
 <title>SBP Accounting V19 DEVELOPMENT</title>
 <style id="sbp-journal-print-modal-style">
 .sbp-print-modal{position:fixed!important;inset:0!important;z-index:10050!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;background:rgba(15,23,42,.56)!important;backdrop-filter:blur(3px)!important;box-sizing:border-box!important}
@@ -354,14 +354,23 @@
 <section class="page" id="page-reports" hidden><div class="panel"><div class="panel-head"><div><h3>Neraca Percobaan</h3><p>Saldo awal + mutasi jurnal terposting = saldo akhir per akun.</p></div><div class="button-row"><label class="report-period-label">Periode<input type="month" id="report-period"></label><button class="btn" id="export-trial-xlsx">Ekspor Excel</button><button class="btn" id="print-report">Cetak / PDF</button></div></div><div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="trial-balance-content" aria-expanded="false"><span class="inline-icon"><i data-lucide="plus"></i></span> Tampilkan neraca percobaan</button></div><div id="trial-balance-content" hidden><div id="trial-balance" class="empty">Belum ada data saldo.</div></div></div></section>
 <section class="page" id="page-balance-comparison" hidden>
  <div class="panel comparison-hero"><div class="panel-head"><div><span class="tag">LAPORAN KEUANGAN · MODEL KOMPARATIF</span><h3>Neraca Komparatif</h3><p>Membandingkan posisi keuangan pada dua tanggal berbeda. Form ini berdiri sendiri dan tidak mengubah Neraca Percobaan.</p></div><span class="comparison-mark"><i data-lucide="scale"></i></span></div>
-  <div class="comparison-controls">
-   <label>Bulan & tahun pembanding pertama<input type="month" id="comparison-date-a"></label>
-   <label>Bulan & tahun pembanding kedua<input type="month" id="comparison-date-b"></label>
-   <button class="btn btn-primary" id="comparison-generate" type="button"><i data-lucide="refresh-cw"></i> Tampilkan Laporan</button>
-   <button class="btn" id="comparison-print" type="button"><i data-lucide="printer"></i> Cetak / PDF</button>
-   <button class="btn" id="comparison-export" type="button"><i data-lucide="file-spreadsheet"></i> Ekspor Excel</button>
+  <div class="comparison-filter-shell">
+   <div class="comparison-controls">
+    <label>Periode pembanding A<input type="month" id="comparison-date-a"></label>
+    <label>Periode pembanding B<input type="month" id="comparison-date-b"></label>
+    <button class="btn btn-primary" id="comparison-generate" type="button"><i data-lucide="calculator"></i> Hitung Otomatis</button>
+    <button class="btn" id="comparison-filter-toggle" type="button" aria-expanded="false"><i data-lucide="sliders-horizontal"></i> Filter Laporan</button>
+   </div>
+   <div class="comparison-filter-panel" id="comparison-filter-panel" hidden>
+    <label>Cari SANDI / nama akun<input type="search" id="comparison-search" placeholder="Ketik SANDI atau nama akun..."></label>
+    <label>Kelompok akun<select id="comparison-filter-group"><option value="all">Semua kelompok</option><option>Aktiva Lancar</option><option>Aktiva Tidak Lancar</option><option>Kontra Aktiva</option><option>Liabilitas Jangka Pendek</option><option>Liabilitas Jangka Panjang</option><option>Ekuitas</option><option>Belum Dipetakan</option></select></label>
+    <label>Status pemetaan<select id="comparison-filter-status"><option value="all">Semua status</option><option value="mapped">Sudah dipetakan</option><option value="unmapped">Belum dipetakan</option></select></label>
+   </div>
   </div>
-  <div class="comparison-note"><i data-lucide="info"></i><span>Saldo dihitung sampai akhir bulan terpilih dari saldo awal dan jurnal POSTED. Persentase dihitung terhadap nilai absolut periode pertama; jika nilai pembanding pertama nol, ditampilkan tanda “—”.</span></div>
+  <div class="comparison-actions">
+   <span class="comparison-note"><i data-lucide="info"></i><span>Angka dihitung otomatis dari saldo awal dan jurnal berstatus POSTED sampai akhir bulan. Draft dan Nota Debet Draft tidak dihitung.</span></span>
+   <div><button class="btn" id="comparison-print" type="button"><i data-lucide="printer"></i> Cetak / PDF</button> <button class="btn" id="comparison-export" type="button"><i data-lucide="file-spreadsheet"></i> Ekspor Excel</button></div>
+  </div>
   <div id="comparison-summary" class="comparison-summary"><div class="empty">Pilih dua tanggal, lalu tekan Tampilkan Laporan.</div></div>
   <div id="comparison-report" class="comparison-report"><div class="empty">Laporan komparatif belum dibuat.</div></div>
  </div>
@@ -471,7 +480,7 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 DEVELOPMENT · Data Terpisah</span><span id="build-stamp" class="build-stamp" data-build="3"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-COMP-BALANCE-002</span><span>Kloning sumber Build 042 · Branch development · Database terpisah</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 DEVELOPMENT · Data Terpisah</span><span id="build-stamp" class="build-stamp" data-build="3"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-COMP-BALANCE-003</span><span>Kloning sumber Build 042 · Branch development · Database terpisah</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=172"></script>
+<script src="app.js?v=173"></script>
 </body></html>
