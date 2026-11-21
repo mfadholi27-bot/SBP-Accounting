@@ -355,13 +355,13 @@
 <section class="page" id="page-balance-comparison" hidden>
  <div class="panel comparison-hero"><div class="panel-head"><div><span class="tag">LAPORAN KEUANGAN · MODEL KOMPARATIF</span><h3>Neraca Komparatif</h3><p>Membandingkan posisi keuangan pada dua tanggal berbeda. Form ini berdiri sendiri dan tidak mengubah Neraca Percobaan.</p></div><span class="comparison-mark"><i data-lucide="scale"></i></span></div>
   <div class="comparison-controls">
-   <label>Tanggal pembanding pertama<input type="date" id="comparison-date-a"></label>
-   <label>Tanggal pembanding kedua<input type="date" id="comparison-date-b"></label>
+   <label>Bulan & tahun pembanding pertama<input type="month" id="comparison-date-a"></label>
+   <label>Bulan & tahun pembanding kedua<input type="month" id="comparison-date-b"></label>
    <button class="btn btn-primary" id="comparison-generate" type="button"><i data-lucide="refresh-cw"></i> Tampilkan Laporan</button>
    <button class="btn" id="comparison-print" type="button"><i data-lucide="printer"></i> Cetak / PDF</button>
    <button class="btn" id="comparison-export" type="button"><i data-lucide="file-spreadsheet"></i> Ekspor Excel</button>
   </div>
-  <div class="comparison-note"><i data-lucide="info"></i><span>Saldo dihitung sampai dengan tanggal laporan dari saldo awal dan jurnal POSTED. Persentase dihitung terhadap nilai absolut periode pertama; jika nilai pembanding pertama nol, ditampilkan tanda “—”.</span></div>
+  <div class="comparison-note"><i data-lucide="info"></i><span>Saldo dihitung sampai akhir bulan terpilih dari saldo awal dan jurnal POSTED. Persentase dihitung terhadap nilai absolut periode pertama; jika nilai pembanding pertama nol, ditampilkan tanda “—”.</span></div>
   <div id="comparison-summary" class="comparison-summary"><div class="empty">Pilih dua tanggal, lalu tekan Tampilkan Laporan.</div></div>
   <div id="comparison-report" class="comparison-report"><div class="empty">Laporan komparatif belum dibuat.</div></div>
  </div>
