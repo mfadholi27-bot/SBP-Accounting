@@ -1149,7 +1149,7 @@ $('comparison-generate').onclick=renderBalanceComparison;
 $('comparison-export').onclick=exportBalanceComparison;
 $('comparison-print').onclick=printBalanceComparison;
 $('comparison-filter-toggle').onclick=()=>{const panel=$('comparison-filter-panel'),opening=panel.hidden;panel.hidden=!opening;$('comparison-filter-toggle').setAttribute('aria-expanded',String(opening));$('comparison-filter-toggle').innerHTML='<i data-lucide="'+(opening?'chevron-up':'sliders-horizontal')+'"></i> '+(opening?'Sembunyikan Filter':'Filter Laporan');if(window.lucide?.createIcons)window.lucide.createIcons()};
-['comparison-search','comparison-filter-group','comparison-filter-status'].forEach(id=>$(id).addEventListener(id==='comparison-search'?'input':'change',()=>{if($('comparison-report').dataset.generated==='1')renderBalanceComparison()}));
+['comparison-search','comparison-filter-group','comparison-filter-status','comparison-codes'].forEach(id=>$(id).addEventListener(id==='comparison-search'?'input':'change',()=>{if($('comparison-report').dataset.generated==='1')renderBalanceComparison()}));
 
 
 const BALANCE_MAPPING_GROUPS=['Aktiva Lancar','Aktiva Tidak Lancar','Kontra Aktiva','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Ekuitas'];
@@ -1213,9 +1213,20 @@ function buildBalanceComparison(){
  const groupNames=[...order.filter(g=>accounts.some(x=>x.group===g)),...new Set(accounts.map(x=>x.group).filter(g=>!order.includes(g)))];const groups=groupNames.map(g=>({name:g,rows:accounts.filter(x=>x.group===g).sort((x,y)=>x.code.localeCompare(y.code))}));
  return {a,b,groups,accounts};
 }
+function comparisonSelectedSandis(data){
+ const raw=String($('comparison-codes')?.value||'').trim();
+ if(!raw)return {codes:null,error:''};
+ const codes=[...new Set(raw.split(/[;,\n\r\t ]+/).map(x=>x.trim()).filter(Boolean))];
+ if(codes.length>3)return {codes:null,error:'Maksimal pilih 3 SANDI. Hapus SANDI yang berlebih.'};
+ const known=new Set(data.accounts.map(r=>String(r.code).trim()));
+ const missing=codes.filter(code=>!known.has(code));
+ if(missing.length)return {codes:null,error:'SANDI tidak ditemukan: '+missing.join(', ')+'. Periksa kembali penulisannya.'};
+ return {codes:new Set(codes),error:''};
+}
 function filteredBalanceComparisonGroups(data){
- const q=String($('comparison-search')?.value||'').trim().toLowerCase(),group=$('comparison-filter-group')?.value||'all',status=$('comparison-filter-status')?.value||'all';
- return data.groups.filter(g=>group==='all'||g.name===group).map(g=>({...g,rows:g.rows.filter(r=>(!q||(r.code+' '+r.name).toLowerCase().includes(q))&&(status==='all'||(status==='mapped'&&r.group!=='Belum Dipetakan')||(status==='unmapped'&&r.group==='Belum Dipetakan')))})).filter(g=>g.rows.length);
+ const q=String($('comparison-search')?.value||'').trim().toLowerCase(),group=$('comparison-filter-group')?.value||'all',status=$('comparison-filter-status')?.value||'all',selected=comparisonSelectedSandis(data);
+ if(selected.error){toast(selected.error);return []}
+ return data.groups.filter(g=>group==='all'||g.name===group).map(g=>({...g,rows:g.rows.filter(r=>(!selected.codes||selected.codes.has(String(r.code).trim()))&&(!q||(r.code+' '+r.name).toLowerCase().includes(q))&&(status==='all'||(status==='mapped'&&r.group!=='Belum Dipetakan')||(status==='unmapped'&&r.group==='Belum Dipetakan')))})).filter(g=>g.rows.length);
 }
 function renderBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
