@@ -1157,7 +1157,7 @@ function initBalanceMapping(){
  balanceMappingDraft={...state.balanceMappings};
  $('mapping-search').oninput=renderBalanceMapping;
  $('mapping-filter').onchange=renderBalanceMapping;
- $('mapping-select-all').onchange=e=>document.querySelectorAll('#mapping-rows .mapping-select:visible').forEach(x=>x.checked=e.target.checked);
+ $('mapping-select-all').onchange=e=>document.querySelectorAll('#mapping-rows .mapping-select').forEach(x=>x.checked=e.target.checked);
  $('mapping-apply-bulk').onclick=()=>{
   const group=$('mapping-bulk-group').value,selected=[...document.querySelectorAll('#mapping-rows .mapping-select:checked')];
   if(!group)return toast('Pilih kelompok tujuan terlebih dahulu.');
@@ -1195,11 +1195,11 @@ function comparisonAsOf(date){
  (Array.isArray(state.journals)?state.journals:[]).filter(j=>isPostedJournal(j)&&String(j.date||'')>=month+'-01'&&String(j.date||'')<=date).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).forEach(l=>{const code=String(l.code??'').trim();if(!code)return;const v=movement.get(code)||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(code,v)}));
  return rows.map(r=>{const opening=getOpeningBalanceForAccount(month,r.code).net,mv=movement.get(r.code)||{debit:0,credit:0};return {...r,balance:opening+mv.debit-mv.credit}});
 }
-function comparisonClassify(code,account){return BALANCE_MAPPING_GROUPS.includes(balanceMappingDraft[String(code)]||state.balanceMappings?.[String(code)])?(balanceMappingDraft[String(code)]||state.balanceMappings[String(code)]):'Belum Dipetakan';}
+function comparisonClassify(code,account){const group=state.balanceMappings?.[String(code)]||'';return BALANCE_MAPPING_GROUPS.includes(group)?group:'Belum Dipetakan';}
 function comparisonPercent(a,b){if(Math.abs(a)<.005)return '—';const pct=(b-a)/Math.abs(a)*100;return (pct>0?'+':'')+pct.toLocaleString('id-ID',{maximumFractionDigits:2})+'%'}
 function comparisonMoney(v){return Math.abs(Number(v)||0)<.005?'—':(v<0?'-':'')+money(Math.abs(v))}
 function comparisonMonthLabel(value){const [year,month]=String(value).split('-').map(Number);return new Date(year,month-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'}).toUpperCase()}
-function comparisonMonthEnd(value){const [year,month]=String(value).split('-').map(Number);return new Date(year,month,0).toISOString().slice(0,10)}
+function comparisonMonthEnd(value){const [year,month]=String(value).split('-').map(Number),day=new Date(Date.UTC(year,month,0)).getUTCDate();return String(year)+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
 function buildBalanceComparison(){
  const monthA=$('comparison-date-a').value,monthB=$('comparison-date-b').value;
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthA)||!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthB)||monthA===monthB){toast('Pilih dua bulan dan tahun yang valid serta berbeda.');return null}
@@ -1220,7 +1220,7 @@ function renderBalanceComparison(){
  const card=(label,x,y)=>'<div class="comparison-card"><span>'+label+'</span><b>'+comparisonMoney(x)+'</b><small>Periode kedua: '+comparisonMoney(y)+'</small></div>';
  $('comparison-summary').innerHTML=card('Total Aktiva',totalAssetsA,totalAssetsB)+card('Total Liabilitas',totalLiabA,totalLiabB)+card('Total Ekuitas',totalEquityA,totalEquityB);
  const renderGroups=selected=>selected.map(g=>'<section class="comparison-group"><h4>'+esc(g.name)+'</h4><table><thead><tr><th>SANDI</th><th>AKUN</th><th>'+esc(comparisonMonthLabel(data.a.slice(0,7)))+'</th><th>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+'</th><th>%</th></tr></thead><tbody>'+g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+comparisonMoney(r.a)+'</td><td class="num">'+comparisonMoney(r.b)+'</td><td class="num">'+comparisonPercent(r.a,r.b)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.a)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.b)))+'</th><th class="num">'+comparisonPercent(sum(g.rows.map(r=>r.a)),sum(g.rows.map(r=>r.b)))+'</th></tr></tfoot></table></section>');
- $('comparison-report').innerHTML='<div class="comparison-report-heading"><b>LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF</b><span>PER '+fmtDate(data.a).toUpperCase()+' DAN '+fmtDate(data.b).toUpperCase()+'</span><small>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</small></div>'+renderGroups(assetGroups)+'<div class="comparison-grand-total"><b>TOTAL AKTIVA</b><b>'+comparisonMoney(totalAssetsA)+'</b><b>'+comparisonMoney(totalAssetsB)+'</b><b>'+comparisonPercent(totalAssetsA,totalAssetsB)+'</b></div>'+renderGroups(liabilityGroups)+renderGroups(equityGroups)+'<div class="comparison-grand-total"><b>TOTAL LIABILITAS & EKUITAS</b><b>'+comparisonMoney(totalLiabA+totalEquityA)+'</b><b>'+comparisonMoney(totalLiabB+totalEquityB)+'</b><b>'+comparisonPercent(totalLiabA+totalEquityA,totalLiabB+totalEquityB)+'</b></div><p class="comparison-footnote">Catatan: kelompok akun mengikuti konfigurasi Pemetaan SANDI Neraca. Akun berstatus Belum Dipetakan tidak dimasukkan ke subtotal.</p>';
+ $('comparison-report').innerHTML='<div class="comparison-report-heading"><b>LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF</b><span>PER '+comparisonMonthLabel(data.a.slice(0,7))+' DAN '+comparisonMonthLabel(data.b.slice(0,7))+'</span><small>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</small></div>'+renderGroups(assetGroups)+'<div class="comparison-grand-total"><b>TOTAL AKTIVA</b><b>'+comparisonMoney(totalAssetsA)+'</b><b>'+comparisonMoney(totalAssetsB)+'</b><b>'+comparisonPercent(totalAssetsA,totalAssetsB)+'</b></div>'+renderGroups(liabilityGroups)+renderGroups(equityGroups)+renderGroups(data.groups.filter(g=>g.name==='Belum Dipetakan'))+'<div class="comparison-grand-total"><b>TOTAL LIABILITAS & EKUITAS</b><b>'+comparisonMoney(totalLiabA+totalEquityA)+'</b><b>'+comparisonMoney(totalLiabB+totalEquityB)+'</b><b>'+comparisonPercent(totalLiabA+totalEquityA,totalLiabB+totalEquityB)+'</b></div><p class="comparison-footnote">Catatan: kelompok akun mengikuti konfigurasi Pemetaan SANDI Neraca. Akun Belum Dipetakan ditampilkan terpisah dan tidak dimasukkan ke subtotal Aktiva, Liabilitas, maupun Ekuitas.</p>';
  return data;
 }
 function exportBalanceComparison(){
