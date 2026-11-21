@@ -1173,6 +1173,7 @@ function comparisonMoney(v){return Math.abs(Number(v)||0)<.005?'—':(v<0?'-':''
 function buildBalanceComparison(){
  const a=$('comparison-date-a').value,b=$('comparison-date-b').value;
  if(!a||!b||a===b||!/^(\d{4})-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(a)||!/^(\d{4})-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(b)){toast('Pilih dua tanggal laporan yang valid dan berbeda.');return null}
+ const validDate=value=>{const d=new Date(value+'T00:00:00');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===value};if(!validDate(a)||!validDate(b)){toast('Tanggal laporan tidak valid.');return null}
  const rowsA=comparisonAsOf(a),rowsB=comparisonAsOf(b),mapA=new Map(rowsA.map(r=>[String(r.code),r.balance])),mapB=new Map(rowsB.map(r=>[String(r.code),r.balance]));
  const codes=[...new Set([...mapA.keys(),...mapB.keys()])],accounts=codes.map(code=>{const acc=(state.accounts||[]).find(x=>String(x.code)===code)||{},v1=mapA.get(code)||0,v2=mapB.get(code)||0;return {code,name:acc.name||'(Akun tidak ditemukan)',group:comparisonClassify(code,acc),a:v1,b:v2,change:v2-v1}});
  const order=['Aktiva Lancar','Aktiva Tidak Lancar','Akumulasi Penyusutan','Aktiva · Perlu Pemetaan','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Liabilitas · Perlu Pemetaan','Ekuitas','Perlu Pemetaan'];
@@ -1181,7 +1182,7 @@ function buildBalanceComparison(){
 }
 function renderBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
- const sum=items=>items.reduce((n,r)=>n+r,0),assetGroups=data.groups.filter(g=>g.name.startsWith('Aktiva')||g.name==='Akumulasi Penyusutan'),liabilityGroups=data.groups.filter(g=>g.name.startsWith('Liabilitas')),equityGroups=data.groups.filter(g=>g.name==='Ekuitas'||g.name==='Perlu Pemetaan');
+ const sum=items=>items.reduce((n,r)=>n+r,0),assetGroups=data.groups.filter(g=>g.name.startsWith('Aktiva')||g.name==='Akumulasi Penyusutan'),liabilityGroups=data.groups.filter(g=>g.name.startsWith('Liabilitas')),equityGroups=data.groups.filter(g=>g.name==='Ekuitas');
  const groupTotal=g=>sum(g.rows.map(r=>r.a));
  const totalAssetsA=sum(assetGroups.map(groupTotal)),totalAssetsB=sum(assetGroups.map(g=>sum(g.rows.map(r=>r.b))));
  const totalLiabA=sum(liabilityGroups.map(groupTotal)),totalLiabB=sum(liabilityGroups.map(g=>sum(g.rows.map(r=>r.b))));
