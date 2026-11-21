@@ -1636,10 +1636,15 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  if(!doc){frame.remove();toast('Area cetak tidak dapat disiapkan oleh browser.');return null}
  SBP_PRINT_ACTIVE=true;
  let printHandled=false;
+ let printStarted=false;
+ let printFallbackTimer=null;
+ const onWindowFocus=()=>{if(printStarted&&!printHandled)setTimeout(cleanup,700)};
  const cleanup=()=>{
   if(printHandled)return;
   printHandled=true;
   window.removeEventListener('afterprint',cleanup);
+  window.removeEventListener('focus',onWindowFocus);
+  if(printFallbackTimer)clearTimeout(printFallbackTimer);
   try{if(typeof afterPrint==='function')Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}
   frame.remove();
   SBP_PRINT_ACTIVE=false;
@@ -1647,11 +1652,12 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  frame.onload=()=>{
   try{
    frame.contentWindow.focus();
-   setTimeout(()=>{if(!printHandled){try{frame.contentWindow.print()}catch(err){cleanup();toast('Dialog cetak gagal dibuka: '+err.message)}}},120);
+   setTimeout(()=>{if(!printHandled){try{printStarted=true;printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}catch(err){cleanup();toast('Dialog cetak gagal dibuka: '+err.message)}}},120);
   }catch(err){cleanup();toast('Dialog cetak gagal dibuka: '+err.message)}
  };
  frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
  window.addEventListener('afterprint',cleanup,{once:true});
+ window.addEventListener('focus',onWindowFocus);
  doc.open();
  doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div>')+'</header>'+meta+body+signatures+footer+'</main></body></html>');
  doc.close();
