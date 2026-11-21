@@ -1,4 +1,4 @@
-/* BUILD 053 — Repeat letterhead and align comparative balance print tables */
+/* BUILD 055 — Reliable iframe print initialization and print trigger */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1594,7 +1594,7 @@ function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-p
 function printDocument(title,subtitle,body,orientation='portrait',afterPrint=null){
  const old=document.getElementById('sbp-print-frame');if(old)old.remove();
  const frame=document.createElement('iframe');frame.id='sbp-print-frame';frame.title='Pratinjau cetak '+title;
- frame.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(frame);
+ frame.style.cssText='position:fixed;left:0;top:0;width:100vw;height:100vh;border:0;opacity:0;pointer-events:none;z-index:-1';document.body.appendChild(frame);
  const paperMap={A4:'210mm 297mm',F4:'215mm 330mm',Letter:'8.5in 11in',Legal:'8.5in 14in'};
  const pageOrientation=PRINT_CONFIG.orientation==='auto'?orientation:PRINT_CONFIG.orientation;
  const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4, pageSize=pageOrientation==='landscape'?paper.split(' ').reverse().join(' '):paper;
@@ -1617,14 +1617,13 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  const repeatBrand=title==='NERACA KOMPARATIF'&&PRINT_CONFIG.brand?'<div class="repeat-print-brand">'+esc(profile.name)+'<small>'+esc(profile.systemName)+' · V19</small>'+(profile.address?'<small>'+esc(profile.address)+'</small>':'')+(profile.unit?'<small>'+esc(profile.unit)+'</small>':'')+'</div>':'';const meta=PRINT_CONFIG.printedAt?'<div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>':'';
  const signatures=PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'';
  const footer=PRINT_CONFIG.footer?'<footer class="footer">'+esc(profile.name)+' · '+esc(profile.systemName)+' V19 · Dokumen hasil cetak sistem</footer>':'';
- const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body>'+repeatBrand+'<main class="sheet"><header class="header">'+brand+'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
+ const doc=frame.contentDocument;doc.open();frame.onload=()=>{setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(err){toast('Gagal membuka cetak: '+err.message)}},150)};doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body>'+repeatBrand+'<main class="sheet"><header class="header">'+brand+'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
  let printHandled=false;
  const cleanup=()=>{
   if(printHandled)return;printHandled=true;
   if(typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}
   frame.remove();window.removeEventListener('afterprint',cleanup);
  };
- frame.onload=()=>{setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(err){toast('Gagal membuka cetak: '+err.message)}},150)};
  frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
  window.addEventListener('afterprint',cleanup,{once:true});
  return frame;
