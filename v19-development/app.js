@@ -1,4 +1,4 @@
-/* BUILD 051 — Comparative balance grouped by 3-digit SANDI heads */
+/* BUILD 052 — Unlimited SANDI selection for comparative balance */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1218,7 +1218,6 @@ function comparisonSelectedSandis(data){
  const raw=String($('comparison-codes')?.value||'').trim(),mode=comparisonDisplayMode();
  if(!raw)return {codes:null,error:''};
  const codes=[...new Set(raw.split(/[;,\n\r\t ]+/).map(x=>x.trim()).filter(Boolean))];
- if(codes.length>3)return {codes:null,error:'Maksimal pilih 3 kode. Hapus kode yang berlebih.'};
  const known=new Set(data.accounts.map(r=>mode==='head'?String(r.code).trim().slice(0,3):String(r.code).trim()));
  const invalid=codes.filter(code=>mode==='head'?!/^\d{3}$/.test(code)||!known.has(code):!known.has(code));
  if(invalid.length)return {codes:null,error:(mode==='head'?'Kepala SANDI tidak ditemukan: ':'SANDI tidak ditemukan: ')+invalid.join(', ')+'. Periksa kembali penulisannya.'};
