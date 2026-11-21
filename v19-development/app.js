@@ -1,4 +1,4 @@
-/* BUILD 049 — Delete all manual opening balances for selected period */
+/* BUILD 050 — Automatic comparative balance filters and calculation */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1148,6 +1148,8 @@ $('comparison-date-b').value=comparisonNow.toISOString().slice(0,7);
 $('comparison-generate').onclick=renderBalanceComparison;
 $('comparison-export').onclick=exportBalanceComparison;
 $('comparison-print').onclick=printBalanceComparison;
+$('comparison-filter-toggle').onclick=()=>{const panel=$('comparison-filter-panel'),opening=panel.hidden;panel.hidden=!opening;$('comparison-filter-toggle').setAttribute('aria-expanded',String(opening));$('comparison-filter-toggle').innerHTML='<i data-lucide="'+(opening?'chevron-up':'sliders-horizontal')+'"></i> '+(opening?'Sembunyikan Filter':'Filter Laporan');if(window.lucide?.createIcons)window.lucide.createIcons()};
+['comparison-search','comparison-filter-group','comparison-filter-status'].forEach(id=>$(id).addEventListener(id==='comparison-search'?'input':'change',()=>{if($('comparison-report').dataset.generated==='1')renderBalanceComparison()}));
 
 
 const BALANCE_MAPPING_GROUPS=['Aktiva Lancar','Aktiva Tidak Lancar','Kontra Aktiva','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Ekuitas'];
@@ -1191,9 +1193,10 @@ function renderBalanceMapping(){
  $('mapping-select-all').checked=false;
 }
 function comparisonAsOf(date){
- const month=String(date||'').slice(0,7),rows=getTrialBalanceRows(month),movement=new Map();
- (Array.isArray(state.journals)?state.journals:[]).filter(j=>isPostedJournal(j)&&String(j.date||'')>=month+'-01'&&String(j.date||'')<=date).forEach(j=>(Array.isArray(j.lines)?j.lines:[]).forEach(l=>{const code=String(l.code??'').trim();if(!code)return;const v=movement.get(code)||{debit:0,credit:0};v.debit+=Number(l.debit||0);v.credit+=Number(l.credit||0);movement.set(code,v)}));
- return rows.map(r=>{const opening=getOpeningBalanceForAccount(month,r.code).net,mv=movement.get(r.code)||{debit:0,credit:0};return {...r,balance:opening+mv.debit-mv.credit}});
+ // getTrialBalanceRows sudah memuat saldo awal dan seluruh jurnal POSTED bulan tersebut.
+ // Jangan menambahkan mutasi bulan berjalan untuk kedua kalinya.
+ const month=String(date||'').slice(0,7);
+ return getTrialBalanceRows(month).map(r=>({...r,balance:Number(r.balance||0)}));
 }
 function comparisonClassify(code,account){const group=state.balanceMappings?.[String(code)]||'';return BALANCE_MAPPING_GROUPS.includes(group)?group:'Belum Dipetakan';}
 function comparisonPercent(a,b){if(Math.abs(a)<.005)return '—';const pct=(b-a)/Math.abs(a)*100;return (pct>0?'+':'')+pct.toLocaleString('id-ID',{maximumFractionDigits:2})+'%'}
@@ -1204,34 +1207,40 @@ function buildBalanceComparison(){
  const monthA=$('comparison-date-a').value,monthB=$('comparison-date-b').value;
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthA)||!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthB)||monthA===monthB){toast('Pilih dua bulan dan tahun yang valid serta berbeda.');return null}
  const a=comparisonMonthEnd(monthA),b=comparisonMonthEnd(monthB);
- const rowsA=comparisonAsOf(a),rowsB=comparisonAsOf(b),mapA=new Map(rowsA.map(r=>[String(r.code),r.balance])),mapB=new Map(rowsB.map(r=>[String(r.code),r.balance]));
- const codes=[...new Set([...mapA.keys(),...mapB.keys()])],accounts=codes.map(code=>{const acc=(state.accounts||[]).find(x=>String(x.code)===code)||{},v1=mapA.get(code)||0,v2=mapB.get(code)||0;return {code,name:acc.name||'(Akun tidak ditemukan)',group:comparisonClassify(code,acc),a:v1,b:v2,change:v2-v1}});
+ const rowsA=comparisonAsOf(a),rowsB=comparisonAsOf(b),mapA=new Map(rowsA.map(r=>[String(r.code).trim(),r.balance])),mapB=new Map(rowsB.map(r=>[String(r.code).trim(),r.balance]));
+ const codes=[...new Set([...mapA.keys(),...mapB.keys()])],accounts=codes.map(code=>{const acc=(state.accounts||[]).find(x=>String(x.code??'').trim()===code)||{},v1=mapA.get(code)||0,v2=mapB.get(code)||0;return {code,name:acc.name||'(Akun tidak ditemukan)',group:comparisonClassify(code,acc),a:v1,b:v2,change:v2-v1}});
  const order=['Aktiva Lancar','Aktiva Tidak Lancar','Kontra Aktiva','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Ekuitas','Belum Dipetakan'];
  const groupNames=[...order.filter(g=>accounts.some(x=>x.group===g)),...new Set(accounts.map(x=>x.group).filter(g=>!order.includes(g)))];const groups=groupNames.map(g=>({name:g,rows:accounts.filter(x=>x.group===g).sort((x,y)=>x.code.localeCompare(y.code))}));
  return {a,b,groups,accounts};
 }
+function filteredBalanceComparisonGroups(data){
+ const q=String($('comparison-search')?.value||'').trim().toLowerCase(),group=$('comparison-filter-group')?.value||'all',status=$('comparison-filter-status')?.value||'all';
+ return data.groups.filter(g=>group==='all'||g.name===group).map(g=>({...g,rows:g.rows.filter(r=>(!q||(r.code+' '+r.name).toLowerCase().includes(q))&&(status==='all'||(status==='mapped'&&r.group!=='Belum Dipetakan')||(status==='unmapped'&&r.group==='Belum Dipetakan')))})).filter(g=>g.rows.length);
+}
 function renderBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
  const sum=items=>items.reduce((n,r)=>n+r,0),assetGroups=data.groups.filter(g=>g.name.startsWith('Aktiva')||g.name==='Kontra Aktiva'),liabilityGroups=data.groups.filter(g=>g.name.startsWith('Liabilitas')),equityGroups=data.groups.filter(g=>g.name==='Ekuitas');
- const groupTotal=g=>sum(g.rows.map(r=>r.a));
- const totalAssetsA=sum(assetGroups.map(groupTotal)),totalAssetsB=sum(assetGroups.map(g=>sum(g.rows.map(r=>r.b))));
- const totalLiabA=sum(liabilityGroups.map(groupTotal)),totalLiabB=sum(liabilityGroups.map(g=>sum(g.rows.map(r=>r.b))));
- const totalEquityA=sum(equityGroups.map(groupTotal)),totalEquityB=sum(equityGroups.map(g=>sum(g.rows.map(r=>r.b))));
- const card=(label,x,y)=>'<div class="comparison-card"><span>'+label+'</span><b>'+comparisonMoney(x)+'</b><small>Periode kedua: '+comparisonMoney(y)+'</small></div>';
- $('comparison-summary').innerHTML=card('Total Aktiva',totalAssetsA,totalAssetsB)+card('Total Liabilitas',totalLiabA,totalLiabB)+card('Total Ekuitas',totalEquityA,totalEquityB);
- const renderGroups=selected=>selected.map(g=>'<section class="comparison-group"><h4>'+esc(g.name)+'</h4><table><thead><tr><th>SANDI</th><th>AKUN</th><th>'+esc(comparisonMonthLabel(data.a.slice(0,7)))+'</th><th>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+'</th><th>%</th></tr></thead><tbody>'+g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+comparisonMoney(r.a)+'</td><td class="num">'+comparisonMoney(r.b)+'</td><td class="num">'+comparisonPercent(r.a,r.b)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.a)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.b)))+'</th><th class="num">'+comparisonPercent(sum(g.rows.map(r=>r.a)),sum(g.rows.map(r=>r.b)))+'</th></tr></tfoot></table></section>');
- $('comparison-report').innerHTML='<div class="comparison-report-heading"><b>LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF</b><span>PER '+comparisonMonthLabel(data.a.slice(0,7))+' DAN '+comparisonMonthLabel(data.b.slice(0,7))+'</span><small>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</small></div>'+renderGroups(assetGroups)+'<div class="comparison-grand-total"><b>TOTAL AKTIVA</b><b>'+comparisonMoney(totalAssetsA)+'</b><b>'+comparisonMoney(totalAssetsB)+'</b><b>'+comparisonPercent(totalAssetsA,totalAssetsB)+'</b></div>'+renderGroups(liabilityGroups)+renderGroups(equityGroups)+renderGroups(data.groups.filter(g=>g.name==='Belum Dipetakan'))+'<div class="comparison-grand-total"><b>TOTAL LIABILITAS & EKUITAS</b><b>'+comparisonMoney(totalLiabA+totalEquityA)+'</b><b>'+comparisonMoney(totalLiabB+totalEquityB)+'</b><b>'+comparisonPercent(totalLiabA+totalEquityA,totalLiabB+totalEquityB)+'</b></div><p class="comparison-footnote">Catatan: kelompok akun mengikuti konfigurasi Pemetaan SANDI Neraca. Akun Belum Dipetakan ditampilkan terpisah dan tidak dimasukkan ke subtotal Aktiva, Liabilitas, maupun Ekuitas.</p>';
+ const groupTotal=(groups,key)=>sum(groups.flatMap(g=>g.rows.map(r=>r[key])));
+ const totalAssetsA=groupTotal(assetGroups,'a'),totalAssetsB=groupTotal(assetGroups,'b'),totalLiabA=groupTotal(liabilityGroups,'a'),totalLiabB=groupTotal(liabilityGroups,'b'),totalEquityA=groupTotal(equityGroups,'a'),totalEquityB=groupTotal(equityGroups,'b');
+ const checkA=totalAssetsA-totalLiabA-totalEquityA,checkB=totalAssetsB-totalLiabB-totalEquityB;
+ const card=(label,x,y)=>'<div class="comparison-card"><span>'+label+'</span><b>'+comparisonMoney(x)+'</b><small>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+': '+comparisonMoney(y)+'</small><small>Selisih: '+comparisonMoney(y-x)+' · '+comparisonPercent(x,y)+'</small></div>';
+ $('comparison-summary').innerHTML=card('Total Aktiva',totalAssetsA,totalAssetsB)+card('Total Liabilitas',totalLiabA,totalLiabB)+card('Total Ekuitas',totalEquityA,totalEquityB)+'<div class="comparison-balance-check"><b>Uji keseimbangan neraca</b><span>'+esc(comparisonMonthLabel(data.a.slice(0,7)))+': '+(Math.abs(checkA)<.005?'SEIMBANG':'SELISIH '+comparisonMoney(checkA))+'</span><span>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+': '+(Math.abs(checkB)<.005?'SEIMBANG':'SELISIH '+comparisonMoney(checkB))+'</span></div>';
+ const visible=filteredBalanceComparisonGroups(data);
+ const renderGroups=selected=>selected.map(g=>'<section class="comparison-group"><h4>'+esc(g.name)+'</h4><table><thead><tr><th>SANDI</th><th>AKUN</th><th>'+esc(comparisonMonthLabel(data.a.slice(0,7)))+'</th><th>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+'</th><th>SELISIH</th><th>%</th></tr></thead><tbody>'+g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+comparisonMoney(r.a)+'</td><td class="num">'+comparisonMoney(r.b)+'</td><td class="num">'+comparisonMoney(r.change)+'</td><td class="num">'+comparisonPercent(r.a,r.b)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+' (HASIL FILTER)</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.a)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.b)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.change)))+'</th><th class="num">'+comparisonPercent(sum(g.rows.map(r=>r.a)),sum(g.rows.map(r=>r.b)))+'</th></tr></tfoot></table></section>');
+ const visibleAsset=visible.filter(g=>g.name.startsWith('Aktiva')||g.name==='Kontra Aktiva'),visibleLiab=visible.filter(g=>g.name.startsWith('Liabilitas')),visibleEquity=visible.filter(g=>g.name==='Ekuitas'),visibleUnmapped=visible.filter(g=>g.name==='Belum Dipetakan');
+ $('comparison-report').dataset.generated='1';
+ $('comparison-report').innerHTML='<div class="comparison-report-heading"><b>LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF</b><span>PER '+comparisonMonthLabel(data.a.slice(0,7))+' DAN '+comparisonMonthLabel(data.b.slice(0,7))+'</span><small>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</small></div>'+renderGroups(visibleAsset)+renderGroups(visibleLiab)+renderGroups(visibleEquity)+renderGroups(visibleUnmapped)+'<p class="comparison-footnote">Ringkasan dan uji keseimbangan memakai seluruh akun yang sudah dipetakan. Filter hanya membatasi rincian tabel. Akun Belum Dipetakan tetap terpisah dan tidak masuk subtotal.</p>';
  return data;
 }
 function exportBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
- const rows=[['LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF'],['BULAN & TAHUN 1',comparisonMonthLabel(data.a.slice(0,7))],['BULAN & TAHUN 2',comparisonMonthLabel(data.b.slice(0,7))],[],['KELOMPOK','SANDI','NAMA AKUN',comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'PERUBAHAN','PERSENTASE']];
- data.groups.forEach(g=>{rows.push([g.name]);g.rows.forEach(r=>rows.push([g.name,r.code,r.name,r.a,r.b,r.change,Math.abs(r.a)<.005?'':(r.change/Math.abs(r.a))]));rows.push(['TOTAL '+g.name,'','',g.rows.reduce((n,r)=>n+r.a,0),g.rows.reduce((n,r)=>n+r.b,0)])});
+ const groups=filteredBalanceComparisonGroups(data);const rows=[['LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF'],['BULAN & TAHUN 1',comparisonMonthLabel(data.a.slice(0,7))],['BULAN & TAHUN 2',comparisonMonthLabel(data.b.slice(0,7))],[],['KELOMPOK','SANDI','NAMA AKUN',comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'PERUBAHAN','PERSENTASE']];
+ groups.forEach(g=>{rows.push([g.name]);g.rows.forEach(r=>rows.push([g.name,r.code,r.name,r.a,r.b,r.change,Math.abs(r.a)<.005?'':(r.change/Math.abs(r.a))]));rows.push(['TOTAL '+g.name,'','',g.rows.reduce((n,r)=>n+r.a,0),g.rows.reduce((n,r)=>n+r.b,0)])});
  exportXlsxSheet('Neraca-Komparatif-'+data.a+'-'+data.b+'.xlsx','Neraca Komparatif',rows);
 }
 function printBalanceComparison(){
  const data=buildBalanceComparison();if(!data)return;
- const groups=data.groups.map(g=>'<h3 style="margin:5mm 0 2mm;font-size:10pt">'+esc(g.name)+'</h3>'+printTable(['SANDI','AKUN',comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'%'],g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+esc(comparisonMoney(r.a))+'</td><td class="num">'+esc(comparisonMoney(r.b))+'</td><td class="num">'+esc(comparisonPercent(r.a,r.b))+'</td></tr>'),'<tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'a')))+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'b')))+'</th><th></th></tr>')).join('');
+ const groups=filteredBalanceComparisonGroups(data).map(g=>'<h3 style="margin:5mm 0 2mm;font-size:10pt">'+esc(g.name)+'</h3>'+printTable(['SANDI','AKUN',comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'%'],g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+esc(comparisonMoney(r.a))+'</td><td class="num">'+esc(comparisonMoney(r.b))+'</td><td class="num">'+esc(comparisonPercent(r.a,r.b))+'</td></tr>'),'<tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'a')))+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'b')))+'</th><th></th></tr>')).join('');
  const body='<div class="comparison-print-title"><b>LAPORAN POSISI KEUANGAN</b><h2>NERACA KOMPARATIF</h2><b>PER '+esc(comparisonMonthLabel(data.a.slice(0,7)))+' DAN '+esc(comparisonMonthLabel(data.b.slice(0,7)))+'</b><p>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</p></div>'+groups;
  printDocument('NERACA KOMPARATIF','Per '+comparisonMonthLabel(data.a.slice(0,7))+' dan '+comparisonMonthLabel(data.b.slice(0,7)),body,'landscape');
 }
