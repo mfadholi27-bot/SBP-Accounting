@@ -1229,3 +1229,21 @@ body{overscroll-behavior:none!important}
 .comparison-print-title{text-align:center;margin-bottom:5mm}.comparison-print-title h2{margin:2mm 0;font-size:13pt}
 @media(max-width:1000px){.comparison-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.comparison-controls .btn{width:100%}}
 @media(max-width:600px){#page-balance-comparison .comparison-hero{padding:15px}.comparison-controls{grid-template-columns:1fr}.comparison-summary{grid-template-columns:1fr}.comparison-grand-total{grid-template-columns:1fr 1fr}.comparison-grand-total>*:not(:first-child){text-align:left}}
+
+/* BUILD COMP-BALANCE-002 — SANDI mapping controls */
+#page-balance-mapping .mapping-toolbar{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(150px,.8fr) minmax(190px,1fr) auto;gap:10px;align-items:end;margin:16px 0;padding:15px;border:1px solid #e2e8f0;border-radius:12px;background:#fbfdfb}
+#page-balance-mapping .mapping-toolbar label{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:11px;font-weight:750;color:#475569}
+#page-balance-mapping .mapping-toolbar input,#page-balance-mapping .mapping-toolbar select,#page-balance-mapping .mapping-table select{height:39px;min-width:0;width:100%;box-sizing:border-box;padding:0 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#17212b;font-size:12px}
+#page-balance-mapping .mapping-status{margin:10px 0;padding:10px 12px;border-radius:9px;background:#f1f6f2;color:#365344;font-size:11px;font-weight:750}
+#page-balance-mapping .mapping-table-wrap{overflow:auto;border:1px solid #e2e8f0;border-radius:10px}
+#page-balance-mapping .mapping-table{width:100%;min-width:760px;border-collapse:collapse;font-size:12px}
+#page-balance-mapping .mapping-table th{padding:11px 10px;background:#f0f5f2;color:#365344;text-align:left}
+#page-balance-mapping .mapping-table td{padding:8px 10px;border-top:1px solid #edf1ee;color:#334155}
+#page-balance-mapping .mapping-table td:first-child,#page-balance-mapping .mapping-table th:first-child{text-align:center;width:38px}
+#page-balance-mapping .mapping-table input[type=checkbox]{width:15px;height:15px;accent-color:#16804b}
+#page-balance-mapping .mapping-pill{display:inline-flex;padding:5px 8px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap}
+#page-balance-mapping .mapping-pill.mapped{background:#e7f6ec;color:#176b49}
+#page-balance-mapping .mapping-pill.unmapped{background:#fff4df;color:#94621a}
+#page-balance-mapping .mapping-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;flex-wrap:wrap}
+@media(max-width:900px){#page-balance-mapping .mapping-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){#page-balance-mapping .mapping-toolbar{grid-template-columns:1fr}#page-balance-mapping .mapping-actions{align-items:stretch;flex-direction:column}}
