@@ -1671,16 +1671,20 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
     handle.addEventListener('pointerdown',ev=>{
      ev.preventDefault();ev.stopPropagation();
      const linked=tables.filter(x=>x.signature===signature&&x.cells.length===cells.length);
-     const sourceWidth=table.getBoundingClientRect().width||1;
-     const base=[...cols.children].slice(0,cells.length).map(col=>(col.getBoundingClientRect().width||sourceWidth/cells.length)/sourceWidth*100);
-     const pair=base[i]+(base[i+1]||0),startX=ev.clientX,minPct=Math.max(3,Math.min(8,100/cells.length*.35));
+     const startWidth=cols.children[i].getBoundingClientRect().width||th.getBoundingClientRect().width||80;
+     const startX=ev.clientX,minWidth=36;
      handle.setPointerCapture?.(ev.pointerId);
      const move=mv=>{
-      const delta=(mv.clientX-startX)/sourceWidth*100;
-      const next=Math.max(minPct,Math.min(pair-minPct,base[i]+delta));
+      const next=Math.max(minWidth,startWidth+(mv.clientX-startX));
       linked.forEach(group=>{
-       group.cols.children[i].style.width=next+'%';
-       if(group.cols.children[i+1])group.cols.children[i+1].style.width=(pair-next)+'%';
+       const groupTableWidth=group.table.getBoundingClientRect().width||1;
+       const groupCol=group.cols.children[i];
+       groupCol.style.width=next+'px';
+       groupCol.style.minWidth=next+'px';
+       groupCol.style.maxWidth=next+'px';
+       group.table.style.width='max-content';
+       group.table.style.minWidth='100%';
+       group.table.style.tableLayout='fixed';
       });
      };
      const done=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done)};
