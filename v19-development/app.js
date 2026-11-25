@@ -1644,7 +1644,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   window.removeEventListener('afterprint',cleanup);window.removeEventListener('focus',onWindowFocus);
   if(printFallbackTimer)clearTimeout(printFallbackTimer);
   if(printStarted&&typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}
-  window.removeEventListener('resize',updateHandlePositions);overlay.remove();SBP_PRINT_ACTIVE=false;
+  overlay.remove();SBP_PRINT_ACTIVE=false;
  };
  closeBtn.onclick=cleanup;
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
