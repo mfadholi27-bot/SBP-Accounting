@@ -1648,11 +1648,14 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  closeBtn.onclick=cleanup;
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
+ let resetLedgerColumns=()=>{};
  const initResizableColumns=()=>{
   const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');
   if(!table)return;
   const cols=table.querySelectorAll('colgroup col'),headers=table.querySelectorAll('thead th');
   if(cols.length!==6||headers.length!==6)return;
+  if(table.dataset.sbpResizeReady==='1')return;
+  table.dataset.sbpResizeReady='1';
   const defaults=[12,14,34,13.33,13.33,13.34];
   const widths=defaults.map((pct,i)=>Math.max(64,table.clientWidth*pct/100));
   const apply=()=>{
@@ -1672,10 +1675,11 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
    const done=()=>{if(!dragging)return;dragging=false;d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',done);d.removeEventListener('pointercancel',done)};
    grip.addEventListener('pointerdown',ev=>{if(ev.button!==undefined&&ev.button!==0)return;ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=widths[i];try{grip.setPointerCapture(ev.pointerId)}catch(_){}d.addEventListener('pointermove',move);d.addEventListener('pointerup',done);d.addEventListener('pointercancel',done)});
   });
+  resetLedgerColumns=()=>{defaults.forEach((pct,i)=>{widths[i]=Math.max(64,(table.parentElement.clientWidth||900)*pct/100)});apply()};
   apply();
  };
  frame.onload=()=>{initResizableColumns();};
- resetBtn.onclick=()=>{const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');if(!table)return;const widths=[12,14,34,13.33,13.33,13.34],cols=table.querySelectorAll('colgroup col');const total=table.parentElement.clientWidth||900;widths.forEach((pct,i)=>{const w=Math.max(64,total*pct/100);cols[i].style.width=w+'px';cols[i].style.minWidth=w+'px';cols[i].style.maxWidth=w+'px'});initResizableColumns()};
+ resetBtn.onclick=()=>resetLedgerColumns();
  printBtn.onclick=()=>{
   if(printStarted)return;printStarted=true;
   try{frame.contentWindow.focus();window.addEventListener('afterprint',cleanup,{once:true});window.addEventListener('focus',onWindowFocus);frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}
