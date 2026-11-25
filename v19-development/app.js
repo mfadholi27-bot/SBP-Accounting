@@ -1644,12 +1644,17 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   window.removeEventListener('afterprint',cleanup);window.removeEventListener('focus',onWindowFocus);
   if(printFallbackTimer)clearTimeout(printFallbackTimer);
   if(printStarted&&typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}
-  overlay.remove();SBP_PRINT_ACTIVE=false;
+  window.removeEventListener('resize',updateHandlePositions);overlay.remove();SBP_PRINT_ACTIVE=false;
  };
  closeBtn.onclick=cleanup;
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
+ const handleLayer=document.createElement('div');
+ handleLayer.style.cssText='position:absolute;inset:0;z-index:30;pointer-events:none;overflow:hidden';
+ stage.style.position='relative';stage.appendChild(handleLayer);
+ let resizeGroups=[];
  const initResizableColumns=()=>{
   const d=frame.contentDocument;if(!d)return;
+  handleLayer.replaceChildren();resizeGroups=[];
   const tables=[...d.querySelectorAll('table')].map(table=>{
    const head=table.querySelector('thead tr');if(!head)return null;
    const cells=[...head.children];if(!cells.length)return null;
@@ -1672,26 +1677,40 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
     });
    };
    applyWidths();
-   linked.forEach(({cells})=>cells.forEach((th,i)=>{
-    if(th.querySelector('.sbp-col-resize-handle'))return;
-    th.style.position='relative';th.style.cursor='col-resize';th.title='Tarik batas kanan untuk mengubah kolom ini; kolom lain tetap';
-    const handle=d.createElement('button');handle.type='button';handle.className='sbp-col-resize-handle';handle.textContent='↔';handle.setAttribute('aria-label','Tarik untuk mengubah lebar kolom '+(th.textContent.trim()||i+1));handle.title='TARIK ke kiri atau kanan untuk mengubah lebar kolom ini';
-    handle.style.cssText='display:flex;align-items:center;justify-content:center;position:absolute;z-index:100;top:0;right:-8px;width:18px;height:100%;min-height:18px;padding:0;margin:0;border:1px solid #087443;border-radius:4px;background:#b7f0d2;color:#075c36;font:bold 13px/1 Arial,sans-serif;cursor:col-resize;touch-action:none;user-select:none;pointer-events:auto;box-shadow:0 0 0 1px #fff,0 1px 3px #0004';
-    th.style.overflow='visible';th.style.paddingRight='10px';th.appendChild(handle);
+   const group={linked,baseline,applyWidths};resizeGroups.push(group);
+   linked.forEach(({table,cells})=>cells.forEach((th,i)=>{
+    const grip=document.createElement('button');grip.type='button';grip.className='sbp-print-column-grip';
+    grip.textContent='↔';grip.title='Tarik untuk mengubah lebar '+(th.textContent.trim()||('kolom '+(i+1)));
+    grip.setAttribute('aria-label',grip.title);
+    grip.style.cssText='position:absolute;display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:22px;height:24px;padding:0;border:2px solid #075c36;border-radius:5px;background:#b7f0d2;color:#075c36;font:bold 14px Arial,sans-serif;box-shadow:0 1px 5px #0008;cursor:col-resize;touch-action:none;user-select:none;pointer-events:auto';
+    handleLayer.appendChild(grip);
     let dragging=false,startX=0,startWidth=0;
-    const move=ev=>{if(!dragging)return;const delta=ev.clientX-startX;baseline[i]=Math.max(36,startWidth+delta);applyWidths();};
-    const done=ev=>{if(!dragging)return;dragging=false;try{if(handle.hasPointerCapture&&handle.hasPointerCapture(ev.pointerId))handle.releasePointerCapture(ev.pointerId)}catch(_){}handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);};
-    handle.addEventListener('pointerdown',ev=>{
-     if(ev.button!==undefined&&ev.button!==0)return;
-     ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=baseline[i];
-     try{handle.setPointerCapture(ev.pointerId)}catch(_){}
-     handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
-    });
+    const move=ev=>{if(!dragging)return;baseline[i]=Math.max(36,startWidth+(ev.clientX-startX));applyWidths();updateHandlePositions()};
+    const done=ev=>{if(!dragging)return;dragging=false;try{if(grip.hasPointerCapture&&grip.hasPointerCapture(ev.pointerId))grip.releasePointerCapture(ev.pointerId)}catch(_){}grip.removeEventListener('pointermove',move);grip.removeEventListener('pointerup',done);grip.removeEventListener('pointercancel',done)};
+    grip.addEventListener('pointerdown',ev=>{if(ev.button!==undefined&&ev.button!==0)return;ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=baseline[i];try{grip.setPointerCapture(ev.pointerId)}catch(_){}grip.addEventListener('pointermove',move);grip.addEventListener('pointerup',done);grip.addEventListener('pointercancel',done)});
+    grip._sbpCell=th;
    }));
+  });
+  updateHandlePositions();
+ };
+ const updateHandlePositions=()=>{
+  if(!frame.contentDocument)return;
+  const frameRect=frame.getBoundingClientRect(),stageRect=stage.getBoundingClientRect();
+  handleLayer.querySelectorAll('.sbp-print-column-grip').forEach(grip=>{
+   const cell=grip._sbpCell;if(!cell||!cell.isConnected){grip.style.display='none';return}
+   const r=cell.getBoundingClientRect();
+   const x=frameRect.left-stageRect.left+r.right-11;
+   const y=frameRect.top-stageRect.top+r.top+(r.height-24)/2;
+   grip.style.left=x+'px';grip.style.top=y+'px';grip.style.display=(r.bottom>frameRect.top&&r.top<frameRect.bottom)?'flex':'none';
   });
  };
  frame.onload=()=>{initResizableColumns();};
- resetBtn.onclick=()=>{const d=frame.contentDocument;if(!d)return;d.querySelectorAll('table').forEach(table=>{table.style.tableLayout='';table.style.width='';table.style.minWidth='';table.style.maxWidth='';const cg=table.querySelector('colgroup');if(cg)cg.remove();table.querySelectorAll('thead th').forEach(th=>{th.style.position='';th.style.cursor='';th.removeAttribute('title');th.querySelectorAll('.sbp-col-resize-handle').forEach(x=>x.remove())})});initResizableColumns()};
+ frame.addEventListener('load',()=>{initResizableColumns();});
+ if(frame.contentWindow)frame.contentWindow.addEventListener('scroll',updateHandlePositions,{passive:true});
+ stage.addEventListener('scroll',updateHandlePositions,{passive:true});
+ window.addEventListener('resize',updateHandlePositions);
+ frame.onload=()=>{initResizableColumns();};
+ resetBtn.onclick=()=>{const d=frame.contentDocument;if(!d)return;d.querySelectorAll('table').forEach(table=>{table.style.tableLayout='';table.style.width='';table.style.minWidth='';table.style.maxWidth='';const cg=table.querySelector('colgroup');if(cg)cg.remove()});initResizableColumns()};
  printBtn.onclick=()=>{
   if(printStarted)return;printStarted=true;
   try{frame.contentWindow.focus();window.addEventListener('afterprint',cleanup,{once:true});window.addEventListener('focus',onWindowFocus);frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}
