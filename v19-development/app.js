@@ -1663,45 +1663,33 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   tables.forEach(item=>{if(!groups.has(item.signature))groups.set(item.signature,[]);groups.get(item.signature).push(item)});
   groups.forEach(linked=>{
    const first=linked[0];
-   const baseline=first.cells.map((th,i)=>Math.max(36,th.getBoundingClientRect().width||first.cols.children[i].getBoundingClientRect().width||80));
+   const baseline=first.cells.map((th,i)=>Math.max(36,first.cols.children[i].getBoundingClientRect().width||th.getBoundingClientRect().width||80));
    const applyWidths=()=>{
     const total=baseline.reduce((sum,w)=>sum+w,0);
     linked.forEach(group=>{
-     group.table.style.tableLayout='fixed';
-     group.table.style.width=total+'px';
-     group.table.style.minWidth='0';
-     group.table.style.maxWidth='none';
-     group.cols.children.forEach((col,i)=>{
-      const width=baseline[i];
-      col.style.width=width+'px';col.style.minWidth=width+'px';col.style.maxWidth=width+'px';
-     });
+     group.table.style.tableLayout='fixed';group.table.style.width=total+'px';group.table.style.minWidth=total+'px';group.table.style.maxWidth='none';
+     group.cols.children.forEach((col,i)=>{const width=baseline[i];col.style.width=width+'px';col.style.minWidth=width+'px';col.style.maxWidth=width+'px'});
     });
    };
    applyWidths();
-   linked.forEach(({table,cells,cols})=>{
-    cells.forEach((th,i)=>{
-     if(th.querySelector('.sbp-col-resize-handle'))return;
-     th.style.position='relative';th.style.cursor='col-resize';th.title='Tarik batas kanan untuk mengubah lebar kolom ini; kolom lain tetap';
-     const handle=d.createElement('span');handle.className='sbp-col-resize-handle';handle.setAttribute('aria-label','Ubah lebar kolom '+(th.textContent.trim()||i+1));
-     handle.style.cssText='position:absolute;z-index:5;top:0;right:-3px;width:9px;height:100%;cursor:col-resize;touch-action:none;background:transparent';
-     const grip=d.createElement('i');grip.style.cssText='position:absolute;top:15%;bottom:15%;left:3px;width:2px;background:#16824f;opacity:.75';handle.appendChild(grip);th.appendChild(handle);
-     handle.addEventListener('pointerdown',ev=>{
-      ev.preventDefault();ev.stopPropagation();
-      const startWidth=baseline[i],startX=ev.clientX,minWidth=36;
-      handle.setPointerCapture?.(ev.pointerId);
-      const move=mv=>{
-       baseline[i]=Math.max(minWidth,startWidth+(mv.clientX-startX));
-       applyWidths();
-      };
-      const done=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done)};
-      handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
-     });
+   linked.forEach(({cells})=>cells.forEach((th,i)=>{
+    if(th.querySelector('.sbp-col-resize-handle'))return;
+    th.style.position='relative';th.style.cursor='col-resize';th.title='Tarik batas kanan untuk mengubah kolom ini; kolom lain tetap';
+    const handle=d.createElement('span');handle.className='sbp-col-resize-handle';handle.setAttribute('aria-label','Ubah lebar kolom '+(th.textContent.trim()||i+1));
+    handle.style.cssText='display:block;position:absolute;z-index:20;top:0;right:-5px;width:12px;height:100%;cursor:col-resize;touch-action:none;user-select:none;background:transparent;pointer-events:auto';
+    const grip=d.createElement('i');grip.style.cssText='display:block;position:absolute;top:12%;bottom:12%;left:5px;width:2px;background:#16824f;opacity:.9;pointer-events:none';handle.appendChild(grip);th.appendChild(handle);
+    let dragging=false,startX=0,startWidth=0;
+    const move=ev=>{if(!dragging)return;const delta=ev.clientX-startX;baseline[i]=Math.max(36,startWidth+delta);applyWidths();};
+    const done=()=>{if(!dragging)return;dragging=false;d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',done);d.removeEventListener('pointercancel',done);};
+    handle.addEventListener('pointerdown',ev=>{
+     ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=baseline[i];
+     d.addEventListener('pointermove',move);d.addEventListener('pointerup',done);d.addEventListener('pointercancel',done);
     });
-   });
+   }));
   });
  };
  frame.onload=()=>{initResizableColumns();};
- resetBtn.onclick=()=>{const d=frame.contentDocument;if(!d)return;d.querySelectorAll('table').forEach(table=>{table.style.tableLayout='';const cg=table.querySelector('colgroup');if(cg)cg.remove();table.querySelectorAll('thead th').forEach(th=>{th.style.position='';th.style.cursor='';th.removeAttribute('title');th.querySelectorAll('span[aria-hidden="true"]').forEach(x=>x.remove())})});initResizableColumns()};
+ resetBtn.onclick=()=>{const d=frame.contentDocument;if(!d)return;d.querySelectorAll('table').forEach(table=>{table.style.tableLayout='';table.style.width='';table.style.minWidth='';table.style.maxWidth='';const cg=table.querySelector('colgroup');if(cg)cg.remove();table.querySelectorAll('thead th').forEach(th=>{th.style.position='';th.style.cursor='';th.removeAttribute('title');th.querySelectorAll('.sbp-col-resize-handle').forEach(x=>x.remove())})});initResizableColumns()};
  printBtn.onclick=()=>{
   if(printStarted)return;printStarted=true;
   try{frame.contentWindow.focus();window.addEventListener('afterprint',cleanup,{once:true});window.addEventListener('focus',onWindowFocus);frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}
