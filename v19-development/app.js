@@ -1648,7 +1648,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  closeBtn.onclick=cleanup;
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
- let resetLedgerColumns=()=>{};
+ let resetLedgerColumns=()=>{},ledgerColumnWidths=null;
  const initResizableColumns=()=>{
   const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');
   if(!table)return;
@@ -1658,6 +1658,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   table.dataset.sbpResizeReady='1';
   const defaults=[12,14,34,13.33,13.33,13.34];
   const widths=defaults.map((pct,i)=>Math.max(64,table.clientWidth*pct/100));
+  ledgerColumnWidths=widths;
   const apply=()=>{
    const total=widths.reduce((sum,w)=>sum+w,0);
    cols.forEach((col,i)=>{col.style.width=widths[i]+'px';col.style.minWidth=widths[i]+'px';col.style.maxWidth=widths[i]+'px'});
@@ -1680,9 +1681,34 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  frame.onload=()=>{initResizableColumns();};
  resetBtn.onclick=()=>resetLedgerColumns();
+ const applyLedgerPrintLayout=()=>{
+  const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');
+  if(!table)return;
+  const cols=table.querySelectorAll('colgroup col');
+  if(cols.length!==6)return;
+  const printWidths=ledgerColumnWidths||[12,14,34,13.33,13.33,13.34];
+  const total=printWidths.reduce((sum,w)=>sum+w,0)||1;
+  cols.forEach((col,i)=>{
+   col.style.width=(printWidths[i]/total*100)+'%';
+   col.style.minWidth='0';col.style.maxWidth='none';
+  });
+  table.style.width='100%';table.style.minWidth='0';table.style.maxWidth='100%';
+  table.style.tableLayout='fixed';
+  const scroll=table.parentElement;
+  if(scroll){scroll.style.overflow='visible';scroll.style.width='100%';scroll.style.maxWidth='100%'}
+  table.querySelectorAll('.sbp-ledger-resize-grip').forEach(grip=>{grip.style.display='none'});
+ };
  printBtn.onclick=()=>{
   if(printStarted)return;printStarted=true;
-  try{frame.contentWindow.focus();window.addEventListener('afterprint',cleanup,{once:true});window.addEventListener('focus',onWindowFocus);frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}
+  try{
+   applyLedgerPrintLayout();
+   frame.contentWindow.focus();
+   window.addEventListener('afterprint',cleanup,{once:true});
+   window.addEventListener('focus',onWindowFocus);
+   frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
+   printFallbackTimer=setTimeout(cleanup,180000);
+   frame.contentWindow.print();
+  }
   catch(err){printStarted=false;toast('Dialog cetak gagal dibuka: '+err.message)}
  };
  const doc=frame.contentDocument;if(!doc){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
