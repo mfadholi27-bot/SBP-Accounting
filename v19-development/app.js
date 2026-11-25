@@ -1680,9 +1680,33 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  frame.onload=()=>{initResizableColumns();};
  resetBtn.onclick=()=>resetLedgerColumns();
+ const applyLedgerPrintLayout=()=>{
+  const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');
+  if(!table)return;
+  const cols=table.querySelectorAll('colgroup col');
+  if(cols.length!==6)return;
+  const total=widths.reduce((sum,w)=>sum+w,0)||1;
+  cols.forEach((col,i)=>{
+   col.style.width=(widths[i]/total*100)+'%';
+   col.style.minWidth='0';col.style.maxWidth='none';
+  });
+  table.style.width='100%';table.style.minWidth='0';table.style.maxWidth='100%';
+  table.style.tableLayout='fixed';
+  const scroll=table.parentElement;
+  if(scroll){scroll.style.overflow='visible';scroll.style.width='100%';scroll.style.maxWidth='100%'}
+  table.querySelectorAll('.sbp-ledger-resize-grip').forEach(grip=>{grip.style.display='none'});
+ };
  printBtn.onclick=()=>{
   if(printStarted)return;printStarted=true;
-  try{frame.contentWindow.focus();window.addEventListener('afterprint',cleanup,{once:true});window.addEventListener('focus',onWindowFocus);frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}
+  try{
+   applyLedgerPrintLayout();
+   frame.contentWindow.focus();
+   window.addEventListener('afterprint',cleanup,{once:true});
+   window.addEventListener('focus',onWindowFocus);
+   frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
+   printFallbackTimer=setTimeout(cleanup,180000);
+   frame.contentWindow.print();
+  }
   catch(err){printStarted=false;toast('Dialog cetak gagal dibuka: '+err.message)}
  };
  const doc=frame.contentDocument;if(!doc){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
