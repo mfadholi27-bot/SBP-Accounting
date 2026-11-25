@@ -1648,60 +1648,74 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  closeBtn.onclick=cleanup;
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
- let resetLedgerColumns=()=>{},ledgerColumnWidths=null;
+ /* BUILD 079 — Print Studio lintas modul: pengaturan lebar per tabel, bukan CSS global pemaksa. */
+ let resetPrintColumns=()=>{},printColumnSets=[];
  const initResizableColumns=()=>{
-  const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');
-  if(!table)return;
-  const cols=table.querySelectorAll('colgroup col'),headers=table.querySelectorAll('thead th');
-  if(cols.length!==6||headers.length!==6)return;
-  if(table.dataset.sbpResizeReady==='1')return;
-  table.dataset.sbpResizeReady='1';
-  const defaults=[12,14,34,13.33,13.33,13.34];
-  const widths=defaults.map((pct,i)=>Math.max(64,table.clientWidth*pct/100));
-  ledgerColumnWidths=widths;
-  const apply=()=>{
-   const total=widths.reduce((sum,w)=>sum+w,0);
-   cols.forEach((col,i)=>{col.style.width=widths[i]+'px';col.style.minWidth=widths[i]+'px';col.style.maxWidth=widths[i]+'px'});
-   table.style.width=total+'px';table.style.minWidth=total+'px';table.style.maxWidth='none';table.style.tableLayout='fixed';
-   const scroll=table.parentElement;if(scroll)scroll.style.overflowX=total>scroll.clientWidth?'auto':'hidden';
-  };
-  headers.forEach((th,i)=>{
-   th.style.position='relative';th.style.paddingRight='25px';
-   const grip=d.createElement('button');grip.type='button';grip.className='sbp-ledger-resize-grip';grip.textContent='↔';
-   grip.title='Tarik untuk mengubah lebar '+th.textContent.trim();grip.setAttribute('aria-label',grip.title);
-   grip.style.cssText='position:absolute;right:0;top:0;bottom:0;width:24px;border:0;border-left:1px solid #176b4a;background:#b7f0d2;color:#075c36;font:bold 13px Arial;cursor:col-resize;touch-action:none;z-index:2';
-   th.appendChild(grip);
-   let dragging=false,startX=0,startWidth=0;
-   const move=ev=>{if(!dragging)return;ev.preventDefault();widths[i]=Math.max(64,startWidth+ev.clientX-startX);apply()};
-   const done=()=>{if(!dragging)return;dragging=false;d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',done);d.removeEventListener('pointercancel',done)};
-   grip.addEventListener('pointerdown',ev=>{if(ev.button!==undefined&&ev.button!==0)return;ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=widths[i];try{grip.setPointerCapture(ev.pointerId)}catch(_){}d.addEventListener('pointermove',move);d.addEventListener('pointerup',done);d.addEventListener('pointercancel',done)});
+  const d=frame.contentDocument;
+  if(!d)return;
+  const tables=[...d.querySelectorAll('table')].filter(table=>table.querySelectorAll('thead th').length>1);
+  printColumnSets=[];
+  tables.forEach((table,tableIndex)=>{
+   if(table.dataset.sbpResizeReady==='1')return;
+   const headers=[...table.querySelectorAll('thead th')],count=headers.length;
+   let group=table.querySelector(':scope > colgroup');
+   if(!group){group=d.createElement('colgroup');table.insertBefore(group,table.firstChild)}
+   while(group.children.length<count)group.appendChild(d.createElement('col'));
+   while(group.children.length>count)group.removeChild(group.lastElementChild);
+   const cols=[...group.children];
+   const rectWidth=Math.max(1,table.getBoundingClientRect().width||table.clientWidth||760);
+   const widths=cols.map((col,i)=>{
+    const raw=String(col.style.width||headers[i].style.width||'').trim();
+    if(raw.endsWith('%'))return Math.max(24,rectWidth*parseFloat(raw)/100);
+    if(raw.endsWith('px'))return Math.max(24,parseFloat(raw));
+    const measured=headers[i].getBoundingClientRect().width;
+    return Math.max(24,measured||rectWidth/count);
+   });
+   const initial=widths.slice();
+   const record={table,cols,widths,initial,headers,tableIndex};
+   printColumnSets.push(record);
+   const apply=()=>{
+    const total=widths.reduce((sum,value)=>sum+value,0)||1;
+    cols.forEach((col,i)=>{col.style.width=widths[i]+'px';col.style.minWidth=widths[i]+'px';col.style.maxWidth=widths[i]+'px'});
+    table.style.width=total+'px';table.style.minWidth=total+'px';table.style.maxWidth='none';table.style.tableLayout='fixed';
+    const scroll=table.parentElement;
+    if(scroll&&scroll!==d.body){scroll.style.overflowX=total>scroll.clientWidth?'auto':'hidden';scroll.style.maxWidth='100%'}
+   };
+   headers.forEach((th,i)=>{
+    th.style.position='relative';th.style.paddingRight='25px';
+    const grip=d.createElement('button');grip.type='button';grip.className='sbp-ledger-resize-grip';grip.textContent='↔';
+    grip.title='Tarik untuk mengubah lebar '+th.textContent.trim();grip.setAttribute('aria-label',grip.title);
+    grip.style.cssText='position:absolute;right:0;top:0;bottom:0;width:24px;border:0;border-left:1px solid #176b4a;background:#b7f0d2;color:#075c36;font:bold 13px Arial;cursor:col-resize;touch-action:none;z-index:2';
+    th.appendChild(grip);
+    let dragging=false,startX=0,startWidth=0;
+    const move=ev=>{if(!dragging)return;ev.preventDefault();widths[i]=Math.max(48,startWidth+ev.clientX-startX);apply()};
+    const done=()=>{if(!dragging)return;dragging=false;d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',done);d.removeEventListener('pointercancel',done)};
+    grip.addEventListener('pointerdown',ev=>{if(ev.button!==undefined&&ev.button!==0)return;ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=widths[i];try{grip.setPointerCapture(ev.pointerId)}catch(_){}d.addEventListener('pointermove',move);d.addEventListener('pointerup',done);d.addEventListener('pointercancel',done)});
+   });
+   table.dataset.sbpResizeReady='1';
+   apply();
   });
-  resetLedgerColumns=()=>{defaults.forEach((pct,i)=>{widths[i]=Math.max(64,(table.parentElement.clientWidth||900)*pct/100)});apply()};
-  apply();
+  resetPrintColumns=()=>{
+   printColumnSets.forEach(record=>{record.initial.forEach((value,i)=>record.widths[i]=value);const total=record.widths.reduce((sum,value)=>sum+value,0)||1;record.cols.forEach((col,i)=>{col.style.width=record.widths[i]+'px';col.style.minWidth=record.widths[i]+'px';col.style.maxWidth=record.widths[i]+'px'});record.table.style.width=total+'px';record.table.style.minWidth=total+'px';record.table.style.maxWidth='none';record.table.style.tableLayout='fixed'});
+  };
  };
  frame.onload=()=>{initResizableColumns();};
- resetBtn.onclick=()=>resetLedgerColumns();
- const applyLedgerPrintLayout=()=>{
-  const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');
-  if(!table)return;
-  const cols=table.querySelectorAll('colgroup col');
-  if(cols.length!==6)return;
-  const printWidths=ledgerColumnWidths||[12,14,34,13.33,13.33,13.34];
-  const total=printWidths.reduce((sum,w)=>sum+w,0)||1;
-  cols.forEach((col,i)=>{
-   col.style.width=(printWidths[i]/total*100)+'%';
-   col.style.minWidth='0';col.style.maxWidth='none';
+ resetBtn.onclick=()=>resetPrintColumns();
+ const applyPrintColumnLayout=()=>{
+  const d=frame.contentDocument;if(!d)return;
+  printColumnSets.forEach(record=>{
+   const {table,cols,widths}=record,total=widths.reduce((sum,value)=>sum+value,0)||1;
+   cols.forEach((col,i)=>{col.style.width=(widths[i]/total*100)+'%';col.style.minWidth='0';col.style.maxWidth='none'});
+   table.style.width='100%';table.style.minWidth='0';table.style.maxWidth='100%';table.style.tableLayout='fixed';
+   const parent=table.parentElement;
+   if(parent&&parent!==d.body){parent.style.overflow='visible';parent.style.width='100%';parent.style.maxWidth='100%'}
+   table.querySelectorAll('.sbp-ledger-resize-grip').forEach(grip=>{grip.style.display='none'});
   });
-  table.style.width='100%';table.style.minWidth='0';table.style.maxWidth='100%';
-  table.style.tableLayout='fixed';
-  const scroll=table.parentElement;
-  if(scroll){scroll.style.overflow='visible';scroll.style.width='100%';scroll.style.maxWidth='100%'}
-  table.querySelectorAll('.sbp-ledger-resize-grip').forEach(grip=>{grip.style.display='none'});
  };
  printBtn.onclick=()=>{
   if(printStarted)return;printStarted=true;
   try{
-   applyLedgerPrintLayout();
+   applyPrintColumnLayout();
    frame.contentWindow.focus();
    window.addEventListener('afterprint',cleanup,{once:true});
    window.addEventListener('focus',onWindowFocus);
