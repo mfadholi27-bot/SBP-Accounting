@@ -1,4 +1,4 @@
-/* BUILD 070 — Visible draggable column handles in Print Studio */
+/* BUILD 072 — Visible in-cell resize handles and full-width table grid */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1648,17 +1648,12 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  closeBtn.onclick=cleanup;
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
- const handleLayer=document.createElement('div');
- handleLayer.style.cssText='position:absolute;inset:0;z-index:30;pointer-events:none;overflow:hidden';
- stage.style.position='relative';stage.appendChild(handleLayer);
- let resizeGroups=[];
  const initResizableColumns=()=>{
   const d=frame.contentDocument;if(!d)return;
-  handleLayer.replaceChildren();resizeGroups=[];
   const tables=[...d.querySelectorAll('table')].map(table=>{
    const head=table.querySelector('thead tr');if(!head)return null;
    const cells=[...head.children];if(!cells.length)return null;
-   const signature=cells.map(th=>th.textContent.trim().replace(/\\s+/g,' ').toUpperCase()).join('|');
+   const signature=cells.map(th=>th.textContent.trim().toUpperCase()).join('|');
    let cols=table.querySelector('colgroup');
    if(!cols){cols=d.createElement('colgroup');cells.forEach(()=>cols.appendChild(d.createElement('col')));table.insertBefore(cols,table.firstChild)}
    while(cols.children.length<cells.length)cols.appendChild(d.createElement('col'));
@@ -1667,50 +1662,46 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   const groups=new Map();
   tables.forEach(item=>{if(!groups.has(item.signature))groups.set(item.signature,[]);groups.get(item.signature).push(item)});
   groups.forEach(linked=>{
-   const first=linked[0];
-   const baseline=first.cells.map((th,i)=>Math.max(36,first.cols.children[i].getBoundingClientRect().width||th.getBoundingClientRect().width||80));
+   const first=linked[0],firstWidth=first.table.getBoundingClientRect().width||stage.clientWidth||900;
+   const baseline=first.cells.map((th,i)=>Math.max(40,first.cols.children[i].getBoundingClientRect().width||th.getBoundingClientRect().width||firstWidth/first.cells.length));
    const applyWidths=()=>{
     const total=baseline.reduce((sum,w)=>sum+w,0);
     linked.forEach(group=>{
-     group.table.style.tableLayout='fixed';group.table.style.width=total+'px';group.table.style.minWidth=total+'px';group.table.style.maxWidth='none';
-     group.cols.children.forEach((col,i)=>{const width=baseline[i];col.style.width=width+'px';col.style.minWidth=width+'px';col.style.maxWidth=width+'px'});
+     const available=group.table.parentElement?.clientWidth||stage.clientWidth||firstWidth;
+     const tableWidth=Math.max(available,total);
+     group.table.style.tableLayout='fixed';
+     group.table.style.width=tableWidth+'px';
+     group.table.style.minWidth=tableWidth+'px';
+     group.table.style.maxWidth='none';
+     group.cols.children.forEach((col,i)=>{
+      const width=baseline[i];col.style.width=width+'px';col.style.minWidth=width+'px';col.style.maxWidth=width+'px';
+     });
     });
    };
    applyWidths();
-   const group={linked,baseline,applyWidths};resizeGroups.push(group);
-   linked.forEach(({table,cells})=>cells.forEach((th,i)=>{
-    const grip=document.createElement('button');grip.type='button';grip.className='sbp-print-column-grip';
-    grip.textContent='↔';grip.title='Tarik untuk mengubah lebar '+(th.textContent.trim()||('kolom '+(i+1)));
+   linked.forEach(({cells})=>cells.forEach((th,i)=>{
+    th.style.position='relative';th.style.overflow='visible';
+    let grip=th.querySelector('.sbp-print-column-grip');
+    if(grip)grip.remove();
+    grip=d.createElement('button');grip.type='button';grip.className='sbp-print-column-grip';
+    grip.textContent='↔';grip.title='Tarik ke kiri/kanan untuk mengubah lebar kolom '+(th.textContent.trim()||i+1);
     grip.setAttribute('aria-label',grip.title);
-    grip.style.cssText='position:absolute;display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:22px;height:24px;padding:0;border:2px solid #075c36;border-radius:5px;background:#b7f0d2;color:#075c36;font:bold 14px Arial,sans-serif;box-shadow:0 1px 5px #0008;cursor:col-resize;touch-action:none;user-select:none;pointer-events:auto';
-    handleLayer.appendChild(grip);
+    grip.style.cssText='position:absolute;z-index:999999;top:50%;right:-9px;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:22px;height:24px;min-width:22px;padding:0;border:2px solid #064e32;border-radius:5px;background:#b7f0d2;color:#064e32;font:bold 14px Arial,sans-serif;line-height:1;box-shadow:0 1px 5px #0008;cursor:col-resize;touch-action:none;user-select:none;pointer-events:auto';
+    th.appendChild(grip);
     let dragging=false,startX=0,startWidth=0;
-    const move=ev=>{if(!dragging)return;baseline[i]=Math.max(36,startWidth+(ev.clientX-startX));applyWidths();updateHandlePositions()};
+    const move=ev=>{if(!dragging)return;baseline[i]=Math.max(40,startWidth+(ev.clientX-startX));applyWidths()};
     const done=ev=>{if(!dragging)return;dragging=false;try{if(grip.hasPointerCapture&&grip.hasPointerCapture(ev.pointerId))grip.releasePointerCapture(ev.pointerId)}catch(_){}grip.removeEventListener('pointermove',move);grip.removeEventListener('pointerup',done);grip.removeEventListener('pointercancel',done)};
-    grip.addEventListener('pointerdown',ev=>{if(ev.button!==undefined&&ev.button!==0)return;ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=baseline[i];try{grip.setPointerCapture(ev.pointerId)}catch(_){}grip.addEventListener('pointermove',move);grip.addEventListener('pointerup',done);grip.addEventListener('pointercancel',done)});
-    grip._sbpCell=th;
+    grip.addEventListener('pointerdown',ev=>{
+     if(ev.button!==undefined&&ev.button!==0)return;
+     ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=baseline[i];
+     try{grip.setPointerCapture(ev.pointerId)}catch(_){}
+     grip.addEventListener('pointermove',move);grip.addEventListener('pointerup',done);grip.addEventListener('pointercancel',done);
+    });
    }));
   });
-  updateHandlePositions();
- };
- const updateHandlePositions=()=>{
-  if(!frame.contentDocument)return;
-  const frameRect=frame.getBoundingClientRect(),stageRect=stage.getBoundingClientRect();
-  handleLayer.querySelectorAll('.sbp-print-column-grip').forEach(grip=>{
-   const cell=grip._sbpCell;if(!cell||!cell.isConnected){grip.style.display='none';return}
-   const r=cell.getBoundingClientRect();
-   const x=frameRect.left-stageRect.left+r.right-11;
-   const y=frameRect.top-stageRect.top+r.top+(r.height-24)/2;
-   grip.style.left=x+'px';grip.style.top=y+'px';grip.style.display=(r.bottom>frameRect.top&&r.top<frameRect.bottom)?'flex':'none';
-  });
  };
  frame.onload=()=>{initResizableColumns();};
- frame.addEventListener('load',()=>{initResizableColumns();});
- if(frame.contentWindow)frame.contentWindow.addEventListener('scroll',updateHandlePositions,{passive:true});
- stage.addEventListener('scroll',updateHandlePositions,{passive:true});
- window.addEventListener('resize',updateHandlePositions);
- frame.onload=()=>{initResizableColumns();};
- resetBtn.onclick=()=>{const d=frame.contentDocument;if(!d)return;d.querySelectorAll('table').forEach(table=>{table.style.tableLayout='';table.style.width='';table.style.minWidth='';table.style.maxWidth='';const cg=table.querySelector('colgroup');if(cg)cg.remove()});initResizableColumns()};
+ resetBtn.onclick=()=>{const d=frame.contentDocument;if(!d)return;d.querySelectorAll('table').forEach(table=>{table.style.tableLayout='';table.style.width='';table.style.minWidth='';table.style.maxWidth='';const cg=table.querySelector('colgroup');if(cg)cg.remove();table.querySelectorAll('.sbp-print-column-grip').forEach(x=>x.remove())});initResizableColumns()};
  printBtn.onclick=()=>{
   if(printStarted)return;printStarted=true;
   try{frame.contentWindow.focus();window.addEventListener('afterprint',cleanup,{once:true});window.addEventListener('focus',onWindowFocus);frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}
