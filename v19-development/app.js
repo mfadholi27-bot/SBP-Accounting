@@ -1593,7 +1593,7 @@ function printSummary(items){return PRINT_CONFIG.summary?'<section class="sbp-pr
 function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-print-signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':''}
 let SBP_PRINT_ACTIVE=false;
 function printDocument(title,subtitle,body,orientation='portrait',afterPrint=null){
- if(SBP_PRINT_ACTIVE){toast('Dokumen cetak sebelumnya masih aktif. Tutup dialog cetak terlebih dahulu.');return null}
+ if(SBP_PRINT_ACTIVE){toast('Print Studio sedang terbuka. Selesaikan atau tutup pratinjau sebelumnya terlebih dahulu.');return null}
  const paperMap={A4:'210mm 297mm',F4:'215mm 330mm',Letter:'8.5in 11in',Legal:'8.5in 14in'};
  const pageOrientation=PRINT_CONFIG.orientation==='auto'?orientation:PRINT_CONFIG.orientation;
  const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4;
@@ -1622,45 +1622,67 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  if(title==='NERACA KOMPARATIF'){style+='.comparison-print-title{margin:0 0 3mm;break-after:avoid;page-break-after:avoid}.comparison-print-group{break-inside:auto;page-break-inside:auto;margin:0 0 3mm}.comparison-print-table{break-inside:auto;page-break-inside:auto}.comparison-print-group h3{font-size:9pt;margin:2mm 0 1mm;break-after:avoid;page-break-after:avoid}.comparison-print-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:7.2pt}.comparison-print-table th,.comparison-print-table td{padding:1.2mm 1.5mm;overflow-wrap:anywhere}.comparison-print-table td.num{white-space:nowrap;text-align:right}.comparison-print-table tr{break-inside:avoid;page-break-inside:avoid}}';}
  const profile=ensureCompanyProfile();
  const brand=PRINT_CONFIG.brand?'<div class="brand"><b>'+esc(profile.name)+'</b><small>'+esc(profile.systemName)+' · V19</small>'+(profile.address?'<small>'+esc(profile.address)+'</small>':'')+(profile.unit?'<small>'+esc(profile.unit)+'</small>':'')+'<small>'+esc(profile.tagline)+'</small></div>':'';
- const repeatBrand='';
  const meta=PRINT_CONFIG.printedAt?'<div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>':'';
  const signatures=PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'';
  const footer=PRINT_CONFIG.footer?'<footer class="footer">'+esc(profile.name)+' · '+esc(profile.systemName)+' V19 · Dokumen hasil cetak sistem</footer>':'';
  const frame=document.createElement('iframe');
- frame.id='sbp-print-frame';
- frame.title='Dokumen cetak '+title;
- frame.setAttribute('aria-hidden','true');
- frame.style.cssText='position:fixed;left:0;bottom:0;width:0;height:0;border:0;visibility:hidden;pointer-events:none';
- document.body.appendChild(frame);
- const doc=frame.contentDocument;
- if(!doc){frame.remove();toast('Area cetak tidak dapat disiapkan oleh browser.');return null}
+ frame.id='sbp-print-frame';frame.title='Pratinjau cetak '+title;frame.setAttribute('aria-label','Pratinjau dokumen cetak');
+ frame.style.cssText='display:block;width:100%;height:calc(100vh - 116px);min-height:420px;border:0;background:#fff';
+ const overlay=document.createElement('div');overlay.id='sbp-print-studio';
+ overlay.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(10,20,16,.76);backdrop-filter:blur(5px);display:flex;flex-direction:column;padding:14px;box-sizing:border-box';
+ const bar=document.createElement('div');bar.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px;background:#102b20;color:#fff;border-radius:12px 12px 0 0;font:13px Arial,sans-serif';
+ const heading=document.createElement('div');heading.style.cssText='flex:1;min-width:180px';heading.innerHTML='<b style="display:block;font-size:14px">PRINT STUDIO</b><span style="opacity:.75;font-size:11px">'+esc(title)+' · Tarik garis kolom untuk mengatur lebar</span>';
+ const makeButton=(label,bg)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='border:1px solid #ffffff55;border-radius:8px;padding:9px 13px;background:'+bg+';color:#fff;font-weight:700;cursor:pointer';return b};
+ const resetBtn=makeButton('Reset Lebar','#315b47'),printBtn=makeButton('Cetak / Simpan PDF','#16824f'),closeBtn=makeButton('Tutup','#475569');
+ bar.append(heading,resetBtn,printBtn,closeBtn);
+ const stage=document.createElement('div');stage.style.cssText='flex:1;min-height:0;background:#dce2df;border-radius:0 0 12px 12px;overflow:hidden;box-shadow:0 16px 50px #0005';stage.appendChild(frame);overlay.append(bar,stage);document.body.appendChild(overlay);
  SBP_PRINT_ACTIVE=true;
- let printHandled=false;
- let printStarted=false;
- let printFallbackTimer=null;
+ let printHandled=false,printStarted=false,printFallbackTimer=null;
  const onWindowFocus=()=>{if(printStarted&&!printHandled)setTimeout(cleanup,700)};
  const cleanup=()=>{
-  if(printHandled)return;
-  printHandled=true;
-  window.removeEventListener('afterprint',cleanup);
-  window.removeEventListener('focus',onWindowFocus);
+  if(printHandled)return;printHandled=true;
+  window.removeEventListener('afterprint',cleanup);window.removeEventListener('focus',onWindowFocus);
   if(printFallbackTimer)clearTimeout(printFallbackTimer);
-  try{if(typeof afterPrint==='function')Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}
-  frame.remove();
-  SBP_PRINT_ACTIVE=false;
+  if(printStarted&&typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}
+  overlay.remove();SBP_PRINT_ACTIVE=false;
  };
- frame.onload=()=>{
-  try{
-   frame.contentWindow.focus();
-   setTimeout(()=>{if(!printHandled){try{printStarted=true;printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}catch(err){cleanup();toast('Dialog cetak gagal dibuka: '+err.message)}}},120);
-  }catch(err){cleanup();toast('Dialog cetak gagal dibuka: '+err.message)}
+ closeBtn.onclick=cleanup;
+ overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
+ const initResizableColumns=()=>{
+  const d=frame.contentDocument;if(!d)return;
+  d.querySelectorAll('table').forEach(table=>{
+   const head=table.querySelector('thead tr');if(!head)return;
+   const cells=[...head.children];if(!cells.length)return;
+   let cols=table.querySelector('colgroup');
+   if(!cols){cols=d.createElement('colgroup');cells.forEach(()=>cols.appendChild(d.createElement('col')));table.insertBefore(cols,table.firstChild)}
+   while(cols.children.length<cells.length)cols.appendChild(d.createElement('col'));
+   table.style.tableLayout='fixed';
+   cells.forEach((th,i)=>{
+    th.style.position='relative';th.style.cursor='col-resize';th.title='Tarik batas kanan untuk mengubah lebar kolom';
+    const handle=d.createElement('span');handle.setAttribute('aria-hidden','true');
+    handle.style.cssText='position:absolute;z-index:5;top:0;right:-3px;width:8px;height:100%;cursor:col-resize;touch-action:none;background:transparent';
+    const grip=d.createElement('i');grip.style.cssText='position:absolute;top:15%;bottom:15%;left:3px;width:2px;background:#16824f;opacity:.65';handle.appendChild(grip);th.appendChild(handle);
+    handle.addEventListener('pointerdown',ev=>{
+     ev.preventDefault();ev.stopPropagation();const x=ev.clientX,tableWidth=table.getBoundingClientRect().width;
+     const widths=[...cols.children].map((col,j)=>col.getBoundingClientRect().width||tableWidth/cells.length);
+     const left=widths[i],right=widths[i+1]||0,min=36;
+     handle.setPointerCapture?.(ev.pointerId);
+     const move=mv=>{const delta=mv.clientX-x;const next=Math.max(min,Math.min(left+right-min,left+delta));cols.children[i].style.width=next+'px';if(cols.children[i+1])cols.children[i+1].style.width=(left+right-next)+'px';else cols.children[i].style.width=Math.max(min,left+delta)+'px'};
+     const done=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done)};
+     handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
+    });
+   });
+  });
  };
- frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
- window.addEventListener('afterprint',cleanup,{once:true});
- window.addEventListener('focus',onWindowFocus);
- doc.open();
- doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div>')+'</header>'+meta+body+signatures+footer+'</main></body></html>');
- doc.close();
+ frame.onload=()=>{initResizableColumns();};
+ resetBtn.onclick=()=>{const d=frame.contentDocument;if(!d)return;d.querySelectorAll('table').forEach(table=>{table.style.tableLayout='';const cg=table.querySelector('colgroup');if(cg)cg.remove();table.querySelectorAll('thead th').forEach(th=>{th.style.position='';th.style.cursor='';th.removeAttribute('title');th.querySelectorAll('span[aria-hidden="true"]').forEach(x=>x.remove())})});initResizableColumns()};
+ printBtn.onclick=()=>{
+  if(printStarted)return;printStarted=true;
+  try{frame.contentWindow.focus();window.addEventListener('afterprint',cleanup,{once:true});window.addEventListener('focus',onWindowFocus);frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}
+  catch(err){printStarted=false;toast('Dialog cetak gagal dibuka: '+err.message)}
+ };
+ const doc=frame.contentDocument;if(!doc){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
+ doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'body{padding:5mm}.sheet{margin:0 auto}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div>')+'</header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
  return frame;
 }
 function printTrialBalance(){
