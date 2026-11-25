@@ -1680,10 +1680,12 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
     const grip=d.createElement('i');grip.style.cssText='display:block;position:absolute;top:12%;bottom:12%;left:5px;width:2px;background:#16824f;opacity:.9;pointer-events:none';handle.appendChild(grip);th.appendChild(handle);
     let dragging=false,startX=0,startWidth=0;
     const move=ev=>{if(!dragging)return;const delta=ev.clientX-startX;baseline[i]=Math.max(36,startWidth+delta);applyWidths();};
-    const done=()=>{if(!dragging)return;dragging=false;d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',done);d.removeEventListener('pointercancel',done);};
+    const done=ev=>{if(!dragging)return;dragging=false;try{if(handle.hasPointerCapture&&handle.hasPointerCapture(ev.pointerId))handle.releasePointerCapture(ev.pointerId)}catch(_){}handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);};
     handle.addEventListener('pointerdown',ev=>{
+     if(ev.button!==undefined&&ev.button!==0)return;
      ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=baseline[i];
-     d.addEventListener('pointermove',move);d.addEventListener('pointerup',done);d.addEventListener('pointercancel',done);
+     try{handle.setPointerCapture(ev.pointerId)}catch(_){}
+     handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
     });
    }));
   });
@@ -1697,6 +1699,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  const doc=frame.contentDocument;if(!doc){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
  doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'body{padding:5mm}.sheet{margin:0 auto}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div>')+'</header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
+ try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal mengaktifkan pengatur kolom:',err);toast('Pengatur lebar kolom gagal dimuat. Coba tutup dan buka Print Studio kembali.')}
  return frame;
 }
 function printTrialBalance(){
