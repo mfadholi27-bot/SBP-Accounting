@@ -1650,24 +1650,39 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
  const initResizableColumns=()=>{
   const d=frame.contentDocument;if(!d)return;
-  d.querySelectorAll('table').forEach(table=>{
-   const head=table.querySelector('thead tr');if(!head)return;
-   const cells=[...head.children];if(!cells.length)return;
+  const tables=[...d.querySelectorAll('table')].map(table=>{
+   const head=table.querySelector('thead tr');if(!head)return null;
+   const cells=[...head.children];if(!cells.length)return null;
+   const signature=cells.map(th=>th.textContent.trim().replace(/\\s+/g,' ').toUpperCase()).join('|');
    let cols=table.querySelector('colgroup');
    if(!cols){cols=d.createElement('colgroup');cells.forEach(()=>cols.appendChild(d.createElement('col')));table.insertBefore(cols,table.firstChild)}
    while(cols.children.length<cells.length)cols.appendChild(d.createElement('col'));
    table.style.tableLayout='fixed';
+   return {table,cells,cols,signature};
+  }).filter(Boolean);
+  tables.forEach(item=>{
+   const {table,cells,cols,signature}=item;
    cells.forEach((th,i)=>{
-    th.style.position='relative';th.style.cursor='col-resize';th.title='Tarik batas kanan untuk mengubah lebar kolom';
-    const handle=d.createElement('span');handle.setAttribute('aria-hidden','true');
-    handle.style.cssText='position:absolute;z-index:5;top:0;right:-3px;width:8px;height:100%;cursor:col-resize;touch-action:none;background:transparent';
-    const grip=d.createElement('i');grip.style.cssText='position:absolute;top:15%;bottom:15%;left:3px;width:2px;background:#16824f;opacity:.65';handle.appendChild(grip);th.appendChild(handle);
+    if(th.querySelector('.sbp-col-resize-handle'))return;
+    th.style.position='relative';th.style.cursor='col-resize';th.title='Tarik batas kanan untuk mengubah kolom ini pada seluruh tabel sejenis';
+    const handle=d.createElement('span');handle.className='sbp-col-resize-handle';handle.setAttribute('aria-label','Ubah lebar kolom '+(th.textContent.trim()||i+1));
+    handle.style.cssText='position:absolute;z-index:5;top:0;right:-3px;width:9px;height:100%;cursor:col-resize;touch-action:none;background:transparent';
+    const grip=d.createElement('i');grip.style.cssText='position:absolute;top:15%;bottom:15%;left:3px;width:2px;background:#16824f;opacity:.75';handle.appendChild(grip);th.appendChild(handle);
     handle.addEventListener('pointerdown',ev=>{
-     ev.preventDefault();ev.stopPropagation();const x=ev.clientX,tableWidth=table.getBoundingClientRect().width;
-     const widths=[...cols.children].map((col,j)=>col.getBoundingClientRect().width||tableWidth/cells.length);
-     const left=widths[i],right=widths[i+1]||0,min=36;
+     ev.preventDefault();ev.stopPropagation();
+     const linked=tables.filter(x=>x.signature===signature&&x.cells.length===cells.length);
+     const sourceWidth=table.getBoundingClientRect().width||1;
+     const base=[...cols.children].slice(0,cells.length).map(col=>(col.getBoundingClientRect().width||sourceWidth/cells.length)/sourceWidth*100);
+     const pair=base[i]+(base[i+1]||0),startX=ev.clientX,minPct=Math.max(3,Math.min(8,100/cells.length*.35));
      handle.setPointerCapture?.(ev.pointerId);
-     const move=mv=>{const delta=mv.clientX-x;const next=Math.max(min,Math.min(left+right-min,left+delta));cols.children[i].style.width=next+'px';if(cols.children[i+1])cols.children[i+1].style.width=(left+right-next)+'px';else cols.children[i].style.width=Math.max(min,left+delta)+'px'};
+     const move=mv=>{
+      const delta=(mv.clientX-startX)/sourceWidth*100;
+      const next=Math.max(minPct,Math.min(pair-minPct,base[i]+delta));
+      linked.forEach(group=>{
+       group.cols.children[i].style.width=next+'%';
+       if(group.cols.children[i+1])group.cols.children[i+1].style.width=(pair-next)+'%';
+      });
+     };
      const done=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done)};
      handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
     });
