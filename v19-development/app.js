@@ -1650,85 +1650,20 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
  const initResizableColumns=()=>{
   const d=frame.contentDocument;if(!d)return;
-  const tables=[...d.querySelectorAll('table')].map(table=>{
-   const head=table.querySelector('thead tr');if(!head)return null;
-   const cells=[...head.children];if(!cells.length)return null;
-   const signature=cells.map(th=>th.textContent.trim().replace(/\\s+/g,' ').toUpperCase()).join('|');
-   let cols=table.querySelector('colgroup');
-   if(!cols){cols=d.createElement('colgroup');cells.forEach(()=>cols.appendChild(d.createElement('col')));table.insertBefore(cols,table.firstChild)}
-   while(cols.children.length<cells.length)cols.appendChild(d.createElement('col'));
-   return {table,cells,cols,signature};
-  }).filter(Boolean);
-  const groups=new Map();
-  tables.forEach(item=>{if(!groups.has(item.signature))groups.set(item.signature,[]);groups.get(item.signature).push(item)});
-  groups.forEach(linked=>{
-   const first=linked[0],firstTableWidth=first.table.getBoundingClientRect().width||stage.clientWidth||900;
-   // Read the first table's actual column geometry once. Thereafter every table uses
-   // this exact width vector; the browser is not allowed to redistribute spare space.
-   const widths=first.cells.map((th,i)=>Math.max(44,th.getBoundingClientRect().width||firstTableWidth/first.cells.length));
-   const applyWidths=()=>{
-    const total=widths.reduce((sum,width)=>sum+width,0);
-    linked.forEach(group=>{
-     group.table.style.setProperty('table-layout','fixed','important');
-     group.table.style.setProperty('width',total+'px','important');
-     group.table.style.setProperty('min-width',total+'px','important');
-     group.table.style.setProperty('max-width',total+'px','important');
-     group.cols.style.width=total+'px';
-     group.cols.querySelectorAll('col').forEach((col,i)=>{
-      const width=widths[i]||44;
-      col.style.setProperty('width',width+'px','important');
-      col.style.setProperty('min-width',width+'px','important');
-      col.style.setProperty('max-width',width+'px','important');
-     });
-    });
-   };
-   applyWidths();
-   linked.forEach(({cells})=>cells.forEach((th,i)=>{
-    th.style.position='relative';th.style.overflow='visible';th.style.paddingRight='25px';
-    th.querySelectorAll('.sbp-print-column-grip').forEach(old=>old.remove());
-    const grip=d.createElement('button');grip.type='button';grip.className='sbp-print-column-grip';
-    grip.textContent='↔';grip.title='Tarik ke kiri/kanan: '+(th.textContent.trim()||('Kolom '+(i+1)));
-    grip.setAttribute('aria-label',grip.title);
-    grip.style.cssText='position:absolute;z-index:50;top:0;right:0;bottom:0;width:22px;min-width:22px;height:100%;min-height:22px;margin:0;padding:0;border:0;border-left:1px solid #075c36;border-radius:0;background:#b7f0d2;color:#064e32;font:bold 13px Arial,sans-serif;line-height:1;display:flex;align-items:center;justify-content:center;cursor:col-resize;touch-action:none;user-select:none;pointer-events:auto';
-    th.appendChild(grip);
-    let dragging=false,startX=0,startWidth=0;
-    const move=ev=>{
-     if(!dragging)return;
-     ev.preventDefault();
-     widths[i]=Math.max(44,startWidth+(ev.clientX-startX));
-     applyWidths();
-    };
-    const done=()=>{
-     if(!dragging)return;
-     dragging=false;
-     d.removeEventListener('pointermove',move);
-     d.removeEventListener('pointerup',done);
-     d.removeEventListener('pointercancel',done);
-     d.removeEventListener('mousemove',mouseMove);
-     d.removeEventListener('mouseup',done);
-    };
-    const mouseMove=ev=>{
-     if(!dragging)return;
-     widths[i]=Math.max(44,startWidth+(ev.clientX-startX));
-     applyWidths();
-    };
-    grip.addEventListener('pointerdown',ev=>{
-     if(ev.button!==undefined&&ev.button!==0)return;
-     ev.preventDefault();ev.stopPropagation();
-     dragging=true;startX=ev.clientX;startWidth=widths[i];
-     d.addEventListener('pointermove',move);
-     d.addEventListener('pointerup',done);
-     d.addEventListener('pointercancel',done);
-    });
-    // Mouse fallback for browsers where pointer capture behaves inconsistently in iframes.
-    grip.addEventListener('mousedown',ev=>{
-     if(ev.button!==0)return;
-     ev.preventDefault();ev.stopPropagation();
-     dragging=true;startX=ev.clientX;startWidth=widths[i];
-     d.addEventListener('mousemove',mouseMove);
-     d.addEventListener('mouseup',done);
-    });
-   }));
+  // Safety rollback: remove experimental pixel sizing that caused collapsed ledger columns.
+  d.querySelectorAll('table.sbp-print-table').forEach(table=>{
+   table.querySelectorAll('.sbp-print-column-grip').forEach(grip=>grip.remove());
+   const cols=table.querySelector('colgroup[data-sbp-resize]');
+   if(cols)cols.remove();
+   table.style.removeProperty('width');
+   table.style.removeProperty('min-width');
+   table.style.removeProperty('max-width');
+   table.style.removeProperty('table-layout');
+   table.querySelectorAll('th').forEach(th=>{
+    th.style.removeProperty('position');
+    th.style.removeProperty('overflow');
+    th.style.removeProperty('padding-right');
+   });
   });
  };
  frame.onload=()=>{initResizableColumns();};
@@ -1739,7 +1674,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   catch(err){printStarted=false;toast('Dialog cetak gagal dibuka: '+err.message)}
  };
  const doc=frame.contentDocument;if(!doc){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
- doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'html,body{overflow-x:auto}body{padding:5mm}.sheet{margin:0 auto;min-width:max-content}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div>')+'</header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
+ doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'html,body{overflow-x:auto}body{padding:5mm}.sheet{margin:0 auto;width:100%;max-width:100%}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div>')+'</header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
  try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal mengaktifkan pengatur kolom:',err);toast('Pengatur lebar kolom gagal dimuat. Coba tutup dan buka Print Studio kembali.')}
  return frame;
 }
