@@ -1648,7 +1648,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  closeBtn.onclick=cleanup;
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
- let resetLedgerColumns=()=>{};
+ let resetLedgerColumns=()=>{},ledgerColumnWidths=null;
  const initResizableColumns=()=>{
   const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');
   if(!table)return;
@@ -1658,6 +1658,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   table.dataset.sbpResizeReady='1';
   const defaults=[12,14,34,13.33,13.33,13.34];
   const widths=defaults.map((pct,i)=>Math.max(64,table.clientWidth*pct/100));
+  ledgerColumnWidths=widths;
   const apply=()=>{
    const total=widths.reduce((sum,w)=>sum+w,0);
    cols.forEach((col,i)=>{col.style.width=widths[i]+'px';col.style.minWidth=widths[i]+'px';col.style.maxWidth=widths[i]+'px'});
@@ -1685,9 +1686,10 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   if(!table)return;
   const cols=table.querySelectorAll('colgroup col');
   if(cols.length!==6)return;
-  const total=widths.reduce((sum,w)=>sum+w,0)||1;
+  const printWidths=ledgerColumnWidths||[12,14,34,13.33,13.33,13.34];
+  const total=printWidths.reduce((sum,w)=>sum+w,0)||1;
   cols.forEach((col,i)=>{
-   col.style.width=(widths[i]/total*100)+'%';
+   col.style.width=(printWidths[i]/total*100)+'%';
    col.style.minWidth='0';col.style.maxWidth='none';
   });
   table.style.width='100%';table.style.minWidth='0';table.style.maxWidth='100%';
