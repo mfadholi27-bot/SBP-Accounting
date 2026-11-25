@@ -1,4 +1,4 @@
-/* BUILD 060 — Single-window iframe printing and report-specific pagination */
+/* BUILD 070 — Visible draggable column handles in Print Studio */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1675,9 +1675,9 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
    linked.forEach(({cells})=>cells.forEach((th,i)=>{
     if(th.querySelector('.sbp-col-resize-handle'))return;
     th.style.position='relative';th.style.cursor='col-resize';th.title='Tarik batas kanan untuk mengubah kolom ini; kolom lain tetap';
-    const handle=d.createElement('span');handle.className='sbp-col-resize-handle';handle.setAttribute('aria-label','Ubah lebar kolom '+(th.textContent.trim()||i+1));
-    handle.style.cssText='display:block;position:absolute;z-index:20;top:0;right:-5px;width:12px;height:100%;cursor:col-resize;touch-action:none;user-select:none;background:transparent;pointer-events:auto';
-    const grip=d.createElement('i');grip.style.cssText='display:block;position:absolute;top:12%;bottom:12%;left:5px;width:2px;background:#16824f;opacity:.9;pointer-events:none';handle.appendChild(grip);th.appendChild(handle);
+    const handle=d.createElement('button');handle.type='button';handle.className='sbp-col-resize-handle';handle.textContent='↔';handle.setAttribute('aria-label','Tarik untuk mengubah lebar kolom '+(th.textContent.trim()||i+1));handle.title='TARIK ke kiri atau kanan untuk mengubah lebar kolom ini';
+    handle.style.cssText='display:flex;align-items:center;justify-content:center;position:absolute;z-index:100;top:0;right:-8px;width:18px;height:100%;min-height:18px;padding:0;margin:0;border:1px solid #087443;border-radius:4px;background:#b7f0d2;color:#075c36;font:bold 13px/1 Arial,sans-serif;cursor:col-resize;touch-action:none;user-select:none;pointer-events:auto;box-shadow:0 0 0 1px #fff,0 1px 3px #0004';
+    th.style.overflow='visible';th.style.paddingRight='10px';th.appendChild(handle);
     let dragging=false,startX=0,startWidth=0;
     const move=ev=>{if(!dragging)return;const delta=ev.clientX-startX;baseline[i]=Math.max(36,startWidth+delta);applyWidths();};
     const done=ev=>{if(!dragging)return;dragging=false;try{if(handle.hasPointerCapture&&handle.hasPointerCapture(ev.pointerId))handle.releasePointerCapture(ev.pointerId)}catch(_){}handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);};
