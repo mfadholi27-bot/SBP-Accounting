@@ -1612,7 +1612,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  'th,td{'+(PRINT_CONFIG.tableLines?'border:1px solid #aebbb4;':'border:0;')+'padding:'+Math.max(.5,Math.min(3,Number(PRINT_CONFIG.rowPadding)||1.2))+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:1.25}td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;overflow-wrap:normal}'+
  '.sbp-print-table{font-size:inherit}.sbp-print-table th{font-size:.95em}.sbp-print-table td:nth-child(2),.sbp-print-table td:nth-child(3){overflow-wrap:anywhere}'+
  '.sbp-print-table tr.journal-subtotal{break-inside:avoid;page-break-inside:avoid}.sbp-print-table tr.journal-subtotal th{background:#edf3ef!important;font-weight:800}'+
- '.sbp-print-table.ledger-table{table-layout:fixed}.sbp-print-table.ledger-table th:nth-child(1){width:12%}.sbp-print-table.ledger-table th:nth-child(2){width:14%}.sbp-print-table.ledger-table th:nth-child(3){width:34%}.sbp-print-table.ledger-table th:nth-child(4),.sbp-print-table.ledger-table th:nth-child(5),.sbp-print-table.ledger-table th:nth-child(6){width:13.33%}'+
+ '.sbp-print-table.ledger-table{table-layout:fixed;width:100%;min-width:100%}.sbp-print-table.ledger-table th:nth-child(1){width:12%}.sbp-print-table.ledger-table th:nth-child(2){width:14%}.sbp-print-table.ledger-table th:nth-child(3){width:34%}.sbp-print-table.ledger-table th:nth-child(4),.sbp-print-table.ledger-table th:nth-child(5),.sbp-print-table.ledger-table th:nth-child(6){width:13.33%}.ledger-scroll{width:100%;max-width:100%;overflow:auto}.ledger-account-heading th{background:#e4eee8!important;text-align:left!important;font-size:10pt;padding:2mm!important}.ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-account-summary span{display:inline-block;margin-right:6mm}'+
  '.sbp-print-table.trial-balance-table{table-layout:fixed}.sbp-print-table.trial-balance-table th:nth-child(1){width:12%}.sbp-print-table.trial-balance-table th:nth-child(2){width:32%}.sbp-print-table.trial-balance-table th:nth-child(n+3){width:14%}'+
  '.sbp-print-table.opening-balance-table{table-layout:fixed}.sbp-print-table.opening-balance-table th:nth-child(1){width:8%}.sbp-print-table.opening-balance-table th:nth-child(2){width:14%}.sbp-print-table.opening-balance-table th:nth-child(3){width:30%}.sbp-print-table.opening-balance-table th:nth-child(4){width:28%}.sbp-print-table.opening-balance-table th:nth-child(5){width:20%}'+
  '.sbp-print-table.accounts-table{table-layout:fixed}.sbp-print-table.accounts-table th:nth-child(1){width:12%}.sbp-print-table.accounts-table th:nth-child(2){width:28%}.sbp-print-table.accounts-table th:nth-child(3){width:60%}'+
@@ -1648,26 +1648,38 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  };
  closeBtn.onclick=cleanup;
  overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
+ let resetLedgerColumns=()=>{};
  const initResizableColumns=()=>{
-  const d=frame.contentDocument;if(!d)return;
-  // Safety rollback: remove experimental pixel sizing that caused collapsed ledger columns.
-  d.querySelectorAll('table.sbp-print-table').forEach(table=>{
-   table.querySelectorAll('.sbp-print-column-grip').forEach(grip=>grip.remove());
-   const cols=table.querySelector('colgroup[data-sbp-resize]');
-   if(cols)cols.remove();
-   table.style.removeProperty('width');
-   table.style.removeProperty('min-width');
-   table.style.removeProperty('max-width');
-   table.style.removeProperty('table-layout');
-   table.querySelectorAll('th').forEach(th=>{
-    th.style.removeProperty('position');
-    th.style.removeProperty('overflow');
-    th.style.removeProperty('padding-right');
-   });
+  const d=frame.contentDocument,table=d?.querySelector('.ledger-master-table');
+  if(!table)return;
+  const cols=table.querySelectorAll('colgroup col'),headers=table.querySelectorAll('thead th');
+  if(cols.length!==6||headers.length!==6)return;
+  if(table.dataset.sbpResizeReady==='1')return;
+  table.dataset.sbpResizeReady='1';
+  const defaults=[12,14,34,13.33,13.33,13.34];
+  const widths=defaults.map((pct,i)=>Math.max(64,table.clientWidth*pct/100));
+  const apply=()=>{
+   const total=widths.reduce((sum,w)=>sum+w,0);
+   cols.forEach((col,i)=>{col.style.width=widths[i]+'px';col.style.minWidth=widths[i]+'px';col.style.maxWidth=widths[i]+'px'});
+   table.style.width=total+'px';table.style.minWidth=total+'px';table.style.maxWidth='none';table.style.tableLayout='fixed';
+   const scroll=table.parentElement;if(scroll)scroll.style.overflowX=total>scroll.clientWidth?'auto':'hidden';
+  };
+  headers.forEach((th,i)=>{
+   th.style.position='relative';th.style.paddingRight='25px';
+   const grip=d.createElement('button');grip.type='button';grip.className='sbp-ledger-resize-grip';grip.textContent='↔';
+   grip.title='Tarik untuk mengubah lebar '+th.textContent.trim();grip.setAttribute('aria-label',grip.title);
+   grip.style.cssText='position:absolute;right:0;top:0;bottom:0;width:24px;border:0;border-left:1px solid #176b4a;background:#b7f0d2;color:#075c36;font:bold 13px Arial;cursor:col-resize;touch-action:none;z-index:2';
+   th.appendChild(grip);
+   let dragging=false,startX=0,startWidth=0;
+   const move=ev=>{if(!dragging)return;ev.preventDefault();widths[i]=Math.max(64,startWidth+ev.clientX-startX);apply()};
+   const done=()=>{if(!dragging)return;dragging=false;d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',done);d.removeEventListener('pointercancel',done)};
+   grip.addEventListener('pointerdown',ev=>{if(ev.button!==undefined&&ev.button!==0)return;ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=widths[i];try{grip.setPointerCapture(ev.pointerId)}catch(_){}d.addEventListener('pointermove',move);d.addEventListener('pointerup',done);d.addEventListener('pointercancel',done)});
   });
+  resetLedgerColumns=()=>{defaults.forEach((pct,i)=>{widths[i]=Math.max(64,(table.parentElement.clientWidth||900)*pct/100)});apply()};
+  apply();
  };
  frame.onload=()=>{initResizableColumns();};
- resetBtn.onclick=()=>{const d=frame.contentDocument;if(!d)return;d.querySelectorAll('table').forEach(table=>{table.style.tableLayout='';table.style.width='';table.style.minWidth='';table.style.maxWidth='';const cg=table.querySelector('colgroup');if(cg)cg.remove();table.querySelectorAll('.sbp-print-column-grip').forEach(x=>x.remove())});initResizableColumns()};
+ resetBtn.onclick=()=>resetLedgerColumns();
  printBtn.onclick=()=>{
   if(printStarted)return;printStarted=true;
   try{frame.contentWindow.focus();window.addEventListener('afterprint',cleanup,{once:true});window.addEventListener('focus',onWindowFocus);frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});printFallbackTimer=setTimeout(cleanup,180000);frame.contentWindow.print()}
@@ -1704,13 +1716,15 @@ async function printLedger(){
  const results=codes.map(code=>getLedgerTransactionsRange(selection.from,selection.to,code)).filter(Boolean);
  if(!results.length){toast('Data Buku Besar tidak dapat dihitung. Periksa periode dan akun.');return}
  const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0),totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
- let body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]]);
+ let rows='';
  results.forEach(result=>{
-  const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),c=moves.reduce((n,r)=>n+r.credit,0);
-  body+='<h2 style="margin:18px 0 6px;font-size:14px">'+esc(result.account.code)+' · '+esc(result.account.name)+'</h2>';
-  body+=printSummary([['Saldo awal rentang',ledgerNetDisplay(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',ledgerNetDisplay(result.endingNet)]]);
-  body+=printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>'),'','ledger-table');
+  const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),cr=moves.reduce((n,r)=>n+r.credit,0);
+  rows+='<tr class="ledger-account-heading"><th colspan="6">'+esc(result.account.code)+' · '+esc(result.account.name)+'</th></tr>';
+  rows+='<tr class="ledger-account-summary"><td colspan="6"><span>Saldo awal: <b>'+esc(ledgerNetDisplay(result.openingNet))+'</b></span><span>Mutasi debit: <b>'+esc(printMoney(d))+'</b></span><span>Mutasi kredit: <b>'+esc(printMoney(cr))+'</b></span><span>Saldo akhir: <b>'+esc(ledgerNetDisplay(result.endingNet))+'</b></span></td></tr>';
+  rows+=result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>').join('');
  });
+ const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+
+ '<div class="ledger-scroll"><table class="sbp-print-table ledger-table ledger-master-table"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>TANGGAL</th><th>NO. BUKTI</th><th>KETERANGAN</th><th>DEBIT</th><th>KREDIT</th><th>SALDO</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
  const verify=async()=>{
   const memoryUnchanged=JSON.stringify(state)===memoryBefore;
   let persistedUnchanged=false,persistedVerified=false;
