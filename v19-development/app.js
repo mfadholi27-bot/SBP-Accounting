@@ -2143,6 +2143,38 @@ function runDataValidation(){
  const validPeriod=/^\d{4}-(0[1-9]|1[0-2])$/.test(activePeriod);
  const add=(level,category,location,detail,action)=>issues.push({level,category,location,detail,action});
  if(!validPeriod){add('GAGAL','Periode','Periode kerja aktif','Periode kerja aktif belum valid.','Tetapkan periode kerja aktif dengan format tahun-bulan yang benar.');return {issues,checkedAt:new Date(),counts:{accounts:0,journals:0,openings:0,nptrans:0,period:activePeriod}}}
+ // SAFETY: audit seluruh tanggal transaksi terhadap Periode Kerja Aktif.
+ // Pemeriksaan bersifat read-only; data lama tidak dipindahkan atau diubah.
+ const normalizeAuditDate=(raw)=>{
+  const value=String(raw??'').trim();
+  let match=value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(match){const date=match[1]+'-'+match[2]+'-'+match[3];return isValidCalendarDate(date)?date:null}
+  match=value.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+  if(match){const date=match[3]+'-'+match[2].padStart(2,'0')+'-'+match[1].padStart(2,'0');return isValidCalendarDate(date)?date:null}
+  return null;
+ };
+ let periodDateMismatches=0;
+ const reportPeriodMismatch=(raw,category,location)=>{
+  const date=normalizeAuditDate(raw);
+  if(!date)return;
+  const transactionPeriod=date.slice(0,7);
+  if(transactionPeriod!==activePeriod){
+   periodDateMismatches++;
+   add('PERINGATAN','Periode Kerja',location,'Tanggal '+date+' berada pada '+periodLabel(transactionPeriod)+', sedangkan Periode Kerja Aktif adalah '+periodLabel(activePeriod)+'.','Periksa dokumen sumber dan pastikan tanggal serta bulan transaksi memang benar. Jika transaksi memang milik bulan lain, ubah Periode Kerja Aktif untuk pemeriksaan atau ikuti prosedur koreksi yang berlaku. Data tidak diubah otomatis.');
+  }
+ };
+ allJournals.forEach((journal,index)=>{
+  const no=String(journal.number??'').trim();
+  reportPeriodMismatch(journal.date,'Jurnal','Jurnal '+(no||('#'+(index+1))));
+ });
+ (Array.isArray(state.debitNotes)?state.debitNotes:[]).forEach((note,index)=>{
+  const no=String(note.number??'').trim();
+  reportPeriodMismatch(note.date,'Nota Debet','Nota Debet '+(no||('#'+(index+1))));
+ });
+ allNpRows.forEach((row,index)=>{
+  const no=String(row.nobukti??'').trim(),code=String(row.sandi??'').trim();
+  reportPeriodMismatch(row.tanggal,'NPTRANS','NPTRANS '+(no?'Bukti '+no:'baris '+(index+1))+(code?' · SANDI '+code:''));
+ });
  const journals=allJournals.filter(j=>String(j.date||'').slice(0,7)===activePeriod);
  const openings=allOpenings.filter(o=>String(o.period||'')===activePeriod);
  const npRows=allNpRows.filter(r=>{
@@ -2222,7 +2254,7 @@ function runDataValidation(){
   if(!Number.isFinite(Number(r.jumlah)))add('GAGAL','NPTRANS','Baris '+(i+1),'Nilai JUMLAH bukan angka yang valid.','Periksa nilai pada file sumber.');
  });
  for(const [key,count] of npKeys)if(count>1)add('PERINGATAN','NPTRANS','Kunci '+key,'Kombinasi tanggal, nomor bukti, nomor urut, dan SANDI muncul '+count+' kali dalam periode '+activePeriod+'.','Bandingkan dengan file NPTRANS asli sebelum memutuskan apakah record duplikat.');
- return {issues,checkedAt:new Date(),counts:{accounts:accounts.length,journals:journals.length,openings:openings.length,nptrans:npRows.length,period:activePeriod}};
+ return {issues,checkedAt:new Date(),counts:{accounts:accounts.length,journals:journals.length,openings:openings.length,nptrans:npRows.length,period:activePeriod,periodDateMismatches}};
 }
 function openValidationLocation(issue){
  const category=String(issue.category||''),location=String(issue.location||'');
@@ -2242,7 +2274,7 @@ function renderValidation(){
  const status=$('validation-status');status.textContent=errors?'PERLU PERBAIKAN':warnings?'ADA PERINGATAN':'VALID';status.className=errors?'validation-bad':warnings?'validation-warn':'validation-good';
   $('validation-meta').textContent='Periode kerja aktif '+result.counts.period+' · Diperiksa '+result.checkedAt.toLocaleString('id-ID')+' · '+result.counts.accounts+' akun terkait · '+result.counts.journals+' jurnal · '+result.counts.openings+' saldo awal · '+result.counts.nptrans+' baris NPTRANS.';
  const shown=result.issues.filter(x=>filter==='all'||x.level===filter);
- $('validation-results').innerHTML=shown.length?'<div class="table-wrap"><table class="validation-table"><thead><tr><th>Status</th><th>Kategori</th><th>Lokasi data</th><th>Temuan</th><th>Saran pemeriksaan</th><th>Tindakan</th></tr></thead><tbody>'+shown.map(x=>'<tr><td><span class="validation-badge '+(x.level==='GAGAL'?'bad':'warn')+'">'+x.level+'</span></td><td>'+esc(x.category)+'</td><td>'+esc(x.location)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.action)+'</td><td><button class="btn validation-open-location" type="button" data-issue-index="'+result.issues.indexOf(x)+'">Buka Lokasi</button></td></tr>').join('')+'</tbody></table></div>':'<div class="validation-clear"><i data-lucide="check-circle-2"></i><b>'+(result.issues.length?'Tidak ada temuan pada filter ini.':'Tidak ditemukan masalah pada pemeriksaan yang tersedia.')+'</b><span>Hasil pemeriksaan hanya mencakup aturan validasi BUILD V66.</span></div>';
+ $('validation-results').innerHTML=shown.length?'<div class="table-wrap"><table class="validation-table"><thead><tr><th>Status</th><th>Kategori</th><th>Lokasi data</th><th>Temuan</th><th>Saran pemeriksaan</th><th>Tindakan</th></tr></thead><tbody>'+shown.map(x=>'<tr><td><span class="validation-badge '+(x.level==='GAGAL'?'bad':'warn')+'">'+x.level+'</span></td><td>'+esc(x.category)+'</td><td>'+esc(x.location)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.action)+'</td><td><button class="btn validation-open-location" type="button" data-issue-index="'+result.issues.indexOf(x)+'">Buka Lokasi</button></td></tr>').join('')+'</tbody></table></div>':'<div class="validation-clear"><i data-lucide="check-circle-2"></i><b>'+(result.issues.length?'Tidak ada temuan pada filter ini.':'Tidak ditemukan masalah pada pemeriksaan yang tersedia.')+'</b><span>Pemeriksaan mencakup integritas jurnal, saldo awal, NPTRANS, dan kesesuaian tanggal terhadap Periode Kerja Aktif.</span></div>';
  document.querySelectorAll('.validation-open-location').forEach(button=>button.onclick=()=>openValidationLocation(result.issues[Number(button.dataset.issueIndex)]));
  if(window.lucide?.createIcons)window.lucide.createIcons();
 }
