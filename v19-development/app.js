@@ -2263,6 +2263,11 @@ function openValidationLocation(issue){
  else if(category==='Rekonsiliasi Lintas Periode'||category==='Saldo Awal'||category==='Keseimbangan Saldo Awal'){page='opening-balances';focusId='opening-period'}
  else if(category==='Master Akun'){page='accounts';focusId='account-search'}
  else if(category==='Jurnal'||category==='Keseimbangan Jurnal'||category==='Nomor Bukti'){page='journal-list';focusId='journal-search'}
+ else if(category==='Periode Kerja'){
+  if(location.startsWith('Jurnal ')){page='journal-list';focusId='journal-search'}
+  else if(location.startsWith('Nota Debet ')){page='debit-notes';focusId='dn-search'}
+  else if(location.startsWith('NPTRANS ')){page='nptrans';focusId='np-search'}
+ }
  else if(category==='NPTRANS'){page='nptrans';focusId='np-search'}
  go(page);
  const target=focusId&&$(focusId);if(target){target.focus();if(target.select)target.select()}
