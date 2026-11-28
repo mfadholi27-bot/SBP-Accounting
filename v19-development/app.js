@@ -1,4 +1,4 @@
-/* BUILD 091 — Force Print Studio iframe document refresh when pagination settings change */
+/* BUILD 092 — Target rows drive adaptive typography and row padding, with full live repagination */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1803,7 +1803,7 @@ async function printLedger(){
   let persistedUnchanged=false,persistedVerified=false;
   try{const after=JSON.stringify(await readPersistedAccountingState());persistedVerified=persistedBefore!==null;persistedUnchanged=persistedVerified&&after===persistedBefore}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sesudah cetak gagal:',err)}
   const pass=memoryUnchanged&&persistedVerified&&persistedUnchanged;
-  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,pages:paged.pageCount,layout:'measured-dom-pagination-smart-rows-live-recalc-090'};
+  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,pages:paged.pageCount,layout:'measured-dom-pagination-adaptive-density-092'};
   console.info('[SBP V19] Hasil uji integritas cetak Buku Besar',detail);
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
