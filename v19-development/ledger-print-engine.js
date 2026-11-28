@@ -52,8 +52,8 @@
   const continueRow=()=>'<tr class="ledger-page-subtotal"><td colspan="6" style="text-align:right">BERSAMBUNG KE HALAMAN BERIKUTNYA →</td></tr>';
   const finalRow=(result,debit,credit)=>'<tr class="ledger-account-final"><td colspan="3">TOTAL AKUN · SALDO AKHIR</td><td class="num">'+money(debit)+'</td><td class="num">'+money(credit)+'</td><td class="num">'+esc(net(result.endingNet))+'</td></tr>';
   const pages=[];
-  let page={html:'',used:heightOf(header),debit:0,credit:0,balance:0,hasContent:false};
-  function beginPage(){page={html:'',used:heightOf(header),debit:0,credit:0,balance:0,hasContent:false}}
+  let page={html:'',used:heightOf(header),debit:0,credit:0,balance:0,hasContent:false,hasMovement:false};
+  function beginPage(){page={html:'',used:heightOf(header),debit:0,credit:0,balance:0,hasContent:false,hasMovement:false}}
   function closePage(continuing){
    if(!page.hasContent)return;
    const sub=subtotalRow(page.debit,page.credit,page.balance);
@@ -63,7 +63,7 @@
   }
   function add(html,height,counts){
    page.html+=html;page.used+=height;page.hasContent=true;
-   if(counts){page.debit+=Number(counts.debit||0);page.credit+=Number(counts.credit||0);page.balance=Number(counts.balance||0)}
+   if(counts){page.debit+=Number(counts.debit||0);page.credit+=Number(counts.credit||0);page.balance=Number(counts.balance||0);if(counts.isMovement)page.hasMovement=true}
   }
   results.forEach(result=>{
    const allRows=Array.isArray(result.rows)?result.rows:[];
@@ -82,13 +82,13 @@
     const r=movements[cursor],rowHtml=render(r),rowHeight=heightOf(rowHtml);
     const remainingAfter=movements.length-cursor-1;
     const reserve=heightOf(subtotalRow(0,0,r.balance))+(remainingAfter?heightOf(continueRow()):heightOf(finalRow(result,0,0)));
-    if(page.used+rowHeight+reserve>pageBudget&&page.hasContent){
+    if(page.used+rowHeight+reserve>pageBudget&&page.hasMovement){
      closePage(true);
      const h=headingRow(result.account,true),c=carryRow(previousBalance);
      add(h,heightOf(h));add(c,heightOf(c));
      continue;
     }
-    add(rowHtml,rowHeight,{debit:r.debit,credit:r.credit,balance:r.balance});
+    add(rowHtml,rowHeight,{debit:r.debit,credit:r.credit,balance:r.balance,isMovement:true});
     previousBalance=Number(r.balance||0);cursor++;
    }
    const debit=movements.reduce((n,r)=>n+Number(r.debit||0),0),credit=movements.reduce((n,r)=>n+Number(r.credit||0),0);
