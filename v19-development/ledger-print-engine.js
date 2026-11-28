@@ -48,7 +48,7 @@
   const headingRow=(account,continuation)=>'<tr class="ledger-account-heading"><td colspan="6">'+esc(account.code)+' · '+esc(account.name)+(continuation?' — LANJUTAN':'')+'</td></tr>';
   const summaryRow=result=>'<tr class="ledger-account-summary"><td colspan="6"><span>Saldo awal: <b>'+esc(net(result.openingNet))+'</b></span></td></tr>';
   const carryRow=balance=>'<tr class="ledger-carry-row"><td colspan="5">SALDO PINDAHAN DARI HALAMAN SEBELUMNYA</td><td class="num">'+esc(net(balance))+'</td></tr>';
-  const subtotalRow=(debit,credit,balance)=>'<tr class="ledger-page-subtotal"><td colspan="3">SUBTOTAL HALAMAN</td><td class="num">'+money(debit)+'</td><td class="num">'+money(credit)+'</td><td class="num">'+esc(net(balance))+'</td></tr>';
+  const subtotalRow=(debit,credit,balance)=>'<tr class="ledger-page-subtotal"><td colspan="3">SUBTOTAL MUTASI HALAMAN</td><td class="num">'+money(debit)+'</td><td class="num">'+money(credit)+'</td><td class="num">—</td></tr>';
   const continueRow=()=>'<tr class="ledger-page-subtotal"><td colspan="6" style="text-align:right">BERSAMBUNG KE HALAMAN BERIKUTNYA →</td></tr>';
   const finalRow=(result,debit,credit)=>'<tr class="ledger-account-final"><td colspan="3">TOTAL AKUN · SALDO AKHIR</td><td class="num">'+money(debit)+'</td><td class="num">'+money(credit)+'</td><td class="num">'+esc(net(result.endingNet))+'</td></tr>';
   const pages=[];
