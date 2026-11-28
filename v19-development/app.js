@@ -1,4 +1,4 @@
-/* BUILD 085 — Smart Paper Saver: measured DOM ledger pagination and compact page packing */
+/* BUILD 089 — Print Studio live rows-per-page control for Buku Besar */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
