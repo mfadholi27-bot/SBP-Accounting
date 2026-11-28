@@ -27,11 +27,11 @@
   // A row target is a density target, not only a maximum-row counter.
   // Reduce type size and vertical padding progressively so higher targets
   // can physically fit more movement rows on each printed sheet.
-  const targetDensity=targetRows>=55?{font:5.4,padding:.22,line:1.04}:
-   targetRows>=45?{font:5.8,padding:.28,line:1.07}:
-   targetRows>=35?{font:6.4,padding:.38,line:1.10}:
-   targetRows>=25?{font:7.2,padding:.58,line:1.15}:
-   targetRows>0?{font:8,padding:.9,line:1.22}:density;
+  const targetDensity=targetRows>=55?{font:5.5,padding:.22,line:1.06}:
+   targetRows>=45?{font:6,padding:.35,line:1.08}:
+   targetRows>=35?{font:6.7,padding:.5,line:1.10}:
+   targetRows>=25?{font:7.5,padding:.85,line:1.18}:
+   targetRows>0?{font:8,padding:1.15,line:1.25}:density;
   const effectiveFont=targetDensity.font,effectivePadding=targetDensity.padding;
 
   const contentWidth=(pageWidth-2*(margin+5))*MM_TO_PX;
