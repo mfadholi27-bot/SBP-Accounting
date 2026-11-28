@@ -1,4 +1,4 @@
-/* SBP Accounting V19 — Build 087 smart page fill pagination engine.
+/* SBP Accounting V19 — Build 088 target rows per page pagination engine.
    Local-only, read-only presentation layer. Measures rendered table rows in a hidden
    same-origin document; never estimates row height from description character counts. */
 (function(global){
@@ -24,6 +24,7 @@
   };
   const density=densityProfile[o.density]||densityProfile.compact;
   const effectiveFont=density.font,effectivePadding=density.padding;
+  const targetRows=Math.max(0,Math.min(80,Math.floor(Number(o.targetRows)||0)));
 
   const contentWidth=(pageWidth-2*(margin+5))*MM_TO_PX;
   const pageHeightPx=(pageHeight-2*(margin+5))*MM_TO_PX;
@@ -64,8 +65,8 @@
   const continueRow=()=>'<tr class="ledger-page-subtotal"><td colspan="6" style="text-align:right">BERSAMBUNG KE HALAMAN BERIKUTNYA →</td></tr>';
   const finalRow=(result,debit,credit)=>'<tr class="ledger-account-final"><td colspan="3">TOTAL AKUN · SALDO AKHIR</td><td class="num">'+money(debit)+'</td><td class="num">'+money(credit)+'</td><td class="num">'+esc(net(result.endingNet))+'</td></tr>';
   const pages=[];
-  let page={html:'',used:heightOf(header),debit:0,credit:0,balance:0,hasContent:false,hasMovement:false};
-  function beginPage(){page={html:'',used:heightOf(header),debit:0,credit:0,balance:0,hasContent:false,hasMovement:false}}
+  let page={html:'',used:heightOf(header),debit:0,credit:0,balance:0,hasContent:false,hasMovement:false,movementRows:0};
+  function beginPage(){page={html:'',used:heightOf(header),debit:0,credit:0,balance:0,hasContent:false,hasMovement:false,movementRows:0}}
   function closePage(continuing){
    if(!page.hasContent)return;
    const sub=subtotalRow(page.debit,page.credit,page.balance);
@@ -75,13 +76,14 @@
   }
   function add(html,height,counts){
    page.html+=html;page.used+=height;page.hasContent=true;
-   if(counts){page.debit+=Number(counts.debit||0);page.credit+=Number(counts.credit||0);page.balance=Number(counts.balance||0);if(counts.isMovement)page.hasMovement=true}
+   if(counts){page.debit+=Number(counts.debit||0);page.credit+=Number(counts.credit||0);page.balance=Number(counts.balance||0);if(counts.isMovement){page.hasMovement=true;page.movementRows++}}
   }
   results.forEach(result=>{
    const allRows=Array.isArray(result.rows)?result.rows:[];
    const opening=allRows.find(r=>r.kind==='opening')||null;
    const movements=allRows.filter(r=>r.kind==='movement');
    let cursor=0,previousBalance=opening?Number(opening.balance||0):Number(result.openingNet||0);
+   if(page.hasContent&&targetRows>0&&page.movementRows>=targetRows)closePage(true);
    const firstHeading=headingRow(result.account,false),firstSummary=summaryRow(result);
    const openingHtml=opening?render(opening):'';
    const baseHeight=heightOf(firstHeading)+heightOf(firstSummary)+(opening?heightOf(openingHtml):0);
@@ -94,7 +96,7 @@
     const r=movements[cursor],rowHtml=render(r),rowHeight=heightOf(rowHtml);
     const remainingAfter=movements.length-cursor-1;
     const reserve=heightOf(subtotalRow(0,0,r.balance))+(remainingAfter?heightOf(continueRow()):heightOf(finalRow(result,0,0)));
-    if(page.used+rowHeight+reserve>pageBudget()&&page.hasMovement){
+    if(((targetRows>0&&page.movementRows>=targetRows)||page.used+rowHeight+reserve>pageBudget())&&page.hasMovement){
      closePage(true);
      const h=headingRow(result.account,true),c=carryRow(previousBalance);
      add(h,heightOf(h));add(c,heightOf(c));
@@ -115,5 +117,5 @@
   const html='<style>.ledger-print-page .ledger-table{font-size:'+effectiveFont+'pt!important}.ledger-print-page .ledger-table th,.ledger-print-page .ledger-table td{padding:'+effectivePadding+'mm 1mm!important;line-height:'+density.line+'!important}</style>'+pages.map((rows,i)=>'<section class="ledger-print-page'+(i<pages.length-1?' ledger-print-page-break':'')+'"><table class="sbp-print-table ledger-table ledger-master-table">'+colgroup+'<thead>'+header+'</thead><tbody>'+rows+'</tbody></table></section>').join('');
   return {html,pageCount:pages.length};
  }
- global.SBPLedgerPrintEngine={version:'087.0',paginate};
+ global.SBPLedgerPrintEngine={version:'088.0',paginate};
 })(window);
