@@ -1619,6 +1619,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  'th,td{'+(PRINT_CONFIG.tableLines?'border:1px solid #aebbb4;':'border:0;')+'padding:'+Math.max(.5,Math.min(3,Number(PRINT_CONFIG.rowPadding)||1.2))+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:1.25}td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;overflow-wrap:normal}'+
  '.sbp-print-table{font-size:inherit}.sbp-print-table th{font-size:.95em}.sbp-print-table td:nth-child(2),.sbp-print-table td:nth-child(3){overflow-wrap:anywhere}'+
  '.sbp-print-table tr.journal-subtotal{break-inside:avoid;page-break-inside:avoid}.sbp-print-table tr.journal-subtotal th{background:#edf3ef!important;font-weight:800}'+
+ '.ledger-print-page{width:100%;margin:0 0 5mm;break-inside:auto;page-break-inside:auto}.ledger-print-page-break{break-after:page;page-break-after:always}.ledger-print-page .ledger-account-heading td{background:#e4eee8!important;font-weight:800;text-align:left;padding:1.4mm!important}.ledger-print-page .ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-print-page .ledger-carry-row td{background:#fff8e6;font-weight:700}.ledger-print-page .ledger-page-subtotal td{background:#edf3ef;font-weight:700;font-size:7pt}.ledger-print-page .ledger-account-final td{background:#e5f2e9;font-weight:800;border-top:1.5px solid #176b4a}'+
  '.sbp-print-table.ledger-table{table-layout:fixed;width:100%;min-width:100%}.sbp-print-table.ledger-table th:nth-child(1){width:12%}.sbp-print-table.ledger-table th:nth-child(2){width:14%}.sbp-print-table.ledger-table th:nth-child(3){width:34%}.sbp-print-table.ledger-table th:nth-child(4),.sbp-print-table.ledger-table th:nth-child(5),.sbp-print-table.ledger-table th:nth-child(6){width:13.33%}.ledger-scroll{width:100%;max-width:100%;overflow:auto}.ledger-account-heading th{background:#e4eee8!important;text-align:left!important;font-size:9pt;padding:1.4mm!important}.ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-account-summary span{display:inline-block;margin-right:6mm}.ledger-page-subtotal td{background:#edf3ef;font-weight:700;font-size:7pt}.ledger-page-subtotal .carry-label{font-weight:800;text-align:left}.ledger-continuation-start{break-before:page;page-break-before:always}.ledger-carry-row td{background:#fff8e6;font-weight:700}.ledger-account-final td{background:#e5f2e9;font-weight:800;border-top:1.5px solid #176b4a}'+
  '.sbp-print-table.trial-balance-table{table-layout:fixed}.sbp-print-table.trial-balance-table th:nth-child(1){width:12%}.sbp-print-table.trial-balance-table th:nth-child(2){width:32%}.sbp-print-table.trial-balance-table th:nth-child(n+3){width:14%}'+
  '.sbp-print-table.opening-balance-table{table-layout:fixed}.sbp-print-table.opening-balance-table th:nth-child(1){width:8%}.sbp-print-table.opening-balance-table th:nth-child(2){width:14%}.sbp-print-table.opening-balance-table th:nth-child(3){width:30%}.sbp-print-table.opening-balance-table th:nth-child(4){width:28%}.sbp-print-table.opening-balance-table th:nth-child(5){width:20%}'+
@@ -1762,70 +1763,36 @@ async function printLedger(){
  try{persistedBefore=JSON.stringify(await readPersistedAccountingState())}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sebelum cetak gagal:',err)}
  const results=codes.map(code=>getLedgerTransactionsRange(selection.from,selection.to,code)).filter(Boolean);
  if(!results.length){toast('Data Buku Besar tidak dapat dihitung. Periksa periode dan akun.');return}
- const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0),totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
- /* BUILD 082 — continuous ledger pages: compact account flow, page subtotals and carry-forward.
-    Carry rows are presentation-only; they are excluded from movement debit/credit totals. */
- /* Content-aware pagination: estimate rendered row height from wrapped description length.
-    Short rows use space efficiently; long descriptions consume additional page capacity. */
- const PAGE_UNITS_FIRST=27,PAGE_UNITS_NEXT=31;
- const rowUnits=r=>Math.max(1,Math.ceil(String(r.description||'').length/105));
- let rows='';
- results.forEach(result=>{
-  const sourceRows=Array.isArray(result.rows)?result.rows:[];
-  const openingRow=sourceRows.find(r=>r.kind==='opening')||null;
-  const movementRows=sourceRows.filter(r=>r.kind==='movement');
-  const pages=[];
-  let cursor=0,first=true;
-  while(cursor<movementRows.length){
-   const budget=first?PAGE_UNITS_FIRST:PAGE_UNITS_NEXT;
-   let used=0,chunk=[];
-   if(first&&openingRow){chunk.push(openingRow);used+=1}
-   while(cursor<movementRows.length){
-    const units=rowUnits(movementRows[cursor]);
-    if(chunk.length&&used+units>budget)break;
-    chunk.push(movementRows[cursor]);used+=units;cursor++;
-   }
-   if(!chunk.length&&cursor<movementRows.length){chunk.push(movementRows[cursor]);cursor++}
-   pages.push(chunk);first=false;
-  }
-  if(!pages.length)pages.push(openingRow?[openingRow]:[]);
-  let previousBalance=openingRow?Number(openingRow.balance||0):Number(result.openingNet||0);
-  pages.forEach((pageRows,pageIndex)=>{
-   const isContinuation=pageIndex>0;
-   const pageDebit=pageRows.filter(r=>r.kind==='movement').reduce((n,r)=>n+Number(r.debit||0),0);
-   const pageCredit=pageRows.filter(r=>r.kind==='movement').reduce((n,r)=>n+Number(r.credit||0),0);
-   const pageLast=pageRows.length?pageRows[pageRows.length-1]:null;
-   const pageBalance=pageLast?Number(pageLast.balance||0):previousBalance;
-   rows+='<tr class="ledger-account-heading'+(isContinuation?' ledger-continuation-start':'')+'"><th colspan="6">'+esc(result.account.code)+' · '+esc(result.account.name)+(isContinuation?' — LANJUTAN':'')+'</th></tr>';
-   if(isContinuation){
-    rows+='<tr class="ledger-carry-row"><td colspan="5" class="carry-label">SALDO PINDAHAN DARI HALAMAN '+pageIndex+'</td><td class="num">'+esc(ledgerNetDisplay(previousBalance))+'</td></tr>';
-   }else{
-    rows+='<tr class="ledger-account-summary"><td colspan="6"><span>Saldo awal: <b>'+esc(ledgerNetDisplay(result.openingNet))+'</b></span></td></tr>';
-   }
-   rows+=pageRows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>').join('');
-   rows+='<tr class="ledger-page-subtotal"><td colspan="3">SUBTOTAL HALAMAN '+(pageIndex+1)+'</td><td class="num">'+printMoney(pageDebit)+'</td><td class="num">'+printMoney(pageCredit)+'</td><td class="num">'+ledgerNetDisplay(pageBalance)+'</td></tr>';
-   if(pageIndex<pages.length-1){
-    rows+='<tr class="ledger-page-subtotal"><td colspan="6" style="text-align:right">BERSAMBUNG KE HALAMAN BERIKUTNYA →</td></tr>';
-   }else{
-    const d=movementRows.reduce((n,r)=>n+Number(r.debit||0),0),cr=movementRows.reduce((n,r)=>n+Number(r.credit||0),0);
-    rows+='<tr class="ledger-account-final"><td colspan="3">TOTAL AKUN · SALDO AKHIR</td><td class="num">'+printMoney(d)+'</td><td class="num">'+printMoney(cr)+'</td><td class="num">'+ledgerNetDisplay(result.endingNet)+'</td></tr>';
-   }
-   if(pageLast)previousBalance=Number(pageLast.balance||0);
-  });
+ const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0);
+ const totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
+ if(!window.SBPLedgerPrintEngine){toast('Mesin cetak Buku Besar belum termuat. Muat ulang aplikasi.');return}
+ const renderMovementRow=r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number||'')+'</td><td>'+esc(r.description||'')+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>';
+ const paged=window.SBPLedgerPrintEngine.paginate({
+  results,
+  paper:PRINT_CONFIG.paper||'F4',
+  orientation:PRINT_CONFIG.orientation==='auto'?'landscape':PRINT_CONFIG.orientation,
+  margin:Number(PRINT_CONFIG.margin)||10,
+  fontSize:Number(PRINT_CONFIG.fontSize)||8,
+  rowPadding:Number(PRINT_CONFIG.rowPadding)||1.2,
+  tableLines:PRINT_CONFIG.tableLines!==false,
+  renderMovementRow,
+  money:printMoney,
+  net:ledgerNetDisplay,
+  escape:esc
  });
- const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+
- '<div class="ledger-scroll"><table class="sbp-print-table ledger-table ledger-master-table"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>TANGGAL</th><th>NO. BUKTI</th><th>KETERANGAN</th><th>DEBIT</th><th>KREDIT</th><th>SALDO</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+ if(!paged||!paged.html){toast('Mesin paginasi tidak dapat membentuk halaman Buku Besar.');return}
+ const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Jumlah halaman',String(paged.pageCount)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+paged.html;
  const verify=async()=>{
   const memoryUnchanged=JSON.stringify(state)===memoryBefore;
   let persistedUnchanged=false,persistedVerified=false;
   try{const after=JSON.stringify(await readPersistedAccountingState());persistedVerified=persistedBefore!==null;persistedUnchanged=persistedVerified&&after===persistedBefore}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sesudah cetak gagal:',err)}
   const pass=memoryUnchanged&&persistedVerified&&persistedUnchanged;
-  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,layout:'continuous-with-page-subtotals-and-carry-forward'};
+  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,pages:paged.pageCount,layout:'measured-dom-pagination'};
   console.info('[SBP V19] Hasil uji integritas cetak Buku Besar',detail);
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun',body,'landscape',verify);
+ printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun · '+paged.pageCount+' halaman',body,'landscape',verify);
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
