@@ -1,4 +1,4 @@
-/* BUILD 090 — Live recalculate all ledger page subtotals, carry-forwards, account totals and page summary */
+/* BUILD 091 — Force Print Studio iframe document refresh when pagination settings change */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1740,10 +1740,11 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   }
   catch(err){printStarted=false;toast('Dialog cetak gagal dibuka: '+err.message)}
  };
- const doc=frame.contentDocument;if(!doc){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
+ if(!frame.contentDocument){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
  const writePreview=(nextBody,nextSubtitle=subtitle)=>{
-   doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'html,body{overflow-x:auto}body{padding:5mm}.sheet{margin:0 auto;width:100%;max-width:100%}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(nextSubtitle)+'</p></div>')+'</header>'+meta+nextBody+signatures+footer+'</main></body></html>');doc.close();
-   requestAnimationFrame(()=>{try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal memperbarui pratinjau:',err)}});
+   const html='<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'html,body{overflow-x:auto}body{padding:5mm}.sheet{margin:0 auto;width:100%;max-width:100%}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(nextSubtitle)+'</p></div>')+'</header>'+meta+nextBody+signatures+footer+'</main></body></html>';
+   frame.onload=()=>requestAnimationFrame(()=>{try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal memperbarui pratinjau:',err)}});
+   frame.srcdoc=html;
   };
   writePreview(body);
   if(rowTargetControl)rowTargetControl.addEventListener('change',()=>{
