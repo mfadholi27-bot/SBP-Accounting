@@ -1646,7 +1646,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   if(studioOptions&&typeof studioOptions.onRowsChange==='function'){
    rowTargetLabel=document.createElement('label');rowTargetLabel.textContent='Baris per lembar';rowTargetLabel.style.cssText='display:flex;align-items:center;gap:7px;font:12px Arial,sans-serif;color:#fff;white-space:nowrap';
    rowTargetControl=document.createElement('select');rowTargetControl.style.cssText='border:1px solid #ffffff66;border-radius:7px;padding:8px 10px;background:#fff;color:#17212b;font-weight:700;min-width:130px';
-   [['0','Otomatis'],['20','20 baris'],['25','25 baris'],['30','30 baris'],['35','35 baris'],['40','40 baris'],['custom','Jumlah sendiri']].forEach(([v,t])=>{const op=document.createElement('option');op.value=v;op.textContent=t;rowTargetControl.appendChild(op)});
+   [['0','Otomatis'],['20','20 baris'],['25','25 baris'],['30','30 baris'],['35','35 baris'],['40','40 baris'],['45','45 baris'],['50','50 baris'],['60','60 baris']].forEach(([v,t])=>{const op=document.createElement('option');op.value=v;op.textContent=t;rowTargetControl.appendChild(op)});
    rowTargetControl.value=String(studioOptions.targetRows??30);rowTargetLabel.appendChild(rowTargetControl);
   }
   bar.append(heading);if(rowTargetLabel)bar.append(rowTargetLabel);bar.append(resetBtn,printBtn,closeBtn);
@@ -1798,7 +1798,7 @@ async function printLedger(){
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun · '+paged.pageCount+' halaman',body,'landscape',verify,{targetRows:initialRows,onRowsChange:target=>{const next=buildLedgerPreview(target);return next?{body:next.body,subtitle:'Periode '+selection.label+' · '+results.length+' akun · '+next.pageCount+' halaman'}:null}});
+ printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun · '+paged.pageCount+' halaman',body,'landscape',verify,{targetRows:initialRows,onRowsChange:target=>{PRINT_CONFIG.ledgerTargetRows=target;try{localStorage.setItem(PRINT_SETTINGS_KEY,JSON.stringify(PRINT_CONFIG))}catch(_){}const next=buildLedgerPreview(target);return next?{body:next.body,subtitle:'Periode '+selection.label+' · '+results.length+' akun · '+next.pageCount+' halaman'}:null}});
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
