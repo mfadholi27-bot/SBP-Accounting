@@ -1765,18 +1765,30 @@ async function printLedger(){
  const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0),totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
  /* BUILD 082 — continuous ledger pages: compact account flow, page subtotals and carry-forward.
     Carry rows are presentation-only; they are excluded from movement debit/credit totals. */
- const PAGE_ROWS=22;
+ /* Content-aware pagination: estimate rendered row height from wrapped description length.
+    Short rows use space efficiently; long descriptions consume additional page capacity. */
+ const PAGE_UNITS_FIRST=27,PAGE_UNITS_NEXT=31;
+ const rowUnits=r=>Math.max(1,Math.ceil(String(r.description||'').length/105));
  let rows='';
  results.forEach(result=>{
   const sourceRows=Array.isArray(result.rows)?result.rows:[];
   const openingRow=sourceRows.find(r=>r.kind==='opening')||null;
   const movementRows=sourceRows.filter(r=>r.kind==='movement');
   const pages=[];
-  if(movementRows.length){
-   for(let i=0;i<movementRows.length;i+=PAGE_ROWS){
-    pages.push((i===0&&openingRow?[openingRow]:[]).concat(movementRows.slice(i,i+PAGE_ROWS)));
+  let cursor=0,first=true;
+  while(cursor<movementRows.length){
+   const budget=first?PAGE_UNITS_FIRST:PAGE_UNITS_NEXT;
+   let used=0,chunk=[];
+   if(first&&openingRow){chunk.push(openingRow);used+=1}
+   while(cursor<movementRows.length){
+    const units=rowUnits(movementRows[cursor]);
+    if(chunk.length&&used+units>budget)break;
+    chunk.push(movementRows[cursor]);used+=units;cursor++;
    }
-  }else pages.push(openingRow?[openingRow]:[]);
+   if(!chunk.length&&cursor<movementRows.length){chunk.push(movementRows[cursor]);cursor++}
+   pages.push(chunk);first=false;
+  }
+  if(!pages.length)pages.push(openingRow?[openingRow]:[]);
   let previousBalance=openingRow?Number(openingRow.balance||0):Number(result.openingNet||0);
   pages.forEach((pageRows,pageIndex)=>{
    const isContinuation=pageIndex>0;
