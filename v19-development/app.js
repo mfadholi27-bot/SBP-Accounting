@@ -1774,6 +1774,7 @@ async function printLedger(){
   margin:Number(PRINT_CONFIG.margin)||10,
   fontSize:Number(PRINT_CONFIG.fontSize)||8,
   rowPadding:Number(PRINT_CONFIG.rowPadding)||.85,
+  density:PRINT_CONFIG.ledgerDensity||'compact',
   tableLines:PRINT_CONFIG.tableLines!==false,
   renderMovementRow,
   money:printMoney,
