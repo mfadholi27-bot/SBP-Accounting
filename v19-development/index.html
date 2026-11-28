@@ -453,6 +453,8 @@
 <label>Ukuran huruf (pt)<input id="print-font-size" type="number" min="6" max="14" step=".5"></label>
 <label>Jarak isi tabel (mm)<input id="print-row-padding" type="number" min=".5" max="4" step=".1"></label>
 <label>Kepadatan baris Buku Besar<select id="ledger-density"><option value="auto">Otomatis (menyesuaikan isi)</option><option value="normal">Normal — lebih lega</option><option value="compact" selected>Padat — hemat kertas</option><option value="dense">Sangat padat — maksimal</option></select></label>
+<label>Target baris transaksi per lembar<select id="ledger-target-rows"><option value="0">Otomatis — isi sesuai tinggi kertas</option><option value="20">20 baris</option><option value="25">25 baris</option><option value="30" selected>30 baris (rekomendasi)</option><option value="35">35 baris</option><option value="40">40 baris</option><option value="custom">Jumlah sendiri</option></select></label>
+<label id="ledger-custom-rows-wrap" hidden>Jumlah baris sendiri<input id="ledger-custom-rows" type="number" min="5" max="80" step="1" value="30"></label>
 <label>Warna header tabel<input id="print-header-color" type="color"></label>
 </div>
 <div class="print-settings-options"><label><input type="checkbox" id="print-brand"> Tampilkan identitas SBP Accounting</label><label><input type="checkbox" id="print-date"> Tampilkan tanggal dan waktu cetak</label><label><input type="checkbox" id="print-footer"> Tampilkan footer dokumen</label><label><input type="checkbox" id="print-summary"> Tampilkan ringkasan laporan</label><label><input type="checkbox" id="print-signatures"> Tampilkan kolom tanda tangan</label><label><input type="checkbox" id="print-lines"> Tampilkan garis tabel</label></div>
@@ -483,8 +485,8 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 DEVELOPMENT · Data Terpisah</span><span id="build-stamp" class="build-stamp" data-build="87"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-SMART-LEDGER-PAGEFILL-087</span><span>Build 087: pengisian halaman adaptif; halaman lanjutan memakai area lebih maksimal tanpa mengulang cadangan kop dan ringkasan · Build 082/081/080/079 dipertahankan · Branch development</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 DEVELOPMENT · Data Terpisah</span><span id="build-stamp" class="build-stamp" data-build="88"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-SMART-LEDGER-ROWS-PER-PAGE-088</span><span>Build 088: pengaturan target jumlah baris transaksi per lembar dengan batas tinggi fisik kertas dan pengukuran baris aktual · Build 082/081/080/079 dipertahankan · Branch development</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="ledger-print-engine.js?v=087"></script>
-<script src="app.js?v=212"></script>
+<script src="ledger-print-engine.js?v=088"></script>
+<script src="app.js?v=213"></script>
 </body></html>
