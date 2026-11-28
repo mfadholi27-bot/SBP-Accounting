@@ -1,4 +1,4 @@
-/* SBP Accounting V19 — Build 085 smart paper saver pagination engine.
+/* SBP Accounting V19 — Build 086 smart row density pagination engine.
    Local-only, read-only presentation layer. Measures rendered table rows in a hidden
    same-origin document; never estimates row height from description character counts. */
 (function(global){
@@ -15,15 +15,23 @@
   const pageHeight=landscape?Math.min(...paper):Math.max(...paper);
   const margin=Math.max(5,Math.min(25,Number(o.margin)||10));
   const fontSize=Math.max(6,Math.min(12,Number(o.fontSize)||8));
-  const rowPadding=Math.max(.5,Math.min(3,Number(o.rowPadding)||.85));
+  const densityProfile={
+   auto:{font:fontSize,padding:rowPadding,line:1.25},
+   normal:{font:8,padding:1.15,line:1.25},
+   compact:{font:7.5,padding:.7,line:1.18},
+   dense:{font:7,padding:.45,line:1.12}
+  };
+  const density=densityProfile[o.density]||densityProfile.compact;
+  const effectiveFont=density.font,effectivePadding=density.padding;
+
   const contentWidth=(pageWidth-2*(margin+5))*MM_TO_PX;
   const pageHeightPx=(pageHeight-2*(margin+5))*MM_TO_PX;
   // Reserve only the real document header and a small printer-safe footer area.
   // Build 084 reserved 38mm above the table, leaving too much unused paper.
   const topReserve=21*MM_TO_PX,bottomReserve=5*MM_TO_PX;
   const pageBudget=Math.max(180,pageHeightPx-topReserve-bottomReserve);
-  const tableStyle='width:'+contentWidth+'px;table-layout:fixed;border-collapse:collapse;font:'+fontSize+'pt Arial,Helvetica,sans-serif;color:#17212b';
-  const cellStyle='border:'+(o.tableLines?'1px solid #aebbb4':'0')+';padding:'+rowPadding+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:1.25';
+  const tableStyle='width:'+contentWidth+'px;table-layout:fixed;border-collapse:collapse;font:'+effectiveFont+'pt Arial,Helvetica,sans-serif;color:#17212b';
+  const cellStyle='border:'+(o.tableLines?'1px solid #aebbb4':'0')+';padding:'+effectivePadding+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:'+density.line';
   const header='<tr><th>TANGGAL</th><th>NO. BUKTI</th><th>KETERANGAN</th><th>DEBIT</th><th>KREDIT</th><th>SALDO</th></tr>';
   const colgroup='<colgroup><col style="width:12%"><col style="width:14%"><col style="width:34%"><col style="width:13.33%"><col style="width:13.33%"><col style="width:13.34%"></colgroup>';
   const measurementFrame=document.createElement('iframe');
@@ -105,5 +113,5 @@
   const html=pages.map((rows,i)=>'<section class="ledger-print-page'+(i<pages.length-1?' ledger-print-page-break':'')+'"><table class="sbp-print-table ledger-table ledger-master-table">'+colgroup+'<thead>'+header+'</thead><tbody>'+rows+'</tbody></table></section>').join('');
   return {html,pageCount:pages.length};
  }
- global.SBPLedgerPrintEngine={version:'085.0',paginate};
+ global.SBPLedgerPrintEngine={version:'086.0',paginate};
 })(window);
