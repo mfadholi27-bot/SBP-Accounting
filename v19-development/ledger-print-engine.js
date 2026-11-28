@@ -15,6 +15,7 @@
   const pageHeight=landscape?Math.min(...paper):Math.max(...paper);
   const margin=Math.max(5,Math.min(25,Number(o.margin)||10));
   const fontSize=Math.max(6,Math.min(12,Number(o.fontSize)||8));
+  const rowPadding=Math.max(.5,Math.min(3,Number(o.rowPadding)||.85));
   const densityProfile={
    auto:{font:fontSize,padding:rowPadding,line:1.25},
    normal:{font:8,padding:1.15,line:1.25},
@@ -110,7 +111,7 @@
   });
   if(page.hasContent)closePage(false);
   measurementFrame.remove();
-  const html=pages.map((rows,i)=>'<section class="ledger-print-page'+(i<pages.length-1?' ledger-print-page-break':'')+'"><table class="sbp-print-table ledger-table ledger-master-table">'+colgroup+'<thead>'+header+'</thead><tbody>'+rows+'</tbody></table></section>').join('');
+  const html='<style>.ledger-print-page .ledger-table{font-size:'+effectiveFont+'pt!important}.ledger-print-page .ledger-table th,.ledger-print-page .ledger-table td{padding:'+effectivePadding+'mm 1mm!important;line-height:'+density.line+'!important}</style>'+pages.map((rows,i)=>'<section class="ledger-print-page'+(i<pages.length-1?' ledger-print-page-break':'')+'"><table class="sbp-print-table ledger-table ledger-master-table">'+colgroup+'<thead>'+header+'</thead><tbody>'+rows+'</tbody></table></section>').join('');
   return {html,pageCount:pages.length};
  }
  global.SBPLedgerPrintEngine={version:'086.0',paginate};
