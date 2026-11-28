@@ -1,4 +1,4 @@
-/* SBP Accounting V19 — Build 086 smart row density pagination engine.
+/* SBP Accounting V19 — Build 087 smart page fill pagination engine.
    Local-only, read-only presentation layer. Measures rendered table rows in a hidden
    same-origin document; never estimates row height from description character counts. */
 (function(global){
@@ -27,10 +27,11 @@
 
   const contentWidth=(pageWidth-2*(margin+5))*MM_TO_PX;
   const pageHeightPx=(pageHeight-2*(margin+5))*MM_TO_PX;
-  // Reserve only the real document header and a small printer-safe footer area.
-  // Build 084 reserved 38mm above the table, leaving too much unused paper.
-  const topReserve=21*MM_TO_PX,bottomReserve=5*MM_TO_PX;
-  const pageBudget=Math.max(180,pageHeightPx-topReserve-bottomReserve);
+  // First page shares space with the company heading and report summary.
+  // Continuation pages do not repeat that heading/summary, so reclaim that space.
+  const firstPageBudget=Math.max(180,pageHeightPx-21*MM_TO_PX-5*MM_TO_PX);
+  const continuationPageBudget=Math.max(180,pageHeightPx-5*MM_TO_PX);
+  const pageBudget=()=>pages.length===0?firstPageBudget:continuationPageBudget;
   const tableStyle='width:'+contentWidth+'px;table-layout:fixed;border-collapse:collapse;font:'+effectiveFont+'pt Arial,Helvetica,sans-serif;color:#17212b';
   const cellStyle='border:'+(o.tableLines?'1px solid #aebbb4':'0')+';padding:'+effectivePadding+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:'+density.line;
   const header='<tr><th>TANGGAL</th><th>NO. BUKTI</th><th>KETERANGAN</th><th>DEBIT</th><th>KREDIT</th><th>SALDO</th></tr>';
@@ -85,7 +86,7 @@
    const openingHtml=opening?render(opening):'';
    const baseHeight=heightOf(firstHeading)+heightOf(firstSummary)+(opening?heightOf(openingHtml):0);
    const minimumFooter=heightOf(subtotalRow(0,0,previousBalance))+heightOf(finalRow(result,0,0));
-   if(page.hasContent&&page.used+baseHeight+minimumFooter>pageBudget)closePage(true);
+   if(page.hasContent&&page.used+baseHeight+minimumFooter>pageBudget())closePage(true);
    add(firstHeading,heightOf(firstHeading));
    add(firstSummary,heightOf(firstSummary));
    if(opening)add(openingHtml,heightOf(openingHtml),{balance:previousBalance});
@@ -93,7 +94,7 @@
     const r=movements[cursor],rowHtml=render(r),rowHeight=heightOf(rowHtml);
     const remainingAfter=movements.length-cursor-1;
     const reserve=heightOf(subtotalRow(0,0,r.balance))+(remainingAfter?heightOf(continueRow()):heightOf(finalRow(result,0,0)));
-    if(page.used+rowHeight+reserve>pageBudget&&page.hasMovement){
+    if(page.used+rowHeight+reserve>pageBudget()&&page.hasMovement){
      closePage(true);
      const h=headingRow(result.account,true),c=carryRow(previousBalance);
      add(h,heightOf(h));add(c,heightOf(c));
@@ -104,7 +105,7 @@
    }
    const debit=movements.reduce((n,r)=>n+Number(r.debit||0),0),credit=movements.reduce((n,r)=>n+Number(r.credit||0),0);
    const final=finalRow(result,debit,credit),subHeight=heightOf(subtotalRow(0,0,previousBalance)),finalHeight=heightOf(final);
-   if(page.used+subHeight+finalHeight>pageBudget&&page.hasContent){
+   if(page.used+subHeight+finalHeight>pageBudget()&&page.hasContent){
     closePage(true);const h=headingRow(result.account,true),c=carryRow(previousBalance);add(h,heightOf(h));add(c,heightOf(c));
    }
    add(final,finalHeight);
@@ -114,5 +115,5 @@
   const html='<style>.ledger-print-page .ledger-table{font-size:'+effectiveFont+'pt!important}.ledger-print-page .ledger-table th,.ledger-print-page .ledger-table td{padding:'+effectivePadding+'mm 1mm!important;line-height:'+density.line+'!important}</style>'+pages.map((rows,i)=>'<section class="ledger-print-page'+(i<pages.length-1?' ledger-print-page-break':'')+'"><table class="sbp-print-table ledger-table ledger-master-table">'+colgroup+'<thead>'+header+'</thead><tbody>'+rows+'</tbody></table></section>').join('');
   return {html,pageCount:pages.length};
  }
- global.SBPLedgerPrintEngine={version:'086.0',paginate};
+ global.SBPLedgerPrintEngine={version:'087.0',paginate};
 })(window);
