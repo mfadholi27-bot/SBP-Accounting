@@ -1619,7 +1619,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  'th,td{'+(PRINT_CONFIG.tableLines?'border:1px solid #aebbb4;':'border:0;')+'padding:'+Math.max(.5,Math.min(3,Number(PRINT_CONFIG.rowPadding)||1.2))+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:1.25}td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;overflow-wrap:normal}'+
  '.sbp-print-table{font-size:inherit}.sbp-print-table th{font-size:.95em}.sbp-print-table td:nth-child(2),.sbp-print-table td:nth-child(3){overflow-wrap:anywhere}'+
  '.sbp-print-table tr.journal-subtotal{break-inside:avoid;page-break-inside:avoid}.sbp-print-table tr.journal-subtotal th{background:#edf3ef!important;font-weight:800}'+
- '.sbp-print-table.ledger-table{table-layout:fixed;width:100%;min-width:100%}.sbp-print-table.ledger-table th:nth-child(1){width:12%}.sbp-print-table.ledger-table th:nth-child(2){width:14%}.sbp-print-table.ledger-table th:nth-child(3){width:34%}.sbp-print-table.ledger-table th:nth-child(4),.sbp-print-table.ledger-table th:nth-child(5),.sbp-print-table.ledger-table th:nth-child(6){width:13.33%}.ledger-scroll{width:100%;max-width:100%;overflow:auto}.ledger-account-heading th{background:#e4eee8!important;text-align:left!important;font-size:10pt;padding:2mm!important}.ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-account-summary span{display:inline-block;margin-right:6mm}'+
+ '.sbp-print-table.ledger-table{table-layout:fixed;width:100%;min-width:100%}.sbp-print-table.ledger-table th:nth-child(1){width:12%}.sbp-print-table.ledger-table th:nth-child(2){width:14%}.sbp-print-table.ledger-table th:nth-child(3){width:34%}.sbp-print-table.ledger-table th:nth-child(4),.sbp-print-table.ledger-table th:nth-child(5),.sbp-print-table.ledger-table th:nth-child(6){width:13.33%}.ledger-scroll{width:100%;max-width:100%;overflow:auto}.ledger-account-heading th{background:#e4eee8!important;text-align:left!important;font-size:9pt;padding:1.4mm!important}.ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-account-summary span{display:inline-block;margin-right:6mm}.ledger-page-subtotal td{background:#edf3ef;font-weight:700;font-size:7pt}.ledger-page-subtotal .carry-label{font-weight:800;text-align:left}.ledger-continuation-start{break-before:page;page-break-before:always}.ledger-carry-row td{background:#fff8e6;font-weight:700}.ledger-account-final td{background:#e5f2e9;font-weight:800;border-top:1.5px solid #176b4a}'+
  '.sbp-print-table.trial-balance-table{table-layout:fixed}.sbp-print-table.trial-balance-table th:nth-child(1){width:12%}.sbp-print-table.trial-balance-table th:nth-child(2){width:32%}.sbp-print-table.trial-balance-table th:nth-child(n+3){width:14%}'+
  '.sbp-print-table.opening-balance-table{table-layout:fixed}.sbp-print-table.opening-balance-table th:nth-child(1){width:8%}.sbp-print-table.opening-balance-table th:nth-child(2){width:14%}.sbp-print-table.opening-balance-table th:nth-child(3){width:30%}.sbp-print-table.opening-balance-table th:nth-child(4){width:28%}.sbp-print-table.opening-balance-table th:nth-child(5){width:20%}'+
  '.sbp-print-table.accounts-table{table-layout:fixed}.sbp-print-table.accounts-table th:nth-child(1){width:12%}.sbp-print-table.accounts-table th:nth-child(2){width:28%}.sbp-print-table.accounts-table th:nth-child(3){width:60%}'+
@@ -1763,12 +1763,42 @@ async function printLedger(){
  const results=codes.map(code=>getLedgerTransactionsRange(selection.from,selection.to,code)).filter(Boolean);
  if(!results.length){toast('Data Buku Besar tidak dapat dihitung. Periksa periode dan akun.');return}
  const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0),totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
+ /* BUILD 082 — continuous ledger pages: compact account flow, page subtotals and carry-forward.
+    Carry rows are presentation-only; they are excluded from movement debit/credit totals. */
+ const PAGE_ROWS=22;
  let rows='';
  results.forEach(result=>{
-  const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),cr=moves.reduce((n,r)=>n+r.credit,0);
-  rows+='<tr class="ledger-account-heading"><th colspan="6">'+esc(result.account.code)+' · '+esc(result.account.name)+'</th></tr>';
-  rows+='<tr class="ledger-account-summary"><td colspan="6"><span>Saldo awal: <b>'+esc(ledgerNetDisplay(result.openingNet))+'</b></span><span>Mutasi debit: <b>'+esc(printMoney(d))+'</b></span><span>Mutasi kredit: <b>'+esc(printMoney(cr))+'</b></span><span>Saldo akhir: <b>'+esc(ledgerNetDisplay(result.endingNet))+'</b></span></td></tr>';
-  rows+=result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>').join('');
+  const sourceRows=Array.isArray(result.rows)?result.rows:[];
+  const openingRow=sourceRows.find(r=>r.kind==='opening')||null;
+  const movementRows=sourceRows.filter(r=>r.kind==='movement');
+  const pages=[];
+  const firstPageRows=openingRow?[openingRow]:[];
+  if(firstPageRows.length||movementRows.length===0)pages.push(firstPageRows);
+  for(let i=0;i<movementRows.length;i+=PAGE_ROWS)pages.push(movementRows.slice(i,i+PAGE_ROWS));
+  if(!pages.length)pages.push([]);
+  let previousBalance=openingRow?Number(openingRow.balance||0):Number(result.openingNet||0);
+  pages.forEach((pageRows,pageIndex)=>{
+   const isContinuation=pageIndex>0;
+   const pageDebit=pageRows.filter(r=>r.kind==='movement').reduce((n,r)=>n+Number(r.debit||0),0);
+   const pageCredit=pageRows.filter(r=>r.kind==='movement').reduce((n,r)=>n+Number(r.credit||0),0);
+   const pageLast=pageRows.length?pageRows[pageRows.length-1]:null;
+   const pageBalance=pageLast?Number(pageLast.balance||0):previousBalance;
+   rows+='<tr class="ledger-account-heading'+(isContinuation?' ledger-continuation-start':'')+'"><th colspan="6">'+esc(result.account.code)+' · '+esc(result.account.name)+(isContinuation?' — LANJUTAN':'')+'</th></tr>';
+   if(isContinuation){
+    rows+='<tr class="ledger-carry-row"><td colspan="5" class="carry-label">SALDO PINDAHAN DARI HALAMAN '+pageIndex+'</td><td class="num">'+esc(ledgerNetDisplay(previousBalance))+'</td></tr>';
+   }else{
+    rows+='<tr class="ledger-account-summary"><td colspan="6"><span>Saldo awal: <b>'+esc(ledgerNetDisplay(result.openingNet))+'</b></span></td></tr>';
+   }
+   rows+=pageRows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>').join('');
+   rows+='<tr class="ledger-page-subtotal"><td colspan="3">SUBTOTAL HALAMAN '+(pageIndex+1)+'</td><td class="num">'+printMoney(pageDebit)+'</td><td class="num">'+printMoney(pageCredit)+'</td><td class="num">'+ledgerNetDisplay(pageBalance)+'</td></tr>';
+   if(pageIndex<pages.length-1){
+    rows+='<tr class="ledger-page-subtotal"><td colspan="6" style="text-align:right">BERSAMBUNG KE HALAMAN BERIKUTNYA →</td></tr>';
+   }else{
+    const d=movementRows.reduce((n,r)=>n+Number(r.debit||0),0),cr=movementRows.reduce((n,r)=>n+Number(r.credit||0),0);
+    rows+='<tr class="ledger-account-final"><td colspan="3">TOTAL AKUN · SALDO AKHIR</td><td class="num">'+printMoney(d)+'</td><td class="num">'+printMoney(cr)+'</td><td class="num">'+ledgerNetDisplay(result.endingNet)+'</td></tr>';
+   }
+   if(pageLast)previousBalance=Number(pageLast.balance||0);
+  });
  });
  const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+
  '<div class="ledger-scroll"><table class="sbp-print-table ledger-table ledger-master-table"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>TANGGAL</th><th>NO. BUKTI</th><th>KETERANGAN</th><th>DEBIT</th><th>KREDIT</th><th>SALDO</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
@@ -1777,7 +1807,7 @@ async function printLedger(){
   let persistedUnchanged=false,persistedVerified=false;
   try{const after=JSON.stringify(await readPersistedAccountingState());persistedVerified=persistedBefore!==null;persistedUnchanged=persistedVerified&&after===persistedBefore}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sesudah cetak gagal:',err)}
   const pass=memoryUnchanged&&persistedVerified&&persistedUnchanged;
-  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes};
+  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,layout:'continuous-with-page-subtotals-and-carry-forward'};
   console.info('[SBP V19] Hasil uji integritas cetak Buku Besar',detail);
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
