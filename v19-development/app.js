@@ -1599,7 +1599,7 @@ function printTable(headers,rows,foot='',tableClass=''){return '<table class="sb
 function printSummary(items){return PRINT_CONFIG.summary?'<section class="sbp-print-summary">'+items.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>').join('')+'</section>':''}
 function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-print-signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':''}
 let SBP_PRINT_ACTIVE=false;
-function printDocument(title,subtitle,body,orientation='portrait',afterPrint=null){
+function printDocument(title,subtitle,body,orientation='portrait',afterPrint=null,studioOptions=null){
  if(SBP_PRINT_ACTIVE){toast('Print Studio sedang terbuka. Selesaikan atau tutup pratinjau sebelumnya terlebih dahulu.');return null}
  const paperMap={A4:'210mm 297mm',F4:'215mm 330mm',Letter:'8.5in 11in',Legal:'8.5in 14in'};
  const pageOrientation=PRINT_CONFIG.orientation==='auto'?orientation:PRINT_CONFIG.orientation;
@@ -1642,7 +1642,14 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  const heading=document.createElement('div');heading.style.cssText='flex:1;min-width:180px';heading.innerHTML='<b style="display:block;font-size:14px">PRINT STUDIO</b><span style="opacity:.75;font-size:11px">'+esc(title)+' · Tarik garis kolom untuk mengatur lebar</span>';
  const makeButton=(label,bg)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='border:1px solid #ffffff55;border-radius:8px;padding:9px 13px;background:'+bg+';color:#fff;font-weight:700;cursor:pointer';return b};
  const resetBtn=makeButton('Reset Lebar','#315b47'),printBtn=makeButton('Cetak / Simpan PDF','#16824f'),closeBtn=makeButton('Tutup','#475569');
- bar.append(heading,resetBtn,printBtn,closeBtn);
+ let rowTargetControl=null,rowTargetLabel=null;
+  if(studioOptions&&typeof studioOptions.onRowsChange==='function'){
+   rowTargetLabel=document.createElement('label');rowTargetLabel.textContent='Baris per lembar';rowTargetLabel.style.cssText='display:flex;align-items:center;gap:7px;font:12px Arial,sans-serif;color:#fff;white-space:nowrap';
+   rowTargetControl=document.createElement('select');rowTargetControl.style.cssText='border:1px solid #ffffff66;border-radius:7px;padding:8px 10px;background:#fff;color:#17212b;font-weight:700;min-width:130px';
+   [['0','Otomatis'],['20','20 baris'],['25','25 baris'],['30','30 baris'],['35','35 baris'],['40','40 baris'],['custom','Jumlah sendiri']].forEach(([v,t])=>{const op=document.createElement('option');op.value=v;op.textContent=t;rowTargetControl.appendChild(op)});
+   rowTargetControl.value=String(studioOptions.targetRows??30);rowTargetLabel.appendChild(rowTargetControl);
+  }
+  bar.append(heading);if(rowTargetLabel)bar.append(rowTargetLabel);bar.append(resetBtn,printBtn,closeBtn);
  const stage=document.createElement('div');stage.style.cssText='flex:1;min-height:0;background:#dce2df;border-radius:0 0 12px 12px;overflow:hidden;box-shadow:0 16px 50px #0005';stage.appendChild(frame);overlay.append(bar,stage);document.body.appendChild(overlay);
  SBP_PRINT_ACTIVE=true;
  let printHandled=false,printStarted=false,printFallbackTimer=null;
@@ -1734,7 +1741,12 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
   catch(err){printStarted=false;toast('Dialog cetak gagal dibuka: '+err.message)}
  };
  const doc=frame.contentDocument;if(!doc){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
- doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'html,body{overflow-x:auto}body{padding:5mm}.sheet{margin:0 auto;width:100%;max-width:100%}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div>')+'</header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
+ const writePreview=(nextBody,nextSubtitle=subtitle)=>{
+   doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'html,body{overflow-x:auto}body{padding:5mm}.sheet{margin:0 auto;width:100%;max-width:100%}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(nextSubtitle)+'</p></div>')+'</header>'+meta+nextBody+signatures+footer+'</main></body></html>');doc.close();
+   requestAnimationFrame(()=>{try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal memperbarui pratinjau:',err)}});
+  };
+  writePreview(body);
+  if(rowTargetControl)rowTargetControl.addEventListener('change',()=>{const result=studioOptions.onRowsChange(Number(rowTargetControl.value));if(!result||!result.body){toast('Pratinjau tidak dapat diperbarui.');return}writePreview(result.body,result.subtitle||subtitle)});
  try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal mengaktifkan pengatur kolom:',err);toast('Pengatur lebar kolom gagal dimuat. Coba tutup dan buka Print Studio kembali.')}
  return frame;
 }
@@ -1767,23 +1779,15 @@ async function printLedger(){
  const totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
  if(!window.SBPLedgerPrintEngine){toast('Mesin cetak Buku Besar belum termuat. Muat ulang aplikasi.');return}
  const renderMovementRow=r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number||'')+'</td><td>'+esc(r.description||'')+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>';
- const paged=window.SBPLedgerPrintEngine.paginate({
-  results,
-  paper:PRINT_CONFIG.paper||'F4',
-  orientation:PRINT_CONFIG.orientation==='auto'?'landscape':PRINT_CONFIG.orientation,
-  margin:Number(PRINT_CONFIG.margin)||10,
-  fontSize:Number(PRINT_CONFIG.fontSize)||8,
-  rowPadding:Number(PRINT_CONFIG.rowPadding)||.85,
-  density:PRINT_CONFIG.ledgerDensity||'compact',
-  targetRows:Number(PRINT_CONFIG.ledgerTargetRows)||30,
-  tableLines:PRINT_CONFIG.tableLines!==false,
-  renderMovementRow,
-  money:printMoney,
-  net:ledgerNetDisplay,
-  escape:esc
- });
- if(!paged||!paged.html){toast('Mesin paginasi tidak dapat membentuk halaman Buku Besar.');return}
- const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Jumlah halaman',String(paged.pageCount)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+paged.html;
+ const buildLedgerPreview=targetRows=>{
+  const paged=window.SBPLedgerPrintEngine.paginate({results,paper:PRINT_CONFIG.paper||'F4',orientation:PRINT_CONFIG.orientation==='auto'?'landscape':PRINT_CONFIG.orientation,margin:Number(PRINT_CONFIG.margin)||10,fontSize:Number(PRINT_CONFIG.fontSize)||8,rowPadding:Number(PRINT_CONFIG.rowPadding)||.85,density:PRINT_CONFIG.ledgerDensity||'compact',targetRows:Number(targetRows)||0,tableLines:PRINT_CONFIG.tableLines!==false,renderMovementRow,money:printMoney,net:ledgerNetDisplay,escape:esc});
+  if(!paged||!paged.html)return null;
+  const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Jumlah halaman',String(paged.pageCount)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+paged.html;
+  return {body,pageCount:paged.pageCount};
+ };
+ const initialRows=Number(PRINT_CONFIG.ledgerTargetRows)||30,initialPreview=buildLedgerPreview(initialRows);
+ if(!initialPreview){toast('Mesin paginasi tidak dapat membentuk halaman Buku Besar.');return}
+ const paged={pageCount:initialPreview.pageCount},body=initialPreview.body;
  const verify=async()=>{
   const memoryUnchanged=JSON.stringify(state)===memoryBefore;
   let persistedUnchanged=false,persistedVerified=false;
@@ -1794,7 +1798,7 @@ async function printLedger(){
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun · '+paged.pageCount+' halaman',body,'landscape',verify);
+ printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun · '+paged.pageCount+' halaman',body,'landscape',verify,{targetRows:initialRows,onRowsChange:target=>{const next=buildLedgerPreview(target);return next?{body:next.body,subtitle:'Periode '+selection.label+' · '+results.length+' akun · '+next.pageCount+' halaman'}:null}});
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
