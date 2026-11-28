@@ -1,4 +1,4 @@
-/* BUILD 072 — Visible in-cell resize handles and full-width table grid */
+/* BUILD 085 — Smart Paper Saver: measured DOM ledger pagination and compact page packing */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1619,7 +1619,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  'th,td{'+(PRINT_CONFIG.tableLines?'border:1px solid #aebbb4;':'border:0;')+'padding:'+Math.max(.5,Math.min(3,Number(PRINT_CONFIG.rowPadding)||1.2))+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:1.25}td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;overflow-wrap:normal}'+
  '.sbp-print-table{font-size:inherit}.sbp-print-table th{font-size:.95em}.sbp-print-table td:nth-child(2),.sbp-print-table td:nth-child(3){overflow-wrap:anywhere}'+
  '.sbp-print-table tr.journal-subtotal{break-inside:avoid;page-break-inside:avoid}.sbp-print-table tr.journal-subtotal th{background:#edf3ef!important;font-weight:800}'+
- '.ledger-print-page{width:100%;margin:0 0 5mm;break-inside:auto;page-break-inside:auto}.ledger-print-page-break{break-after:page;page-break-after:always}.ledger-print-page .ledger-account-heading td{background:#e4eee8!important;font-weight:800;text-align:left;padding:1.4mm!important}.ledger-print-page .ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-print-page .ledger-carry-row td{background:#fff8e6;font-weight:700}.ledger-print-page .ledger-page-subtotal td{background:#edf3ef;font-weight:700;font-size:7pt}.ledger-print-page .ledger-account-final td{background:#e5f2e9;font-weight:800;border-top:1.5px solid #176b4a}'+
+ '.ledger-print-page{width:100%;margin:0;break-inside:auto;page-break-inside:auto}.ledger-print-page-break{break-after:page;page-break-after:always}.ledger-print-page .ledger-account-heading td{background:#e4eee8!important;font-weight:800;text-align:left;padding:1.4mm!important}.ledger-print-page .ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-print-page .ledger-carry-row td{background:#fff8e6;font-weight:700}.ledger-print-page .ledger-page-subtotal td{background:#edf3ef;font-weight:700;font-size:7pt}.ledger-print-page .ledger-account-final td{background:#e5f2e9;font-weight:800;border-top:1.5px solid #176b4a}'+
  '.sbp-print-table.ledger-table{table-layout:fixed;width:100%;min-width:100%}.sbp-print-table.ledger-table th:nth-child(1){width:12%}.sbp-print-table.ledger-table th:nth-child(2){width:14%}.sbp-print-table.ledger-table th:nth-child(3){width:34%}.sbp-print-table.ledger-table th:nth-child(4),.sbp-print-table.ledger-table th:nth-child(5),.sbp-print-table.ledger-table th:nth-child(6){width:13.33%}.ledger-scroll{width:100%;max-width:100%;overflow:auto}.ledger-account-heading th{background:#e4eee8!important;text-align:left!important;font-size:9pt;padding:1.4mm!important}.ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-account-summary span{display:inline-block;margin-right:6mm}.ledger-page-subtotal td{background:#edf3ef;font-weight:700;font-size:7pt}.ledger-page-subtotal .carry-label{font-weight:800;text-align:left}.ledger-continuation-start{break-before:page;page-break-before:always}.ledger-carry-row td{background:#fff8e6;font-weight:700}.ledger-account-final td{background:#e5f2e9;font-weight:800;border-top:1.5px solid #176b4a}'+
  '.sbp-print-table.trial-balance-table{table-layout:fixed}.sbp-print-table.trial-balance-table th:nth-child(1){width:12%}.sbp-print-table.trial-balance-table th:nth-child(2){width:32%}.sbp-print-table.trial-balance-table th:nth-child(n+3){width:14%}'+
  '.sbp-print-table.opening-balance-table{table-layout:fixed}.sbp-print-table.opening-balance-table th:nth-child(1){width:8%}.sbp-print-table.opening-balance-table th:nth-child(2){width:14%}.sbp-print-table.opening-balance-table th:nth-child(3){width:30%}.sbp-print-table.opening-balance-table th:nth-child(4){width:28%}.sbp-print-table.opening-balance-table th:nth-child(5){width:20%}'+
@@ -1773,7 +1773,7 @@ async function printLedger(){
   orientation:PRINT_CONFIG.orientation==='auto'?'landscape':PRINT_CONFIG.orientation,
   margin:Number(PRINT_CONFIG.margin)||10,
   fontSize:Number(PRINT_CONFIG.fontSize)||8,
-  rowPadding:Number(PRINT_CONFIG.rowPadding)||1.2,
+  rowPadding:Number(PRINT_CONFIG.rowPadding)||.85,
   tableLines:PRINT_CONFIG.tableLines!==false,
   renderMovementRow,
   money:printMoney,
@@ -1787,7 +1787,7 @@ async function printLedger(){
   let persistedUnchanged=false,persistedVerified=false;
   try{const after=JSON.stringify(await readPersistedAccountingState());persistedVerified=persistedBefore!==null;persistedUnchanged=persistedVerified&&after===persistedBefore}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sesudah cetak gagal:',err)}
   const pass=memoryUnchanged&&persistedVerified&&persistedUnchanged;
-  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,pages:paged.pageCount,layout:'measured-dom-pagination'};
+  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,pages:paged.pageCount,layout:'measured-dom-pagination-smart-paper-saver-085'};
   console.info('[SBP V19] Hasil uji integritas cetak Buku Besar',detail);
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
