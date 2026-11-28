@@ -1,4 +1,4 @@
-/* BUILD 059 — Report-specific print layout refinement */
+/* BUILD 072 — Visible in-cell resize handles and full-width table grid */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -235,7 +235,7 @@ function go(page){
   if(isTarget)p.removeAttribute('hidden');
  });
  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
- const labels={'company-identity':'Identitas Perusahaan','annual-budget':'Anggaran Tahunan','import-center':'Pusat Import Data','journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program','debit-notes':'Nota Debet',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Laporan',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data','print-settings':'Pengaturan Cetak'};
+ const labels={'company-identity':'Identitas Perusahaan','annual-budget':'Anggaran Tahunan','import-center':'Pusat Import Data','journal-admin':'Administrasi Jurnal',periods:'Periode Akuntansi',dashboard:'Dashboard','archive-reader':'Pembaca Arsip',archive:'Arsip 5 Tahunan',journal:'Input Jurnal','journal-list':'Daftar jurnal',accounts:'Master Akun','opening-balances':'Saldo Awal ACC & Program','debit-notes':'Nota Debet',ledger:'Buku Besar per Akun',nptrans:'NPTRANS / DBF',reports:'Neraca Percobaan / Laporan','balance-comparison':'Neraca Komparatif',backup:'Backup & Restore',audit:'Riwayat Aktivitas',validation:'Validasi & Integritas Data','print-settings':'Pengaturan Cetak'};
  $('page-title').textContent=labels[page]||page;
  if(page==='periods')renderPeriodControl();if(page==='company-identity')renderCompanyIdentity();if(page==='annual-budget')renderAnnualBudgets();
  if(page==='dashboard')renderDashboard();if(page==='journal-list')renderJournals();
@@ -245,6 +245,7 @@ function go(page){
  if(page==='opening-balances')renderOpeningBalances();
  if(page==='nptrans')renderNptrans();
  if(page==='reports')renderTrialBalance();
+ if(page==='balance-comparison')renderBalanceComparison();
  if(page==='ledger')renderLedger();
  if(page==='audit')renderAuditLogs();
  if(page==='validation')renderValidation();
@@ -516,17 +517,24 @@ function validateBulkJournals(rows){
   if(state.journals.some(j=>j.number===g.number))errors.push(g.number+': nomor bukti sudah ada di Daftar Jurnal.');
   prepared.push({...g,id:crypto.randomUUID(),status:'draft',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
  }
+ const activePeriod=state.periodControl?.activePeriod||currentMonthKey();
+ prepared.forEach(j=>{
+  const journalPeriod=String(j.date||'').slice(0,7);
+  if(journalPeriod&&journalPeriod!==activePeriod){
+   warnings.push('PERINGATAN PERIODE — '+j.number+' ('+j.date+'): transaksi berada pada '+periodLabel(journalPeriod)+', sedangkan periode kerja aktif adalah '+periodLabel(activePeriod)+'. Periksa tanggal sebelum menyimpan.');
+  }
+ });
  return {prepared,errors,warnings:[...new Set(warnings)]};
 }
 function showBulkPreview(rows){
  const result=validateBulkJournals(rows);pendingBulkJournals=result.errors.length?[]:result.prepared;
  $('bulk-journal-summary').textContent=rows.length+' baris · '+result.prepared.length+' nomor bukti';
- $('bulk-journal-detail').textContent=result.errors.length?'Ditemukan '+result.errors.length+' kesalahan. Perbaiki file sebelum menyimpan.':(result.warnings.length?'Data dapat diimpor sebagai Draft dengan '+result.warnings.length+' catatan penyesuaian.':'Semua data lolos pemeriksaan.');
+ $('bulk-journal-detail').textContent=result.errors.length?'Ditemukan '+result.errors.length+' kesalahan. Perbaiki file sebelum menyimpan.':(result.warnings.length?'Ditemukan '+result.warnings.length+' catatan/peringatan. Periksa rincian sebelum menyimpan.':'Semua data lolos pemeriksaan.');
  const notes=[...result.errors.map(e=>'KESALAHAN: '+e),...result.warnings.map(w=>'CATATAN: '+w)];
  $('bulk-journal-errors').hidden=!notes.length;$('bulk-journal-errors').innerHTML=notes.length?'<b>Hasil pemeriksaan:</b><ul>'+notes.map(e=>'<li>'+esc(e)+'</li>').join('')+'</ul>':'';
  $('bulk-journal-preview-rows').innerHTML=rows.slice(0,100).map(r=>'<tr><td>'+esc(r.date||'—')+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td>'+esc(r.code)+'</td><td>'+money(r.debit)+'</td><td>'+money(r.credit)+'</td></tr>').join('');
  $('bulk-journal-save').disabled=!!result.errors.length;$('bulk-journal-review').hidden=false;
- setMessage('bulk-journal-message',result.errors.length?'Validasi gagal. Tidak ada data yang disimpan.':(result.warnings.length?'Bisa diimpor sebagai Draft. Periksa SANDI dan keseimbangan sebelum melakukan posting.':'Validasi berhasil. Data siap disimpan sebagai Draft.'),result.errors.length?'bad':(result.warnings.length?'':'good'));
+ setMessage('bulk-journal-message',result.errors.length?'Validasi gagal. Tidak ada data yang disimpan.':(result.warnings.length?'Ada catatan/peringatan. Periksa rincian, terutama tanggal di luar Periode Kerja Aktif, sebelum menyimpan sebagai Draft.':'Validasi berhasil. Data siap disimpan sebagai Draft.'),result.errors.length?'bad':(result.warnings.length?'':'good'));
 }
 $('bulk-journal-file').onchange=e=>{const f=e.target.files?.[0];$('bulk-journal-file-name').textContent=f?f.name:'Belum ada file dipilih.';$('bulk-journal-preview').disabled=!f;pendingBulkJournals=[];$('bulk-journal-review').hidden=true};
 $('bulk-journal-preview').onclick=async()=>{const f=$('bulk-journal-file').files?.[0];if(!f)return;try{let rows;if(/\.xlsx?$/i.test(f.name)){if(!window.XLSX)throw Error('Mesin Excel lokal belum siap.');const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:false});let found=null;for(const name of wb.SheetNames){const data=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:true});try{parseBulkJournalRows(data);found=data;break}catch{}}if(!found)throw Error('Format kolom jurnal tidak ditemukan pada sheet Excel.');rows=parseBulkJournalRows(found)}else rows=parseBulkJournalRows(parseCSV(await f.text()));showBulkPreview(rows)}catch(err){pendingBulkJournals=[];$('bulk-journal-review').hidden=true;setMessage('bulk-journal-message','Gagal membaca file: '+err.message,'bad')}};
@@ -1142,6 +1150,136 @@ function renderTrialBalance(){
 }
 $('report-period').value=state.periodControl?.activePeriod||currentMonthKey();
 $('report-period').addEventListener('change',renderTrialBalance);
+const comparisonNow=new Date();$('comparison-date-a').value=(comparisonNow.getFullYear()-1)+'-'+String(comparisonNow.getMonth()+1).padStart(2,'0');
+$('comparison-date-b').value=comparisonNow.toISOString().slice(0,7);
+$('comparison-generate').onclick=renderBalanceComparison;
+$('comparison-export').onclick=exportBalanceComparison;
+$('comparison-print').onclick=printBalanceComparison;
+$('comparison-filter-toggle').onclick=()=>{const panel=$('comparison-filter-panel'),opening=panel.hidden;panel.hidden=!opening;$('comparison-filter-toggle').setAttribute('aria-expanded',String(opening));$('comparison-filter-toggle').innerHTML='<i data-lucide="'+(opening?'chevron-up':'sliders-horizontal')+'"></i> '+(opening?'Sembunyikan Filter':'Filter Laporan');if(window.lucide?.createIcons)window.lucide.createIcons()};
+['comparison-search','comparison-filter-group','comparison-filter-status','comparison-codes','comparison-display-mode'].forEach(id=>$(id).addEventListener(id==='comparison-search'?'input':'change',()=>{if($('comparison-report').dataset.generated==='1')renderBalanceComparison()}));
+
+
+const BALANCE_MAPPING_GROUPS=['Aktiva Lancar','Aktiva Tidak Lancar','Kontra Aktiva','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Ekuitas'];
+let balanceMappingDraft={};
+function initBalanceMapping(){
+ state.balanceMappings=state.balanceMappings&&typeof state.balanceMappings==='object'?state.balanceMappings:{};
+ balanceMappingDraft={...state.balanceMappings};
+ $('mapping-search').oninput=renderBalanceMapping;
+ $('mapping-filter').onchange=renderBalanceMapping;
+ $('mapping-select-all').onchange=e=>document.querySelectorAll('#mapping-rows .mapping-select').forEach(x=>x.checked=e.target.checked);
+ $('mapping-apply-bulk').onclick=()=>{
+  const group=$('mapping-bulk-group').value,selected=[...document.querySelectorAll('#mapping-rows .mapping-select:checked')];
+  if(!group)return toast('Pilih kelompok tujuan terlebih dahulu.');
+  if(!selected.length)return toast('Centang akun yang akan dipetakan.');
+  selected.forEach(box=>{balanceMappingDraft[box.dataset.code]=group});
+  renderBalanceMapping();toast(selected.length+' akun masuk antrean pemetaan. Tekan Simpan Pemetaan.');
+ };
+ $('mapping-save').onclick=async()=>{
+  const clean={};Object.entries(balanceMappingDraft).forEach(([code,group])=>{if(BALANCE_MAPPING_GROUPS.includes(group))clean[String(code)]=group});
+  state.balanceMappings=clean;await persist();balanceMappingDraft={...clean};
+  setMessage('mapping-message','Pemetaan berhasil disimpan. '+Object.keys(clean).length+' akun telah memiliki kelompok.','good');
+  renderBalanceMapping();toast('Pemetaan SANDI tersimpan.');
+ };
+ renderBalanceMapping();
+}
+function renderBalanceMapping(){
+ if(!$('mapping-rows'))return;
+ const q=($('mapping-search').value||'').trim().toLowerCase(),filter=$('mapping-filter').value;
+ const rows=[...(state.accounts||[])].sort((x,y)=>String(x.code).localeCompare(String(y.code)));
+ const filtered=rows.filter(acc=>{
+  const group=balanceMappingDraft[String(acc.code)]||'';
+  return (!q||(String(acc.code)+' '+String(acc.name)).toLowerCase().includes(q))&&(filter==='all'||(filter==='unmapped'&&!group)||(filter==='mapped'&&!!group));
+ });
+ const mapped=rows.filter(x=>BALANCE_MAPPING_GROUPS.includes(balanceMappingDraft[String(x.code)])).length;
+ $('mapping-status').textContent=rows.length+' akun Master Akun · '+mapped+' sudah dipetakan · '+(rows.length-mapped)+' belum dipetakan · '+filtered.length+' ditampilkan';
+ $('mapping-rows').innerHTML=filtered.length?filtered.map(acc=>{
+  const code=String(acc.code),group=balanceMappingDraft[code]||'';
+  return '<tr><td><input class="mapping-select" type="checkbox" data-code="'+esc(code)+'" aria-label="Pilih '+esc(code)+'"></td><td><b>'+esc(code)+'</b></td><td>'+esc(acc.name)+'</td><td><select class="mapping-row-group" data-code="'+esc(code)+'"><option value="">— Belum dipetakan —</option>'+BALANCE_MAPPING_GROUPS.map(g=>'<option value="'+esc(g)+'"'+(group===g?' selected':'')+'>'+esc(g)+'</option>').join('')+'</select></td><td><span class="mapping-pill '+(group?'mapped':'unmapped')+'">'+(group?'Sudah dipetakan':'Belum dipetakan')+'</span></td></tr>';
+ }).join(''):'<tr><td colspan="5" class="empty">Tidak ada akun yang sesuai dengan pencarian atau filter.</td></tr>';
+ document.querySelectorAll('.mapping-row-group').forEach(select=>select.onchange=()=>{balanceMappingDraft[select.dataset.code]=select.value;renderBalanceMapping()});
+ $('mapping-select-all').checked=false;
+}
+function comparisonAsOf(date){
+ // getTrialBalanceRows sudah memuat saldo awal dan seluruh jurnal POSTED bulan tersebut.
+ // Jangan menambahkan mutasi bulan berjalan untuk kedua kalinya.
+ const month=String(date||'').slice(0,7);
+ return getTrialBalanceRows(month).map(r=>({...r,balance:Number(r.balance||0)}));
+}
+function comparisonClassify(code,account){const group=state.balanceMappings?.[String(code)]||'';return BALANCE_MAPPING_GROUPS.includes(group)?group:'Belum Dipetakan';}
+function comparisonPercent(a,b){if(Math.abs(a)<.005)return '—';const pct=(b-a)/Math.abs(a)*100;return (pct>0?'+':'')+pct.toLocaleString('id-ID',{maximumFractionDigits:2})+'%'}
+function comparisonMoney(v){return Math.abs(Number(v)||0)<.005?'—':(v<0?'-':'')+money(Math.abs(v))}
+function comparisonMonthLabel(value){const [year,month]=String(value).split('-').map(Number);return new Date(year,month-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'}).toUpperCase()}
+function comparisonMonthEnd(value){const [year,month]=String(value).split('-').map(Number),day=new Date(Date.UTC(year,month,0)).getUTCDate();return String(year)+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
+function buildBalanceComparison(){
+ const monthA=$('comparison-date-a').value,monthB=$('comparison-date-b').value;
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthA)||!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthB)||monthA===monthB){toast('Pilih dua bulan dan tahun yang valid serta berbeda.');return null}
+ const a=comparisonMonthEnd(monthA),b=comparisonMonthEnd(monthB);
+ const rowsA=comparisonAsOf(a),rowsB=comparisonAsOf(b),mapA=new Map(rowsA.map(r=>[String(r.code).trim(),r.balance])),mapB=new Map(rowsB.map(r=>[String(r.code).trim(),r.balance]));
+ const codes=[...new Set([...mapA.keys(),...mapB.keys()])],accounts=codes.map(code=>{const acc=(state.accounts||[]).find(x=>String(x.code??'').trim()===code)||{},v1=mapA.get(code)||0,v2=mapB.get(code)||0;return {code,name:acc.name||'(Akun tidak ditemukan)',group:comparisonClassify(code,acc),a:v1,b:v2,change:v2-v1}});
+ const order=['Aktiva Lancar','Aktiva Tidak Lancar','Kontra Aktiva','Liabilitas Jangka Pendek','Liabilitas Jangka Panjang','Ekuitas','Belum Dipetakan'];
+ const groupNames=[...order.filter(g=>accounts.some(x=>x.group===g)),...new Set(accounts.map(x=>x.group).filter(g=>!order.includes(g)))];const groups=groupNames.map(g=>({name:g,rows:accounts.filter(x=>x.group===g).sort((x,y)=>x.code.localeCompare(y.code))}));
+ return {a,b,groups,accounts};
+}
+function comparisonDisplayMode(){return $('comparison-display-mode')?.value==='head'?'head':'detail'}
+function comparisonSelectedSandis(data){
+ const raw=String($('comparison-codes')?.value||'').trim(),mode=comparisonDisplayMode();
+ if(!raw)return {codes:null,error:''};
+ const codes=[...new Set(raw.split(/[;,\n\r\t ]+/).map(x=>x.trim()).filter(Boolean))];
+ const known=new Set(data.accounts.map(r=>mode==='head'?String(r.code).trim().slice(0,3):String(r.code).trim()));
+ const invalid=codes.filter(code=>mode==='head'?!/^\d{3}$/.test(code)||!known.has(code):!known.has(code));
+ if(invalid.length)return {codes:null,error:(mode==='head'?'Kepala SANDI tidak ditemukan: ':'SANDI tidak ditemukan: ')+invalid.join(', ')+'. Periksa kembali penulisannya.'};
+ return {codes:new Set(codes),error:''};
+}
+function comparisonColumnFilterValue(r,col){if(col===0)return String(r.code||'');if(col===1)return String(r.name||'');if(col===2)return comparisonMoney(r.a);if(col===3)return comparisonMoney(r.b);if(col===4)return comparisonMoney(r.change);return comparisonPercent(r.a,r.b)}
+function filteredBalanceComparisonGroups(data){
+ const q=String($('comparison-search')?.value||'').trim().toLowerCase(),group=$('comparison-filter-group')?.value||'all',status=$('comparison-filter-status')?.value||'all',selected=comparisonSelectedSandis(data),mode=comparisonDisplayMode(),columnFilters=window.__sbpComparisonColumnFilters||(window.__sbpComparisonColumnFilters={});
+ if(selected.error){toast(selected.error);return []}
+ return data.groups.filter(g=>group==='all'||g.name===group).map(g=>{
+  let rows=g.rows.filter(r=>status==='all'||(status==='mapped'&&r.group!=='Belum Dipetakan')||(status==='unmapped'&&r.group==='Belum Dipetakan'));
+  if(mode==='head'){const heads=new Map();rows.forEach(r=>{const code=String(r.code).trim().slice(0,3);if(selected.codes&&!selected.codes.has(code))return;const item=heads.get(code)||{code,name:'Total Kepala SANDI '+code,a:0,b:0,change:0,group:r.group};item.a+=Number(r.a||0);item.b+=Number(r.b||0);item.change+=Number(r.change||0);heads.set(code,item)});rows=[...heads.values()].sort((x,y)=>x.code.localeCompare(y.code))}
+  else rows=rows.filter(r=>!selected.codes||selected.codes.has(String(r.code).trim()));
+  rows=rows.filter(r=>(!q||(r.code+' '+r.name).toLowerCase().includes(q))&&[0,1,2,3,4,5].every(col=>{const value=String(columnFilters[g.name+'|'+col]||'');return !value||comparisonColumnFilterValue(r,col)===value}));
+  return {...g,rows};
+ }).filter(g=>g.rows.length);
+}
+function renderBalanceComparison(){
+ const data=buildBalanceComparison();if(!data)return;
+ const sum=items=>items.reduce((n,r)=>n+r,0),assetGroups=data.groups.filter(g=>g.name.startsWith('Aktiva')||g.name==='Kontra Aktiva'),liabilityGroups=data.groups.filter(g=>g.name.startsWith('Liabilitas')),equityGroups=data.groups.filter(g=>g.name==='Ekuitas');
+ const groupTotal=(groups,key)=>sum(groups.flatMap(g=>g.rows.map(r=>r[key])));
+ const totalAssetsA=groupTotal(assetGroups,'a'),totalAssetsB=groupTotal(assetGroups,'b'),totalLiabA=groupTotal(liabilityGroups,'a'),totalLiabB=groupTotal(liabilityGroups,'b'),totalEquityA=groupTotal(equityGroups,'a'),totalEquityB=groupTotal(equityGroups,'b');
+ const checkA=totalAssetsA-totalLiabA-totalEquityA,checkB=totalAssetsB-totalLiabB-totalEquityB;
+ const card=(label,x,y)=>'<div class="comparison-card"><span>'+label+'</span><b>'+comparisonMoney(x)+'</b><small>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+': '+comparisonMoney(y)+'</small><small>Selisih: '+comparisonMoney(y-x)+' · '+comparisonPercent(x,y)+'</small></div>';
+ $('comparison-summary').innerHTML=card('Total Aktiva',totalAssetsA,totalAssetsB)+card('Total Liabilitas',totalLiabA,totalLiabB)+card('Total Ekuitas',totalEquityA,totalEquityB)+'<div class="comparison-balance-check"><b>Uji keseimbangan neraca</b><span>'+esc(comparisonMonthLabel(data.a.slice(0,7)))+': '+(Math.abs(checkA)<.005?'SEIMBANG':'SELISIH '+comparisonMoney(checkA))+'</span><span>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+': '+(Math.abs(checkB)<.005?'SEIMBANG':'SELISIH '+comparisonMoney(checkB))+'</span></div>';
+ const visible=filteredBalanceComparisonGroups(data);
+ const displayHead=comparisonDisplayMode()==='head',codeHeading=displayHead?'KEPALA SANDI':'SANDI',nameHeading=displayHead?'NAMA KEPALA':'AKUN';
+ const columnFilters=window.__sbpComparisonColumnFilters||(window.__sbpComparisonColumnFilters={});
+ const renderGroups=selected=>selected.map(g=>'<section class="comparison-group"><h4>'+esc(g.name)+'</h4><table><thead><tr><th>'+codeHeading+'</th><th>'+nameHeading+'</th><th>'+esc(comparisonMonthLabel(data.a.slice(0,7)))+'</th><th>'+esc(comparisonMonthLabel(data.b.slice(0,7)))+'</th><th>SELISIH</th><th>%</th></tr><tr class="comparison-column-filters">'+[codeHeading,nameHeading,comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'SELISIH','%'].map((label,col)=>{const options=[...new Set(g.rows.map(r=>comparisonColumnFilterValue(r,col)))].sort((x,y)=>x.localeCompare(y,'id',{numeric:true}));const current=String(columnFilters[g.name+'|'+col]||'');return '<th><select class="comparison-column-filter" data-filter-group="'+esc(g.name)+'" data-filter-col="'+col+'" aria-label="Filter '+esc(label)+'"><option value="">Semua</option>'+options.map(value=>'<option value="'+esc(value)+'"'+(value===current?' selected':'')+'>'+esc(value)+'</option>').join('')+'</select></th>'}).join('')+'</tr></thead><tbody>'+g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+comparisonMoney(r.a)+'</td><td class="num">'+comparisonMoney(r.b)+'</td><td class="num">'+comparisonMoney(r.change)+'</td><td class="num">'+comparisonPercent(r.a,r.b)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+' (HASIL FILTER)</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.a)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.b)))+'</th><th class="num">'+comparisonMoney(sum(g.rows.map(r=>r.change)))+'</th><th class="num">'+comparisonPercent(sum(g.rows.map(r=>r.a)),sum(g.rows.map(r=>r.b)))+'</th></tr></tfoot></table></section>');
+ const visibleAsset=visible.filter(g=>g.name.startsWith('Aktiva')||g.name==='Kontra Aktiva'),visibleLiab=visible.filter(g=>g.name.startsWith('Liabilitas')),visibleEquity=visible.filter(g=>g.name==='Ekuitas'),visibleUnmapped=visible.filter(g=>g.name==='Belum Dipetakan');
+ $('comparison-report').dataset.generated='1';
+ $('comparison-report').innerHTML='<div class="comparison-report-heading"><b>LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF</b><span>PER '+comparisonMonthLabel(data.a.slice(0,7))+' DAN '+comparisonMonthLabel(data.b.slice(0,7))+'</span><small>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</small></div>'+renderGroups(visibleAsset)+renderGroups(visibleLiab)+renderGroups(visibleEquity)+renderGroups(visibleUnmapped)+'<p class="comparison-footnote">Ringkasan dan uji keseimbangan memakai seluruh akun yang sudah dipetakan. Filter hanya membatasi rincian tabel. Akun Belum Dipetakan tetap terpisah dan tidak masuk subtotal.</p>';
+ document.querySelectorAll('.comparison-column-filter').forEach(input=>{input.oninput=()=>{const filters=window.__sbpComparisonColumnFilters||(window.__sbpComparisonColumnFilters={});filters[input.dataset.filterGroup+'|'+input.dataset.filterCol]=input.value;renderBalanceComparison()}});
+ return data;
+}
+function exportBalanceComparison(){
+ const data=buildBalanceComparison();if(!data)return;
+ const groups=filteredBalanceComparisonGroups(data);const displayHead=comparisonDisplayMode()==='head';const rows=[['LAPORAN POSISI KEUANGAN · NERACA KOMPARATIF'],['MODE TAMPILAN',displayHead?'KEPALA SANDI 3 DIGIT':'RINCIAN AKUN'],['BULAN & TAHUN 1',comparisonMonthLabel(data.a.slice(0,7))],['BULAN & TAHUN 2',comparisonMonthLabel(data.b.slice(0,7))],[],['KELOMPOK',displayHead?'KEPALA SANDI':'SANDI',displayHead?'NAMA KEPALA':'NAMA AKUN',comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'PERUBAHAN','PERSENTASE']];
+ groups.forEach(g=>{rows.push([g.name]);g.rows.forEach(r=>rows.push([g.name,r.code,r.name,r.a,r.b,r.change,Math.abs(r.a)<.005?'':(r.change/Math.abs(r.a))]));rows.push(['TOTAL '+g.name,'','',g.rows.reduce((n,r)=>n+r.a,0),g.rows.reduce((n,r)=>n+r.b,0)])});
+ exportXlsxSheet('Neraca-Komparatif-'+data.a+'-'+data.b+'.xlsx','Neraca Komparatif',rows);
+}
+function printBalanceComparison(){
+ const data=buildBalanceComparison();if(!data)return;
+ const displayHead=comparisonDisplayMode()==='head';
+ const groups=filteredBalanceComparisonGroups(data).map(g=>{
+  const headers=[displayHead?'KEPALA SANDI':'SANDI',displayHead?'NAMA KEPALA':'AKUN',comparisonMonthLabel(data.a.slice(0,7)),comparisonMonthLabel(data.b.slice(0,7)),'%'];
+  const rows=g.rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+esc(comparisonMoney(r.a))+'</td><td class="num">'+esc(comparisonMoney(r.b))+'</td><td class="num">'+esc(comparisonPercent(r.a,r.b))+'</td></tr>').join('');
+  const foot='<tr><th colspan="2">TOTAL '+esc(g.name.toUpperCase())+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'a')))+'</th><th class="num">'+esc(comparisonMoney(sumComparison(g.rows,'b')))+'</th><th class="num">'+esc(comparisonPercent(sumComparison(g.rows,'a'),sumComparison(g.rows,'b')))+'</th></tr>';
+  return '<section class="comparison-print-group"><h3>'+esc(g.name)+'</h3><table class="comparison-print-table"><colgroup><col style="width:11%"><col style="width:29%"><col style="width:22%"><col style="width:22%"><col style="width:16%"></colgroup><thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody><tfoot>'+foot+'</tfoot></table></section>';
+ }).join('');
+ const body='<div class="comparison-print-title"><b>LAPORAN POSISI KEUANGAN</b><h2>NERACA KOMPARATIF</h2><b>PER '+esc(comparisonMonthLabel(data.a.slice(0,7)))+' DAN '+esc(comparisonMonthLabel(data.b.slice(0,7)))+'</b><p>(Dinyatakan dalam Rupiah, kecuali dinyatakan lain)</p></div>'+groups;
+ printDocument('NERACA KOMPARATIF','Per '+comparisonMonthLabel(data.a.slice(0,7))+' dan '+comparisonMonthLabel(data.b.slice(0,7)),body,'landscape');
+}
+function sumComparison(rows,key){return rows.reduce((n,r)=>n+Number(r[key]||0),0)}
+
 
 $('force-delete-mode').addEventListener('change',()=>{const mode=$('force-delete-mode').value,input=$('force-delete-value'),label=$('force-delete-value-label');input.type=mode==='date'?'date':mode==='month'?'month':'number';if(mode==='year'){input.min='1900';input.max='2200';input.step='1';input.placeholder='YYYY';input.value=''}else{input.removeAttribute('min');input.removeAttribute('max');input.removeAttribute('step');input.value=''}label.firstChild.textContent=mode==='date'?'Tanggal':mode==='month'?'Bulan':'Tahun'});
 function journalDeleteMatches(mode,value){
@@ -1460,46 +1598,144 @@ function printMoney(v){return money(Number(v||0))}
 function printTable(headers,rows,foot='',tableClass=''){return '<table class="sbp-print-table '+esc(tableClass)+'"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody>'+(foot?'<tfoot>'+foot+'</tfoot>':'')+'</table>'}
 function printSummary(items){return PRINT_CONFIG.summary?'<section class="sbp-print-summary">'+items.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>').join('')+'</section>':''}
 function printSignatures(){return PRINT_CONFIG.signatures?'<section class="sbp-print-signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':''}
+let SBP_PRINT_ACTIVE=false;
 function printDocument(title,subtitle,body,orientation='portrait',afterPrint=null){
- const old=document.getElementById('sbp-print-frame');if(old)old.remove();
- const frame=document.createElement('iframe');frame.id='sbp-print-frame';frame.title='Pratinjau cetak '+title;
- frame.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(frame);
+ if(SBP_PRINT_ACTIVE){toast('Print Studio sedang terbuka. Selesaikan atau tutup pratinjau sebelumnya terlebih dahulu.');return null}
  const paperMap={A4:'210mm 297mm',F4:'215mm 330mm',Letter:'8.5in 11in',Legal:'8.5in 14in'};
  const pageOrientation=PRINT_CONFIG.orientation==='auto'?orientation:PRINT_CONFIG.orientation;
- const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4, pageSize=pageOrientation==='landscape'?paper.split(' ').reverse().join(' '):paper;
+ const paper=paperMap[PRINT_CONFIG.paper]||paperMap.A4;
+ const pageSize=pageOrientation==='landscape'?paper.split(' ').reverse().join(' '):paper;
  const margin=Math.max(5,Math.min(25,Number(PRINT_CONFIG.margin)||10))+'mm';
  const printed=new Date().toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
- const style='@page{size:'+pageSize+';margin:'+margin+'}'+
- '.journal-line-notes{min-width:38mm;white-space:normal;line-height:1.35}.journal-line-note{margin:0 0 1mm;break-inside:avoid}.journal-line-note b{white-space:nowrap}.muted{color:#64748b;font-style:italic}'+ '@page{@bottom-right{content:"Halaman "+counter(page);font:8pt Arial;color:#64748b}}'+
+ let style='@page{size:'+pageSize+';margin:'+margin+'}'+
+ '@page{@bottom-right{content:"Halaman "+counter(page);font:8pt Arial;color:#64748b}}'+
  '*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#17212b;font:'+Number(PRINT_CONFIG.fontSize||8)+'pt Arial,Helvetica,sans-serif}'+
- '.sheet{width:100%}.header{border-bottom:2px solid #176b4a;padding:0 0 5mm;margin-bottom:3mm}'+
- '.brand{font-size:15pt;font-weight:800;letter-spacing:.5px;color:#145c40}.brand small{display:block;font-size:7.5pt;font-weight:500;letter-spacing:1px;color:#64748b;margin-top:1mm}'+
- '.heading{text-align:center;margin-top:3mm}.heading h1{font-size:14pt;margin:0 0 2mm}.heading p{font-size:9pt;margin:0;color:#475569}'+
- '.meta{display:flex;justify-content:space-between;color:#64748b;font-size:8pt;margin:0 0 3mm;padding-bottom:2mm;border-bottom:1px solid #cbd5e1}'+
- '.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2mm;margin:0 0 3mm}.summary>div{border:1px solid #cbd5e1;border-radius:1mm;padding:2mm}'+
- '.summary span{display:block;color:#64748b;font-size:7.5pt;margin-bottom:1mm}.summary b{font-size:9pt}'+
- 'table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:inherit}thead{display:table-header-group}th{background:'+PRINT_CONFIG.headerColor+'!important;color:#173c2d!important;font-weight:700;text-align:center}'+
- 'th,td{'+(PRINT_CONFIG.tableLines?'border:1px solid #aebbb4;':'border:0;')+'padding:'+Math.max(.5,Math.min(4,Number(PRINT_CONFIG.rowPadding)||1.4))+'mm 1.2mm;vertical-align:middle;overflow-wrap:anywhere}td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;overflow-wrap:normal}tbody tr{break-inside:avoid;page-break-inside:avoid}tfoot{display:table-row-group;font-weight:700}'+
- '.sbp-print-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(35mm,1fr));gap:2mm;margin:0 0 3mm}.sbp-print-summary>div{min-width:0;break-inside:avoid}'+
- '.sbp-print-table{font-size:inherit}.sbp-print-table th{white-space:normal;line-height:1.2}.sbp-print-table td:nth-child(2),.sbp-print-table td:nth-child(3),.sbp-print-table td:nth-child(4){overflow-wrap:anywhere}'+
+ '.sheet{width:100%;max-width:100%}.header{border-bottom:2px solid #176b4a;padding:0 0 4mm;margin-bottom:3mm}'+
+ '.brand{font-size:14pt;font-weight:800;letter-spacing:.3px;color:#145c40}.brand small{display:block;font-size:7pt;font-weight:500;letter-spacing:.5px;color:#64748b;margin-top:1mm}'+
+ '.heading{text-align:center;margin-top:2mm}.heading h1{font-size:13pt;margin:0 0 1.5mm}.heading p{font-size:8pt;margin:0;color:#475569}'+
+ '.meta{display:flex;justify-content:space-between;gap:5mm;color:#64748b;font-size:7pt;margin:0 0 3mm;padding-bottom:2mm;border-bottom:1px solid #cbd5e1}'+
+ '.sbp-print-summary{display:flex;flex-wrap:wrap;gap:2mm;margin:0 0 3mm}.sbp-print-summary>div{flex:1 1 32mm;min-width:28mm;max-width:55mm;border:1px solid #cbd5e1;padding:1.5mm 2mm;break-inside:avoid}.sbp-print-summary span{display:block;color:#64748b;font-size:7pt;margin-bottom:.5mm}.sbp-print-summary b{font-size:8pt;overflow-wrap:anywhere}'+
+ 'table{width:100%;max-width:100%;border-collapse:collapse;table-layout:auto;font-size:inherit}thead{display:table-header-group}tfoot{display:table-row-group;font-weight:700}tr{break-inside:avoid;page-break-inside:avoid}th{background:'+PRINT_CONFIG.headerColor+'!important;color:#173c2d!important;font-weight:700;text-align:center;white-space:normal}'+
+ 'th,td{'+(PRINT_CONFIG.tableLines?'border:1px solid #aebbb4;':'border:0;')+'padding:'+Math.max(.5,Math.min(3,Number(PRINT_CONFIG.rowPadding)||1.2))+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:1.25}td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;overflow-wrap:normal}'+
+ '.sbp-print-table{font-size:inherit}.sbp-print-table th{font-size:.95em}.sbp-print-table td:nth-child(2),.sbp-print-table td:nth-child(3){overflow-wrap:anywhere}'+
  '.sbp-print-table tr.journal-subtotal{break-inside:avoid;page-break-inside:avoid}.sbp-print-table tr.journal-subtotal th{background:#edf3ef!important;font-weight:800}'+
- '.sbp-print-table.ledger-table{table-layout:fixed}.sbp-print-table.ledger-table td:nth-child(3){white-space:normal}'+
- '.signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm;margin:12mm 0 0;text-align:center;break-inside:avoid;page-break-inside:avoid}.signatures span,.signatures small{display:block;font-size:8pt}.signatures b{display:block;height:20mm}'+
- '.footer{border-top:1px solid #cbd5e1;margin-top:6mm;padding-top:2mm;color:#64748b;font-size:7pt;text-align:center}';
- const profile=ensureCompanyProfile();const brand=PRINT_CONFIG.brand?'<div class="brand"><b>'+esc(profile.name)+'</b><small>'+esc(profile.systemName)+' · V19</small>'+(profile.address?'<small>'+esc(profile.address)+'</small>':'')+(profile.unit?'<small>'+esc(profile.unit)+'</small>':'')+'<small>'+esc(profile.tagline)+'</small></div>':'';
+ '.ledger-print-page{width:100%;margin:0 0 5mm;break-inside:auto;page-break-inside:auto}.ledger-print-page-break{break-after:page;page-break-after:always}.ledger-print-page .ledger-account-heading td{background:#e4eee8!important;font-weight:800;text-align:left;padding:1.4mm!important}.ledger-print-page .ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-print-page .ledger-carry-row td{background:#fff8e6;font-weight:700}.ledger-print-page .ledger-page-subtotal td{background:#edf3ef;font-weight:700;font-size:7pt}.ledger-print-page .ledger-account-final td{background:#e5f2e9;font-weight:800;border-top:1.5px solid #176b4a}'+
+ '.sbp-print-table.ledger-table{table-layout:fixed;width:100%;min-width:100%}.sbp-print-table.ledger-table th:nth-child(1){width:12%}.sbp-print-table.ledger-table th:nth-child(2){width:14%}.sbp-print-table.ledger-table th:nth-child(3){width:34%}.sbp-print-table.ledger-table th:nth-child(4),.sbp-print-table.ledger-table th:nth-child(5),.sbp-print-table.ledger-table th:nth-child(6){width:13.33%}.ledger-scroll{width:100%;max-width:100%;overflow:auto}.ledger-account-heading th{background:#e4eee8!important;text-align:left!important;font-size:9pt;padding:1.4mm!important}.ledger-account-summary td{background:#f7faf8;font-size:7pt}.ledger-account-summary span{display:inline-block;margin-right:6mm}.ledger-page-subtotal td{background:#edf3ef;font-weight:700;font-size:7pt}.ledger-page-subtotal .carry-label{font-weight:800;text-align:left}.ledger-continuation-start{break-before:page;page-break-before:always}.ledger-carry-row td{background:#fff8e6;font-weight:700}.ledger-account-final td{background:#e5f2e9;font-weight:800;border-top:1.5px solid #176b4a}'+
+ '.sbp-print-table.trial-balance-table{table-layout:fixed}.sbp-print-table.trial-balance-table th:nth-child(1){width:12%}.sbp-print-table.trial-balance-table th:nth-child(2){width:32%}.sbp-print-table.trial-balance-table th:nth-child(n+3){width:14%}'+
+ '.sbp-print-table.opening-balance-table{table-layout:fixed}.sbp-print-table.opening-balance-table th:nth-child(1){width:8%}.sbp-print-table.opening-balance-table th:nth-child(2){width:14%}.sbp-print-table.opening-balance-table th:nth-child(3){width:30%}.sbp-print-table.opening-balance-table th:nth-child(4){width:28%}.sbp-print-table.opening-balance-table th:nth-child(5){width:20%}'+
+ '.sbp-print-table.accounts-table{table-layout:fixed}.sbp-print-table.accounts-table th:nth-child(1){width:12%}.sbp-print-table.accounts-table th:nth-child(2){width:28%}.sbp-print-table.accounts-table th:nth-child(3){width:60%}'+
+ '.sbp-print-summary+.sbp-print-table{margin-top:1mm}h2{break-after:avoid;page-break-after:avoid}'+
+ '.signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm;margin:10mm 0 0;text-align:center;break-inside:avoid;page-break-inside:avoid}.signatures span,.signatures small{display:block;font-size:7.5pt}.signatures b{display:block;height:18mm}'+
+ '.footer{border-top:1px solid #cbd5e1;margin-top:3mm;padding-top:2mm;color:#64748b;font-size:7pt;text-align:center;break-inside:avoid;page-break-inside:avoid}';
+ if(title==='NERACA KOMPARATIF'){style+='.comparison-print-title{margin:0 0 3mm;break-after:avoid;page-break-after:avoid}.comparison-print-group{break-inside:auto;page-break-inside:auto;margin:0 0 3mm}.comparison-print-table{break-inside:auto;page-break-inside:auto}.comparison-print-group h3{font-size:9pt;margin:2mm 0 1mm;break-after:avoid;page-break-after:avoid}.comparison-print-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:7.2pt}.comparison-print-table th,.comparison-print-table td{padding:1.2mm 1.5mm;overflow-wrap:anywhere}.comparison-print-table td.num{white-space:nowrap;text-align:right}.comparison-print-table tr{break-inside:avoid;page-break-inside:avoid}}';}
+ const profile=ensureCompanyProfile();
+ const brand=PRINT_CONFIG.brand?'<div class="brand"><b>'+esc(profile.name)+'</b><small>'+esc(profile.systemName)+' · V19</small>'+(profile.address?'<small>'+esc(profile.address)+'</small>':'')+(profile.unit?'<small>'+esc(profile.unit)+'</small>':'')+'<small>'+esc(profile.tagline)+'</small></div>':'';
  const meta=PRINT_CONFIG.printedAt?'<div class="meta"><span>Dicetak: '+esc(printed)+'</span><span>Dokumen internal</span></div>':'';
  const signatures=PRINT_CONFIG.signatures?'<section class="signatures"><div><span>Disiapkan oleh,</span><b></b><small>(........................................)</small></div><div><span>Diperiksa oleh,</span><b></b><small>(........................................)</small></div><div><span>Disetujui oleh,</span><b></b><small>(........................................)</small></div></section>':'';
  const footer=PRINT_CONFIG.footer?'<footer class="footer">'+esc(profile.name)+' · '+esc(profile.systemName)+' V19 · Dokumen hasil cetak sistem</footer>':'';
- const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'</style></head><body><main class="sheet"><header class="header">'+brand+'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div></header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
- let printHandled=false;
+ const frame=document.createElement('iframe');
+ frame.id='sbp-print-frame';frame.title='Pratinjau cetak '+title;frame.setAttribute('aria-label','Pratinjau dokumen cetak');
+ frame.style.cssText='display:block;width:100%;height:calc(100vh - 116px);min-height:420px;border:0;background:#fff';
+ const overlay=document.createElement('div');overlay.id='sbp-print-studio';
+ overlay.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(10,20,16,.76);backdrop-filter:blur(5px);display:flex;flex-direction:column;padding:14px;box-sizing:border-box';
+ const bar=document.createElement('div');bar.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px;background:#102b20;color:#fff;border-radius:12px 12px 0 0;font:13px Arial,sans-serif';
+ const heading=document.createElement('div');heading.style.cssText='flex:1;min-width:180px';heading.innerHTML='<b style="display:block;font-size:14px">PRINT STUDIO</b><span style="opacity:.75;font-size:11px">'+esc(title)+' · Tarik garis kolom untuk mengatur lebar</span>';
+ const makeButton=(label,bg)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='border:1px solid #ffffff55;border-radius:8px;padding:9px 13px;background:'+bg+';color:#fff;font-weight:700;cursor:pointer';return b};
+ const resetBtn=makeButton('Reset Lebar','#315b47'),printBtn=makeButton('Cetak / Simpan PDF','#16824f'),closeBtn=makeButton('Tutup','#475569');
+ bar.append(heading,resetBtn,printBtn,closeBtn);
+ const stage=document.createElement('div');stage.style.cssText='flex:1;min-height:0;background:#dce2df;border-radius:0 0 12px 12px;overflow:hidden;box-shadow:0 16px 50px #0005';stage.appendChild(frame);overlay.append(bar,stage);document.body.appendChild(overlay);
+ SBP_PRINT_ACTIVE=true;
+ let printHandled=false,printStarted=false,printFallbackTimer=null;
+ const onWindowFocus=()=>{if(printStarted&&!printHandled)setTimeout(cleanup,700)};
  const cleanup=()=>{
   if(printHandled)return;printHandled=true;
-  if(typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}
-  frame.remove();window.removeEventListener('afterprint',cleanup);
+  window.removeEventListener('afterprint',cleanup);window.removeEventListener('focus',onWindowFocus);
+  if(printFallbackTimer)clearTimeout(printFallbackTimer);
+  if(printStarted&&typeof afterPrint==='function'){try{Promise.resolve(afterPrint()).catch(err=>console.error('[SBP V19] Verifikasi pasca-cetak gagal:',err))}catch(err){console.error(err)}}
+  overlay.remove();SBP_PRINT_ACTIVE=false;
  };
- frame.onload=()=>{setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(err){toast('Gagal membuka cetak: '+err.message)}},150)};
- frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
- window.addEventListener('afterprint',cleanup,{once:true});
+ closeBtn.onclick=cleanup;
+ overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup()});
+ /* BUILD 079 — Print Studio lintas modul: pengaturan lebar per tabel, bukan CSS global pemaksa. */
+ let resetPrintColumns=()=>{},printColumnSets=[];
+ const initResizableColumns=()=>{
+  const d=frame.contentDocument;
+  if(!d)return;
+  const tables=[...d.querySelectorAll('table')].filter(table=>table.querySelectorAll('thead th').length>1);
+  printColumnSets=[];
+  tables.forEach((table,tableIndex)=>{
+   if(table.dataset.sbpResizeReady==='1')return;
+   const headers=[...table.querySelectorAll('thead th')],count=headers.length;
+   let group=table.querySelector(':scope > colgroup');
+   if(!group){group=d.createElement('colgroup');table.insertBefore(group,table.firstChild)}
+   while(group.children.length<count)group.appendChild(d.createElement('col'));
+   while(group.children.length>count)group.removeChild(group.lastElementChild);
+   const cols=[...group.children];
+   const rectWidth=Math.max(1,table.getBoundingClientRect().width||table.clientWidth||760);
+   const widths=cols.map((col,i)=>{
+    const raw=String(col.style.width||headers[i].style.width||'').trim();
+    if(raw.endsWith('%'))return Math.max(24,rectWidth*parseFloat(raw)/100);
+    if(raw.endsWith('px'))return Math.max(24,parseFloat(raw));
+    const measured=headers[i].getBoundingClientRect().width;
+    return Math.max(24,measured||rectWidth/count);
+   });
+   const initial=widths.slice();
+   const record={table,cols,widths,initial,headers,tableIndex};
+   printColumnSets.push(record);
+   const apply=()=>{
+    const total=widths.reduce((sum,value)=>sum+value,0)||1;
+    cols.forEach((col,i)=>{col.style.width=widths[i]+'px';col.style.minWidth=widths[i]+'px';col.style.maxWidth=widths[i]+'px'});
+    table.style.width=total+'px';table.style.minWidth=total+'px';table.style.maxWidth='none';table.style.tableLayout='fixed';
+    const scroll=table.parentElement;
+    if(scroll&&scroll!==d.body){scroll.style.overflowX=total>scroll.clientWidth?'auto':'hidden';scroll.style.maxWidth='100%'}
+   };
+   headers.forEach((th,i)=>{
+    th.style.position='relative';th.style.paddingRight='25px';
+    const grip=d.createElement('button');grip.type='button';grip.className='sbp-ledger-resize-grip';grip.textContent='↔';
+    grip.title='Tarik untuk mengubah lebar '+th.textContent.trim();grip.setAttribute('aria-label',grip.title);
+    grip.style.cssText='position:absolute;right:0;top:0;bottom:0;width:24px;border:0;border-left:1px solid #176b4a;background:#b7f0d2;color:#075c36;font:bold 13px Arial;cursor:col-resize;touch-action:none;z-index:2';
+    th.appendChild(grip);
+    let dragging=false,startX=0,startWidth=0;
+    const move=ev=>{if(!dragging)return;ev.preventDefault();widths[i]=Math.max(48,startWidth+ev.clientX-startX);apply()};
+    const done=()=>{if(!dragging)return;dragging=false;d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',done);d.removeEventListener('pointercancel',done)};
+    grip.addEventListener('pointerdown',ev=>{if(ev.button!==undefined&&ev.button!==0)return;ev.preventDefault();ev.stopPropagation();dragging=true;startX=ev.clientX;startWidth=widths[i];try{grip.setPointerCapture(ev.pointerId)}catch(_){}d.addEventListener('pointermove',move);d.addEventListener('pointerup',done);d.addEventListener('pointercancel',done)});
+   });
+   table.dataset.sbpResizeReady='1';
+   apply();
+  });
+  resetPrintColumns=()=>{
+   printColumnSets.forEach(record=>{record.initial.forEach((value,i)=>record.widths[i]=value);const total=record.widths.reduce((sum,value)=>sum+value,0)||1;record.cols.forEach((col,i)=>{col.style.width=record.widths[i]+'px';col.style.minWidth=record.widths[i]+'px';col.style.maxWidth=record.widths[i]+'px'});record.table.style.width=total+'px';record.table.style.minWidth=total+'px';record.table.style.maxWidth='none';record.table.style.tableLayout='fixed'});
+  };
+ };
+ frame.onload=()=>{initResizableColumns();};
+ resetBtn.onclick=()=>resetPrintColumns();
+ const applyPrintColumnLayout=()=>{
+  const d=frame.contentDocument;if(!d)return;
+  printColumnSets.forEach(record=>{
+   const {table,cols,widths}=record,total=widths.reduce((sum,value)=>sum+value,0)||1;
+   cols.forEach((col,i)=>{col.style.width=(widths[i]/total*100)+'%';col.style.minWidth='0';col.style.maxWidth='none'});
+   table.style.width='100%';table.style.minWidth='0';table.style.maxWidth='100%';table.style.tableLayout='fixed';
+   const parent=table.parentElement;
+   if(parent&&parent!==d.body){parent.style.overflow='visible';parent.style.width='100%';parent.style.maxWidth='100%'}
+   table.querySelectorAll('.sbp-ledger-resize-grip').forEach(grip=>{grip.style.display='none'});
+  });
+ };
+ printBtn.onclick=()=>{
+  if(printStarted)return;printStarted=true;
+  try{
+   applyPrintColumnLayout();
+   frame.contentWindow.focus();
+   window.addEventListener('afterprint',cleanup,{once:true});
+   window.addEventListener('focus',onWindowFocus);
+   frame.contentWindow.addEventListener('afterprint',cleanup,{once:true});
+   printFallbackTimer=setTimeout(cleanup,180000);
+   frame.contentWindow.print();
+  }
+  catch(err){printStarted=false;toast('Dialog cetak gagal dibuka: '+err.message)}
+ };
+ const doc=frame.contentDocument;if(!doc){cleanup();toast('Area pratinjau tidak dapat disiapkan oleh browser.');return null}
+ doc.open();doc.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+style+'html,body{overflow-x:auto}body{padding:5mm}.sheet{margin:0 auto;width:100%;max-width:100%}</style></head><body><main class="sheet"><header class="header">'+brand+(title==='NERACA KOMPARATIF'?'':'<div class="heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></div>')+'</header>'+meta+body+signatures+footer+'</main></body></html>');doc.close();
+ try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal mengaktifkan pengatur kolom:',err);toast('Pengatur lebar kolom gagal dimuat. Coba tutup dan buka Print Studio kembali.')}
  return frame;
 }
 function printTrialBalance(){
@@ -1509,7 +1745,7 @@ function printTrialBalance(){
  const endingDebit=sum('endingDebit'),endingCredit=sum('endingCredit'),difference=endingDebit-endingCredit;
  const plainNet=value=>Math.abs(value)<.005?'0':(value<0?'-':'')+printMoney(Math.abs(value));
  const balanced=Math.abs(difference)<.005;
- const body=printSummary([['Periode',period],['Jumlah akun',String(rows.length)],['Total mutasi debit',printMoney(md)],['Total mutasi kredit',printMoney(mc)],['Selisih saldo akhir',printMoney(difference)],['Status',balanced?'SEIMBANG':'BELUM SEIMBANG']])+printTable(['SANDI','NAMA AKUN','SALDO AWAL','MUTASI DEBIT','MUTASI KREDIT','SALDO AKHIR'],rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+plainNet(r.openingDebit-r.openingCredit)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+plainNet(r.balance)+'</td></tr>'),'<tr><th colspan="2">TOTAL</th><th class="num">'+plainNet(openingNet)+'</th><th class="num">'+printMoney(md)+'</th><th class="num">'+printMoney(mc)+'</th><th class="num">'+plainNet(difference)+'</th></tr>');
+ const body=printSummary([['Periode',period],['Jumlah akun',String(rows.length)],['Total mutasi debit',printMoney(md)],['Total mutasi kredit',printMoney(mc)],['Selisih saldo akhir',printMoney(difference)],['Status',balanced?'SEIMBANG':'BELUM SEIMBANG']])+printTable(['SANDI','NAMA AKUN','SALDO AWAL','MUTASI DEBIT','MUTASI KREDIT','SALDO AKHIR'],rows.map(r=>'<tr><td>'+esc(r.code)+'</td><td>'+esc(r.name)+'</td><td class="num">'+plainNet(r.openingDebit-r.openingCredit)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+plainNet(r.balance)+'</td></tr>'),'<tr><th colspan="2">TOTAL</th><th class="num">'+plainNet(openingNet)+'</th><th class="num">'+printMoney(md)+'</th><th class="num">'+printMoney(mc)+'</th><th class="num">'+plainNet(difference)+'</th></tr>','','trial-balance-table');
  printDocument('NERACA PERCOBAAN','Periode '+period,body,'landscape');
 }
 /* V19 PERIODIC LEDGER PRINT — read-only snapshot guard.
@@ -1527,32 +1763,43 @@ async function printLedger(){
  try{persistedBefore=JSON.stringify(await readPersistedAccountingState())}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sebelum cetak gagal:',err)}
  const results=codes.map(code=>getLedgerTransactionsRange(selection.from,selection.to,code)).filter(Boolean);
  if(!results.length){toast('Data Buku Besar tidak dapat dihitung. Periksa periode dan akun.');return}
- const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0),totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
- let body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]]);
- results.forEach(result=>{
-  const moves=result.rows.filter(r=>r.kind==='movement'),d=moves.reduce((n,r)=>n+r.debit,0),c=moves.reduce((n,r)=>n+r.credit,0);
-  body+='<h2 style="margin:18px 0 6px;font-size:14px">'+esc(result.account.code)+' · '+esc(result.account.name)+'</h2>';
-  body+=printSummary([['Saldo awal rentang',ledgerNetDisplay(result.openingNet)],['Mutasi debit',printMoney(d)],['Mutasi kredit',printMoney(c)],['Saldo akhir',ledgerNetDisplay(result.endingNet)]]);
-  body+=printTable(['TANGGAL','NO. BUKTI','KETERANGAN','DEBIT','KREDIT','SALDO'],result.rows.map(r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number)+'</td><td>'+esc(r.description)+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>'));
+ const totalDebit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.debit,0),0);
+ const totalCredit=results.reduce((n,r)=>n+r.rows.filter(x=>x.kind==='movement').reduce((s,x)=>s+x.credit,0),0);
+ if(!window.SBPLedgerPrintEngine){toast('Mesin cetak Buku Besar belum termuat. Muat ulang aplikasi.');return}
+ const renderMovementRow=r=>'<tr><td>'+esc(r.kind==='opening'?'Awal rentang':fmtDate(r.date))+'</td><td>'+esc(r.number||'')+'</td><td>'+esc(r.description||'')+'</td><td class="num">'+printMoney(r.debit)+'</td><td class="num">'+printMoney(r.credit)+'</td><td class="num">'+ledgerNetDisplay(r.balance)+'</td></tr>';
+ const paged=window.SBPLedgerPrintEngine.paginate({
+  results,
+  paper:PRINT_CONFIG.paper||'F4',
+  orientation:PRINT_CONFIG.orientation==='auto'?'landscape':PRINT_CONFIG.orientation,
+  margin:Number(PRINT_CONFIG.margin)||10,
+  fontSize:Number(PRINT_CONFIG.fontSize)||8,
+  rowPadding:Number(PRINT_CONFIG.rowPadding)||1.2,
+  tableLines:PRINT_CONFIG.tableLines!==false,
+  renderMovementRow,
+  money:printMoney,
+  net:ledgerNetDisplay,
+  escape:esc
  });
+ if(!paged||!paged.html){toast('Mesin paginasi tidak dapat membentuk halaman Buku Besar.');return}
+ const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Jumlah halaman',String(paged.pageCount)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+paged.html;
  const verify=async()=>{
   const memoryUnchanged=JSON.stringify(state)===memoryBefore;
   let persistedUnchanged=false,persistedVerified=false;
   try{const after=JSON.stringify(await readPersistedAccountingState());persistedVerified=persistedBefore!==null;persistedUnchanged=persistedVerified&&after===persistedBefore}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sesudah cetak gagal:',err)}
   const pass=memoryUnchanged&&persistedVerified&&persistedUnchanged;
-  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes};
+  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,pages:paged.pageCount,layout:'measured-dom-pagination'};
   console.info('[SBP V19] Hasil uji integritas cetak Buku Besar',detail);
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun',body.replace(/<table class="sbp-print-table">/g,'<table class="sbp-print-table ledger-table">'),'landscape',verify);
+ printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun · '+paged.pageCount+' halaman',body,'landscape',verify);
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
- const body=printSummary([['Periode',period],['Jumlah akun',String(items.length)],['Total debit awal',printMoney(d)],['Total kredit awal',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['NO','SANDI','NAMA AKUN','KETERANGAN','SALDO AWAL'],items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.accountCode)+'</td><td>'+esc(state.accounts.find(a=>a.code===x.accountCode)?.name||'(Akun tidak ditemukan)')+'</td><td>'+esc(x.note||'')+'</td><td class="num">'+ledgerNetDisplay(Number(x.debit||0)-Number(x.credit||0))+'</td></tr>'),'<tr><th colspan="4">TOTAL SALDO BERSIH</th><th class="num">'+ledgerNetDisplay(d-c)+'</th></tr>');
+ const body=printSummary([['Periode',period],['Jumlah akun',String(items.length)],['Total debit awal',printMoney(d)],['Total kredit awal',printMoney(c)],['Selisih',printMoney(d-c)]])+printTable(['NO','SANDI','NAMA AKUN','KETERANGAN','SALDO AWAL'],items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.accountCode)+'</td><td>'+esc(state.accounts.find(a=>a.code===x.accountCode)?.name||'(Akun tidak ditemukan)')+'</td><td>'+esc(x.note||'')+'</td><td class="num">'+ledgerNetDisplay(Number(x.debit||0)-Number(x.credit||0))+'</td></tr>'),'<tr><th colspan="4">TOTAL SALDO BERSIH</th><th class="num">'+ledgerNetDisplay(d-c)+'</th></tr>','','opening-balance-table');
  printDocument('DAFTAR SALDO AWAL ACC & PROGRAM','Periode '+period,body,'landscape');
 }
-function printAccounts(){const q=($('account-search')?.value||'').trim().toLowerCase(),items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));const body=printSummary([['Jumlah akun',String(items.length)]])+printTable(['NO','KODE / SANDI','NAMA AKUN'],items.map((a,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(a.code)+'</td><td>'+esc(a.name)+'</td></tr>'));printDocument('DAFTAR MASTER AKUN','Daftar kode dan nama akun sesuai filter pencarian aktif',body,'portrait')}
+function printAccounts(){const q=($('account-search')?.value||'').trim().toLowerCase(),items=state.accounts.filter(a=>(a.code+' '+a.name).toLowerCase().includes(q)).sort((a,b)=>a.code.localeCompare(b.code));const body=printSummary([['Jumlah akun',String(items.length)]])+printTable(['NO','KODE / SANDI','NAMA AKUN'],items.map((a,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(a.code)+'</td><td>'+esc(a.name)+'</td></tr>'),'','accounts-table');printDocument('DAFTAR MASTER AKUN','Daftar kode dan nama akun sesuai filter pencarian aktif',body,'portrait')}
 function journalPrintStatus(j){const s=String(j?.status??'').trim().toLowerCase();if(s==='posted')return 'posted';if(s==='draft')return 'draft';if(['cancelled','canceled','void','dibatalkan','batal'].includes(s))return 'cancelled';return 'unknown'}
 function openJournalPrintSettings(){const modal=$('journal-print-modal');if(!modal)return;const account=$('jprint-account');account.innerHTML='<option value="all">Semua akun</option>'+state.accounts.slice().sort((a,b)=>String(a.code).localeCompare(String(b.code))).map(a=>'<option value="'+esc(a.code)+'">'+esc(a.code+' · '+a.name)+'</option>').join('');const active=state.periodControl?.activePeriod||currentMonthKey();$('jprint-month').value=active;$('jprint-year').value=active.slice(0,4);$('jprint-search').value=$('journal-search')?.value||'';$('jprint-status').value='all';$('jprint-account').value='all';$('jprint-mode').value='month';updateJournalPrintMode();$('jprint-validation').textContent='Pilih periode. Semua baris akun dalam jurnal terpilih akan dicetak agar debit dan kredit tetap utuh.';modal.hidden=false}
 function updateJournalPrintMode(){const mode=$('jprint-mode').value;for(const [id,show] of [['jprint-date-wrap',mode==='date'],['jprint-month-wrap',mode==='month'],['jprint-year-wrap',mode==='year'],['jprint-from-wrap',mode==='range'],['jprint-to-wrap',mode==='range']])$(id).hidden=!show}
@@ -1913,6 +2160,38 @@ function runDataValidation(){
  const validPeriod=/^\d{4}-(0[1-9]|1[0-2])$/.test(activePeriod);
  const add=(level,category,location,detail,action)=>issues.push({level,category,location,detail,action});
  if(!validPeriod){add('GAGAL','Periode','Periode kerja aktif','Periode kerja aktif belum valid.','Tetapkan periode kerja aktif dengan format tahun-bulan yang benar.');return {issues,checkedAt:new Date(),counts:{accounts:0,journals:0,openings:0,nptrans:0,period:activePeriod}}}
+ // SAFETY: audit seluruh tanggal transaksi terhadap Periode Kerja Aktif.
+ // Pemeriksaan bersifat read-only; data lama tidak dipindahkan atau diubah.
+ const normalizeAuditDate=(raw)=>{
+  const value=String(raw??'').trim();
+  let match=value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(match){const date=match[1]+'-'+match[2]+'-'+match[3];return isValidCalendarDate(date)?date:null}
+  match=value.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+  if(match){const date=match[3]+'-'+match[2].padStart(2,'0')+'-'+match[1].padStart(2,'0');return isValidCalendarDate(date)?date:null}
+  return null;
+ };
+ let periodDateMismatches=0;
+ const reportPeriodMismatch=(raw,category,location)=>{
+  const date=normalizeAuditDate(raw);
+  if(!date)return;
+  const transactionPeriod=date.slice(0,7);
+  if(transactionPeriod!==activePeriod){
+   periodDateMismatches++;
+   add('PERINGATAN','Periode Kerja',location,'Tanggal '+date+' berada pada '+periodLabel(transactionPeriod)+', sedangkan Periode Kerja Aktif adalah '+periodLabel(activePeriod)+'.','Periksa dokumen sumber dan pastikan tanggal serta bulan transaksi memang benar. Jika transaksi memang milik bulan lain, ubah Periode Kerja Aktif untuk pemeriksaan atau ikuti prosedur koreksi yang berlaku. Data tidak diubah otomatis.');
+  }
+ };
+ allJournals.forEach((journal,index)=>{
+  const no=String(journal.number??'').trim();
+  reportPeriodMismatch(journal.date,'Jurnal','Jurnal '+(no||('#'+(index+1))));
+ });
+ (Array.isArray(state.debitNotes)?state.debitNotes:[]).forEach((note,index)=>{
+  const no=String(note.number??'').trim();
+  reportPeriodMismatch(note.date,'Nota Debet','Nota Debet '+(no||('#'+(index+1))));
+ });
+ allNpRows.forEach((row,index)=>{
+  const no=String(row.nobukti??'').trim(),code=String(row.sandi??'').trim();
+  reportPeriodMismatch(row.tanggal,'NPTRANS','NPTRANS '+(no?'Bukti '+no:'baris '+(index+1))+(code?' · SANDI '+code:''));
+ });
  const journals=allJournals.filter(j=>String(j.date||'').slice(0,7)===activePeriod);
  const openings=allOpenings.filter(o=>String(o.period||'')===activePeriod);
  const npRows=allNpRows.filter(r=>{
@@ -1992,7 +2271,7 @@ function runDataValidation(){
   if(!Number.isFinite(Number(r.jumlah)))add('GAGAL','NPTRANS','Baris '+(i+1),'Nilai JUMLAH bukan angka yang valid.','Periksa nilai pada file sumber.');
  });
  for(const [key,count] of npKeys)if(count>1)add('PERINGATAN','NPTRANS','Kunci '+key,'Kombinasi tanggal, nomor bukti, nomor urut, dan SANDI muncul '+count+' kali dalam periode '+activePeriod+'.','Bandingkan dengan file NPTRANS asli sebelum memutuskan apakah record duplikat.');
- return {issues,checkedAt:new Date(),counts:{accounts:accounts.length,journals:journals.length,openings:openings.length,nptrans:npRows.length,period:activePeriod}};
+ return {issues,checkedAt:new Date(),counts:{accounts:accounts.length,journals:journals.length,openings:openings.length,nptrans:npRows.length,period:activePeriod,periodDateMismatches}};
 }
 function openValidationLocation(issue){
  const category=String(issue.category||''),location=String(issue.location||'');
@@ -2001,6 +2280,11 @@ function openValidationLocation(issue){
  else if(category==='Rekonsiliasi Lintas Periode'||category==='Saldo Awal'||category==='Keseimbangan Saldo Awal'){page='opening-balances';focusId='opening-period'}
  else if(category==='Master Akun'){page='accounts';focusId='account-search'}
  else if(category==='Jurnal'||category==='Keseimbangan Jurnal'||category==='Nomor Bukti'){page='journal-list';focusId='journal-search'}
+ else if(category==='Periode Kerja'){
+  if(location.startsWith('Jurnal ')){page='journal-list';focusId='journal-search'}
+  else if(location.startsWith('Nota Debet ')){page='debit-notes';focusId='dn-search'}
+  else if(location.startsWith('NPTRANS ')){page='nptrans';focusId='np-search'}
+ }
  else if(category==='NPTRANS'){page='nptrans';focusId='np-search'}
  go(page);
  const target=focusId&&$(focusId);if(target){target.focus();if(target.select)target.select()}
@@ -2012,7 +2296,7 @@ function renderValidation(){
  const status=$('validation-status');status.textContent=errors?'PERLU PERBAIKAN':warnings?'ADA PERINGATAN':'VALID';status.className=errors?'validation-bad':warnings?'validation-warn':'validation-good';
   $('validation-meta').textContent='Periode kerja aktif '+result.counts.period+' · Diperiksa '+result.checkedAt.toLocaleString('id-ID')+' · '+result.counts.accounts+' akun terkait · '+result.counts.journals+' jurnal · '+result.counts.openings+' saldo awal · '+result.counts.nptrans+' baris NPTRANS.';
  const shown=result.issues.filter(x=>filter==='all'||x.level===filter);
- $('validation-results').innerHTML=shown.length?'<div class="table-wrap"><table class="validation-table"><thead><tr><th>Status</th><th>Kategori</th><th>Lokasi data</th><th>Temuan</th><th>Saran pemeriksaan</th><th>Tindakan</th></tr></thead><tbody>'+shown.map(x=>'<tr><td><span class="validation-badge '+(x.level==='GAGAL'?'bad':'warn')+'">'+x.level+'</span></td><td>'+esc(x.category)+'</td><td>'+esc(x.location)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.action)+'</td><td><button class="btn validation-open-location" type="button" data-issue-index="'+result.issues.indexOf(x)+'">Buka Lokasi</button></td></tr>').join('')+'</tbody></table></div>':'<div class="validation-clear"><i data-lucide="check-circle-2"></i><b>'+(result.issues.length?'Tidak ada temuan pada filter ini.':'Tidak ditemukan masalah pada pemeriksaan yang tersedia.')+'</b><span>Hasil pemeriksaan hanya mencakup aturan validasi BUILD V66.</span></div>';
+ $('validation-results').innerHTML=shown.length?'<div class="table-wrap"><table class="validation-table"><thead><tr><th>Status</th><th>Kategori</th><th>Lokasi data</th><th>Temuan</th><th>Saran pemeriksaan</th><th>Tindakan</th></tr></thead><tbody>'+shown.map(x=>'<tr><td><span class="validation-badge '+(x.level==='GAGAL'?'bad':'warn')+'">'+x.level+'</span></td><td>'+esc(x.category)+'</td><td>'+esc(x.location)+'</td><td>'+esc(x.detail)+'</td><td>'+esc(x.action)+'</td><td><button class="btn validation-open-location" type="button" data-issue-index="'+result.issues.indexOf(x)+'">Buka Lokasi</button></td></tr>').join('')+'</tbody></table></div>':'<div class="validation-clear"><i data-lucide="check-circle-2"></i><b>'+(result.issues.length?'Tidak ada temuan pada filter ini.':'Tidak ditemukan masalah pada pemeriksaan yang tersedia.')+'</b><span>Pemeriksaan mencakup integritas jurnal, saldo awal, NPTRANS, dan kesesuaian tanggal terhadap Periode Kerja Aktif.</span></div>';
  document.querySelectorAll('.validation-open-location').forEach(button=>button.onclick=()=>openValidationLocation(result.issues[Number(button.dataset.issueIndex)]));
  if(window.lucide?.createIcons)window.lucide.createIcons();
 }
@@ -2030,7 +2314,7 @@ let pendingBackupRestore=null;
  $('backup-import-confirm').onclick=async()=>{const b=pendingBackupRestore;if(!b)return;if(!requireImportPassword('Pemulihan / Import Backup'))return;if(!confirm('PERINGATAN AKHIR: Ganti seluruh database lokal dengan backup '+b.fileName+'?'))return;try{if(!b.entity?.id||b.entity.id!==activeEntity?.id)throw Error('Identitas entitas tidak cocok. Restore dibatalkan.');const safety=makeBackupPayload('pre-restore-safety');const safetyName=backupFileName(new Date(),'SEBELUM-RESTORE');try{if(backupDirectoryHandle&&await directoryPermission(backupDirectoryHandle,false)==='granted')await writeEntityBackup('BACKUP_SEBELUM_TUTUP',safetyName,safety)}catch(safetyError){console.warn('Backup pengaman folder gagal; unduh lokal tetap dibuat',safetyError)}downloadBlob(new Blob([JSON.stringify(safety,null,2)],{type:'application/json'}),safetyName);const candidate=b.candidate,prior=Array.isArray(state.auditLogs)?state.auditLogs:[];state={...emptyState(),...candidate};state.auditLogs=[...new Map([...prior,...(Array.isArray(candidate.auditLogs)?candidate.auditLogs:[])].map(x=>[x.id||JSON.stringify(x),x])).values()].sort((x,y)=>String(y.at).localeCompare(String(x.at)));if(state.npTemplate?.fields)state.npTemplate.fields.forEach(f=>{if(Array.isArray(f.raw))f.raw=new Uint8Array(f.raw)});await persist();pendingBackupRestore=null;$('backup-import-review').hidden=true;$('backup-file').value='';renderDashboard();renderAccounts();renderNptrans();renderJournals();renderOpeningBalances();renderPeriodControl();setMessage('backup-message','Backup '+b.fileName+' berhasil dipulihkan. Database aktif telah diganti.','good');toast('Pemulihan selesai.')}catch(err){setMessage('backup-message','Pemulihan gagal: '+err.message,'bad')}};
 
 
-async function init(){await loadState();state.journalTemplates=Array.isArray(state.journalTemplates)?state.journalTemplates:[];ensureCompanyProfile();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();renderJournalTemplates();resetJournalForm();initAnnualBudget();renderCompanyIdentity();renderDashboard();renderAccounts();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}
+async function init(){await loadState();state.journalTemplates=Array.isArray(state.journalTemplates)?state.journalTemplates:[];ensureCompanyProfile();state.auditLogs=Array.isArray(state.auditLogs)?state.auditLogs:[];state.debitNotes=Array.isArray(state.debitNotes)?state.debitNotes:[];state.annualBudgets=Array.isArray(state.annualBudgets)?state.annualBudgets:[];ensurePeriodControl();for(const id of ['ledger-period','report-period','opening-period'])if($(id))$(id).value=state.periodControl.activePeriod;await loadDirectoryHandle();state.accounts=state.accounts.map(a=>({code:String(a.code??'').trim(),name:String(a.name??'')}));syncNptransSandis();auditBaseline=auditClone({accounts:state.accounts,journals:state.journals,nptrans:state.nptrans,openingBalances:state.openingBalances,debitNotes:state.debitNotes,annualBudgets:state.annualBudgets});await persist();resetAccountForm();renderJournalTemplates();resetJournalForm();initAnnualBudget();renderCompanyIdentity();renderDashboard();renderAccounts();initBalanceMapping();renderPeriodControl();resetDebitNoteForm();debitNoteGroupOptions();renderDebitNoteSelectedSources();renderDebitNotes();if(backupDirectoryHandle){const permission=await directoryPermission(backupDirectoryHandle,false);setMessage('backup-message',permission==='granted'?'Folder backup server terhubung. Backup otomatis aktif setiap ada perubahan data.':'Folder backup pernah dihubungkan, tetapi izinnya perlu diaktifkan kembali. Tekan tombol Hubungkan / Aktifkan Ulang.',''+(permission==='granted'?'good':'bad'))}
  const startupNotice=$('startup-backup-notice');if(startupNotice)startupNotice.hidden=false;
  if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(console.warn);setInterval(()=>{if(backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('jadwal berkala 30 menit')},60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&backupDirectoryHandle&&Date.now()-lastAutoBackupAt>=30*60*1000)runAutomaticBackup('aplikasi aktif kembali')})}
 /* init ditunda sampai database entitas aktif dipilih. */
