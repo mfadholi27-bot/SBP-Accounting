@@ -1,4 +1,4 @@
-/* BUILD 089 — Print Studio live rows-per-page control for Buku Besar */
+/* BUILD 090 — Live recalculate all ledger page subtotals, carry-forwards, account totals and page summary */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1639,7 +1639,7 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
  const overlay=document.createElement('div');overlay.id='sbp-print-studio';
  overlay.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(10,20,16,.76);backdrop-filter:blur(5px);display:flex;flex-direction:column;padding:14px;box-sizing:border-box';
  const bar=document.createElement('div');bar.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px;background:#102b20;color:#fff;border-radius:12px 12px 0 0;font:13px Arial,sans-serif';
- const heading=document.createElement('div');heading.style.cssText='flex:1;min-width:180px';heading.innerHTML='<b style="display:block;font-size:14px">PRINT STUDIO</b><span style="opacity:.75;font-size:11px">'+esc(title)+' · Tarik garis kolom untuk mengatur lebar</span>';
+ const heading=document.createElement('div');heading.style.cssText='flex:1;min-width:180px';const headingTitle=document.createElement('b');headingTitle.style.cssText='display:block;font-size:14px';headingTitle.textContent='PRINT STUDIO';const headingMeta=document.createElement('span');headingMeta.style.cssText='opacity:.75;font-size:11px';headingMeta.textContent=title+' · Tarik garis kolom untuk mengatur lebar';heading.append(headingTitle,headingMeta);
  const makeButton=(label,bg)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='border:1px solid #ffffff55;border-radius:8px;padding:9px 13px;background:'+bg+';color:#fff;font-weight:700;cursor:pointer';return b};
  const resetBtn=makeButton('Reset Lebar','#315b47'),printBtn=makeButton('Cetak / Simpan PDF','#16824f'),closeBtn=makeButton('Tutup','#475569');
  let rowTargetControl=null,rowTargetLabel=null;
@@ -1746,7 +1746,16 @@ function printDocument(title,subtitle,body,orientation='portrait',afterPrint=nul
    requestAnimationFrame(()=>{try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal memperbarui pratinjau:',err)}});
   };
   writePreview(body);
-  if(rowTargetControl)rowTargetControl.addEventListener('change',()=>{const result=studioOptions.onRowsChange(Number(rowTargetControl.value));if(!result||!result.body){toast('Pratinjau tidak dapat diperbarui.');return}writePreview(result.body,result.subtitle||subtitle)});
+  if(rowTargetControl)rowTargetControl.addEventListener('change',()=>{
+    rowTargetControl.disabled=true;
+    try{
+     const result=studioOptions.onRowsChange(Number(rowTargetControl.value));
+     if(!result||!result.body){toast('Pratinjau tidak dapat diperbarui.');return}
+     writePreview(result.body,result.subtitle||subtitle);
+     headingMeta.textContent=title+' · '+(result.pageCount||'—')+' halaman · '+rowTargetControl.value+' baris/lembar';
+    }catch(err){console.error('[SBP Print Studio] Gagal menghitung ulang Buku Besar:',err);toast('Gagal menghitung ulang pratinjau.')}
+    finally{rowTargetControl.disabled=false}
+   });
  try{initResizableColumns()}catch(err){console.error('[SBP Print Studio] Gagal mengaktifkan pengatur kolom:',err);toast('Pengatur lebar kolom gagal dimuat. Coba tutup dan buka Print Studio kembali.')}
  return frame;
 }
@@ -1785,7 +1794,7 @@ async function printLedger(){
   const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Jumlah halaman',String(paged.pageCount)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+paged.html;
   return {body,pageCount:paged.pageCount};
  };
- const initialRows=Number(PRINT_CONFIG.ledgerTargetRows)||30,initialPreview=buildLedgerPreview(initialRows);
+ const initialRows=PRINT_CONFIG.ledgerTargetRows===undefined?30:(Number(PRINT_CONFIG.ledgerTargetRows)||0),initialPreview=buildLedgerPreview(initialRows);
  if(!initialPreview){toast('Mesin paginasi tidak dapat membentuk halaman Buku Besar.');return}
  const paged={pageCount:initialPreview.pageCount},body=initialPreview.body;
  const verify=async()=>{
@@ -1793,12 +1802,19 @@ async function printLedger(){
   let persistedUnchanged=false,persistedVerified=false;
   try{const after=JSON.stringify(await readPersistedAccountingState());persistedVerified=persistedBefore!==null;persistedUnchanged=persistedVerified&&after===persistedBefore}catch(err){console.warn('[SBP V19] Snapshot IndexedDB sesudah cetak gagal:',err)}
   const pass=memoryUnchanged&&persistedVerified&&persistedUnchanged;
-  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,pages:paged.pageCount,layout:'measured-dom-pagination-smart-page-fill-087'};
+  const detail={memoryUnchanged,persistedVerified,persistedUnchanged,period:selection.label,accounts:codes,pages:paged.pageCount,layout:'measured-dom-pagination-smart-rows-live-recalc-090'};
   console.info('[SBP V19] Hasil uji integritas cetak Buku Besar',detail);
   if(!pass)toast('Pemeriksaan cetak belum lulus. Periksa konsol dan penyimpanan IndexedDB.');
   else toast('Validasi lulus: saldo dan jurnal tetap identik setelah cetak.');
  };
- printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun · '+paged.pageCount+' halaman',body,'landscape',verify,{targetRows:initialRows,onRowsChange:target=>{PRINT_CONFIG.ledgerTargetRows=target;try{localStorage.setItem(PRINT_SETTINGS_KEY,JSON.stringify(PRINT_CONFIG))}catch(_){}const next=buildLedgerPreview(target);return next?{body:next.body,subtitle:'Periode '+selection.label+' · '+results.length+' akun · '+next.pageCount+' halaman'}:null}});
+ printDocument('BUKU BESAR PER AKUN','Periode '+selection.label+' · '+results.length+' akun · '+paged.pageCount+' halaman',body,'landscape',verify,{targetRows:initialRows,onRowsChange:target=>{
+  const next=buildLedgerPreview(target);
+  if(!next)return null;
+  PRINT_CONFIG.ledgerTargetRows=target;
+  paged.pageCount=next.pageCount;
+  try{localStorage.setItem(PRINT_SETTINGS_KEY,JSON.stringify(PRINT_CONFIG))}catch(_){}
+  return {body:next.body,pageCount:next.pageCount,subtitle:'Periode '+selection.label+' · '+results.length+' akun · '+next.pageCount+' halaman'};
+ }});
 }
 function printOpeningBalances(){
  const period=$('opening-period').value,items=(state.openingBalances||[]).filter(x=>x.period===period).sort((a,b)=>String(a.accountCode).localeCompare(String(b.accountCode))),d=items.reduce((n,x)=>n+Number(x.debit||0),0),c=items.reduce((n,x)=>n+Number(x.credit||0),0);
