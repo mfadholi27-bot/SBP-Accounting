@@ -32,7 +32,7 @@
   const topReserve=21*MM_TO_PX,bottomReserve=5*MM_TO_PX;
   const pageBudget=Math.max(180,pageHeightPx-topReserve-bottomReserve);
   const tableStyle='width:'+contentWidth+'px;table-layout:fixed;border-collapse:collapse;font:'+effectiveFont+'pt Arial,Helvetica,sans-serif;color:#17212b';
-  const cellStyle='border:'+(o.tableLines?'1px solid #aebbb4':'0')+';padding:'+effectivePadding+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:'+density.line';
+  const cellStyle='border:'+(o.tableLines?'1px solid #aebbb4':'0')+';padding:'+effectivePadding+'mm 1mm;vertical-align:middle;overflow-wrap:anywhere;line-height:'+density.line;
   const header='<tr><th>TANGGAL</th><th>NO. BUKTI</th><th>KETERANGAN</th><th>DEBIT</th><th>KREDIT</th><th>SALDO</th></tr>';
   const colgroup='<colgroup><col style="width:12%"><col style="width:14%"><col style="width:34%"><col style="width:13.33%"><col style="width:13.33%"><col style="width:13.34%"></colgroup>';
   const measurementFrame=document.createElement('iframe');
