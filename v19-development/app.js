@@ -1,4 +1,4 @@
-/* BUILD 089 — Print Studio live rows-per-page control for Buku Besar */
+/* BUILD 090 — Live recalculate all ledger page subtotals, carry-forwards, account totals and page summary */
 /* SBP Accounting V19 — browser-only accounting core.
    Local persistence: IndexedDB. DBF export reuses a real source DBF schema as a safety requirement. */
 let DB_NAME='sbp-accounting-v19-development', STORE='app', STATE_KEY='main';
@@ -1794,7 +1794,7 @@ async function printLedger(){
   const body=printSummary([['Periode',selection.label],['Jumlah akun',String(results.length)],['Jumlah halaman',String(paged.pageCount)],['Total mutasi debit',printMoney(totalDebit)],['Total mutasi kredit',printMoney(totalCredit)]])+paged.html;
   return {body,pageCount:paged.pageCount};
  };
- const initialRows=Number(PRINT_CONFIG.ledgerTargetRows)||30,initialPreview=buildLedgerPreview(initialRows);
+ const initialRows=PRINT_CONFIG.ledgerTargetRows===undefined?30:(Number(PRINT_CONFIG.ledgerTargetRows)||0),initialPreview=buildLedgerPreview(initialRows);
  if(!initialPreview){toast('Mesin paginasi tidak dapat membentuk halaman Buku Besar.');return}
  const paged={pageCount:initialPreview.pageCount},body=initialPreview.body;
  const verify=async()=>{
