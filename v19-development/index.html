@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#116b49"><meta name="description" content="SBP Accounting V19 DEVELOPMENT — kloning terisolasi untuk pengembangan">
-<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=42"><link rel="stylesheet" href="palm-glass-theme.css?v=48"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
+<link rel="icon" type="image/svg+xml" href="assets/sbp-app-icon.svg"><link rel="apple-touch-icon" href="assets/sbp-app-icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=42"><link rel="stylesheet" href="palm-glass-theme.css?v=52"><script src="vendor/xlsx.full.min.js"></script><script src="lucide-local.js"></script>
 <title>SBP Accounting V19 DEVELOPMENT</title>
 <style id="sbp-journal-print-modal-style">
 .sbp-print-modal{position:fixed!important;inset:0!important;z-index:10050!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;background:rgba(15,23,42,.56)!important;backdrop-filter:blur(3px)!important;box-sizing:border-box!important}
@@ -162,7 +162,7 @@
     <div class="side-label nav-group-label">MASTER DATA</div><button class="nav-item" data-page="accounts"><span class="nav-icon"><i data-lucide="users"></i></span>Master Akun</button><button class="nav-item" data-page="opening-balances"><span class="nav-icon"><i data-lucide="wallet"></i></span>Saldo Awal ACC & Program</button>
     <div class="side-label nav-group-label">PENGANGGARAN</div><button class="nav-item" data-page="annual-budget"><span class="nav-icon"><i data-lucide="wallet-cards"></i></span>Anggaran Tahunan</button>
     <div class="side-label nav-group-label">PENGENDALIAN</div><button class="nav-item" data-page="periods"><span class="nav-icon"><i data-lucide="calendar-check"></i></span>Periode Akuntansi</button>
-    <div class="side-label nav-group-label">BUKU BESAR</div><button class="nav-item" data-page="ledger"><span class="nav-icon"><i data-lucide="book-open"></i></span>Buku Besar per Akun</button><div class="side-label nav-group-label">LAPORAN & ANALISIS</div><button class="nav-item" data-page="reports"><span class="nav-icon"><i data-lucide="chart-no-axes-combined"></i></span>Neraca Percobaan / Laporan</button>
+    <div class="side-label nav-group-label">BUKU BESAR</div><button class="nav-item" data-page="ledger"><span class="nav-icon"><i data-lucide="book-open"></i></span>Buku Besar per Akun</button><div class="side-label nav-group-label">LAPORAN & ANALISIS</div><button class="nav-item" data-page="reports"><span class="nav-icon"><i data-lucide="chart-no-axes-combined"></i></span>Neraca Percobaan / Laporan</button><button class="nav-item" data-page="balance-comparison"><span class="nav-icon"><i data-lucide="scale"></i></span>Neraca Komparatif</button><button class="nav-item" data-page="balance-mapping"><span class="nav-icon"><i data-lucide="list-tree"></i></span>Pemetaan SANDI Neraca</button>
     <div class="side-label nav-group-label">INTEGRASI DATA</div><button class="nav-item" data-page="import-center"><span class="nav-icon"><i data-lucide="database-zap"></i></span>Pusat Import Data</button>
     <div class="side-label nav-group-label">KONTROL KUALITAS</div><button class="nav-item" data-page="validation"><span class="nav-icon"><i data-lucide="shield-check"></i></span>Validasi & Integritas Data</button><div class="side-label nav-group-label">ADMINISTRASI</div><button class="nav-item" data-page="journal-admin"><span class="nav-icon"><i data-lucide="shield-alert"></i></span>Administrasi Jurnal</button>
     <div class="side-label nav-group-label">PENGATURAN</div><button class="nav-item" data-page="company-identity"><span class="nav-icon"><i data-lucide="building-2"></i></span>Identitas Perusahaan</button><button class="nav-item" data-page="print-settings"><span class="nav-icon"><i data-lucide="settings"></i></span>Template Cetak</button><div class="side-label nav-group-label">SISTEM</div><button class="nav-item" data-page="audit"><span class="nav-icon"><i data-lucide="history"></i></span>Riwayat Aktivitas</button><button class="nav-item" data-page="archive"><span class="nav-icon"><i data-lucide="archive"></i></span>Arsip 5 Tahunan</button><button class="nav-item" data-page="archive-reader"><span class="nav-icon"><i data-lucide="search"></i></span>Pembaca Arsip</button><button class="nav-item" data-page="backup"><span class="nav-icon"><i data-lucide="download"></i></span>Backup & Restore</button>
@@ -352,6 +352,47 @@
  </div>
 </section>
 <section class="page" id="page-reports" hidden><div class="panel"><div class="panel-head"><div><h3>Neraca Percobaan</h3><p>Saldo awal + mutasi jurnal terposting = saldo akhir per akun.</p></div><div class="button-row"><label class="report-period-label">Periode<input type="month" id="report-period"></label><button class="btn" id="export-trial-xlsx">Ekspor Excel</button><button class="btn" id="print-report">Cetak / PDF</button></div></div><div class="list-disclosure"><button class="btn list-toggle" type="button" data-target="trial-balance-content" aria-expanded="false"><span class="inline-icon"><i data-lucide="plus"></i></span> Tampilkan neraca percobaan</button></div><div id="trial-balance-content" hidden><div id="trial-balance" class="empty">Belum ada data saldo.</div></div></div></section>
+<section class="page" id="page-balance-comparison" hidden>
+ <div class="panel comparison-hero"><div class="panel-head"><div><span class="tag">LAPORAN KEUANGAN · MODEL KOMPARATIF</span><h3>Neraca Komparatif</h3><p>Membandingkan posisi keuangan pada dua tanggal berbeda. Form ini berdiri sendiri dan tidak mengubah Neraca Percobaan.</p></div><span class="comparison-mark"><i data-lucide="scale"></i></span></div>
+  <div class="comparison-filter-shell">
+   <div class="comparison-controls">
+    <label>Periode pembanding A<input type="month" id="comparison-date-a"></label>
+    <label>Periode pembanding B<input type="month" id="comparison-date-b"></label>
+    <button class="btn btn-primary" id="comparison-generate" type="button"><i data-lucide="calculator"></i> Hitung Otomatis</button>
+    <button class="btn" id="comparison-filter-toggle" type="button" aria-expanded="false"><i data-lucide="sliders-horizontal"></i> Filter Laporan</button>
+   </div>
+   <div class="comparison-filter-panel" id="comparison-filter-panel" hidden>
+    <label>Mode tampilan<select id="comparison-display-mode"><option value="detail">Rincian Akun</option><option value="head">Kepala SANDI 3 Digit</option></select><small>Mode kepala menjumlahkan seluruh akun dengan 3 digit awal yang sama.</small></label>
+    <label>Pilih SANDI / Kepala (bebas)<input type="text" id="comparison-codes" placeholder="Contoh: 111, 112, 114"><small>Masukkan sebanyak mungkin kode, pisahkan dengan koma. Kosongkan untuk menampilkan semua.</small></label>
+    <label>Cari SANDI / nama akun<input type="search" id="comparison-search" placeholder="Ketik SANDI atau nama akun..."></label>
+    <label>Kelompok akun<select id="comparison-filter-group"><option value="all">Semua kelompok</option><option>Aktiva Lancar</option><option>Aktiva Tidak Lancar</option><option>Kontra Aktiva</option><option>Liabilitas Jangka Pendek</option><option>Liabilitas Jangka Panjang</option><option>Ekuitas</option><option>Belum Dipetakan</option></select></label>
+    <label>Status pemetaan<select id="comparison-filter-status"><option value="all">Semua status</option><option value="mapped">Sudah dipetakan</option><option value="unmapped">Belum dipetakan</option></select></label>
+   </div>
+  </div>
+  <div class="comparison-actions">
+   <span class="comparison-note"><i data-lucide="info"></i><span>Angka dihitung otomatis dari saldo awal dan jurnal berstatus POSTED sampai akhir bulan. Draft dan Nota Debet Draft tidak dihitung.</span></span>
+   <div><button class="btn" id="comparison-print" type="button"><i data-lucide="printer"></i> Cetak / PDF</button> <button class="btn" id="comparison-export" type="button"><i data-lucide="file-spreadsheet"></i> Ekspor Excel</button></div>
+  </div>
+  <div id="comparison-summary" class="comparison-summary"><div class="empty">Pilih dua tanggal, lalu tekan Tampilkan Laporan.</div></div>
+  <div id="comparison-report" class="comparison-report"><div class="empty">Laporan komparatif belum dibuat.</div></div>
+ </div>
+
+</section>
+<section class="page" id="page-balance-mapping" hidden>
+ <div class="panel comparison-hero"><div class="panel-head"><div><span class="tag">KONFIGURASI LAPORAN KEUANGAN</span><h3>Pemetaan SANDI Neraca</h3><p>Tentukan sendiri kelompok setiap akun berdasarkan sifat dan jangka waktunya. Pengaturan ini terpisah dari Master Akun, jurnal, dan saldo.</p></div><span class="comparison-mark"><i data-lucide="list-tree"></i></span></div>
+  <div class="comparison-note"><i data-lucide="shield-check"></i><span>Perubahan hanya menyimpan kategori laporan. Tidak mengubah SANDI, nama akun, jurnal, saldo awal, atau NPTRANS. Akun yang belum dipetakan tidak akan dimasukkan ke subtotal laporan.</span></div>
+  <div class="mapping-toolbar">
+   <label class="mapping-search">Cari SANDI / nama akun<input id="mapping-search" type="search" placeholder="Ketik kode atau nama akun..."></label>
+   <label>Filter status<select id="mapping-filter"><option value="all">Semua akun</option><option value="unmapped">Belum dipetakan</option><option value="mapped">Sudah dipetakan</option></select></label>
+   <label>Kelompok untuk pilihan<select id="mapping-bulk-group"><option value="">Pilih kelompok...</option><option>Aktiva Lancar</option><option>Aktiva Tidak Lancar</option><option>Kontra Aktiva</option><option>Liabilitas Jangka Pendek</option><option>Liabilitas Jangka Panjang</option><option>Ekuitas</option></select></label>
+   <button class="btn" id="mapping-apply-bulk" type="button">Terapkan ke pilihan</button>
+  </div>
+  <div class="mapping-status" id="mapping-status">Memuat akun...</div>
+  <div class="mapping-table-wrap"><table class="mapping-table"><thead><tr><th><input type="checkbox" id="mapping-select-all" aria-label="Pilih semua akun terlihat"></th><th>SANDI</th><th>NAMA AKUN</th><th>KELOMPOK NERACA</th><th>STATUS</th></tr></thead><tbody id="mapping-rows"></tbody></table></div>
+  <div class="mapping-actions"><span class="footnote">Pilih kelompok sesuai karakter akun dan klasifikasi lancar / tidak lancar. Kontra Aktiva digunakan untuk akun pengurang aset seperti akumulasi penyusutan.</span><button class="btn btn-primary" id="mapping-save" type="button"><i data-lucide="save"></i> Simpan Pemetaan</button></div>
+  <div class="inline-message" id="mapping-message" aria-live="polite">Pemetaan belum disimpan.</div>
+ </div>
+</section>
 <section class="page" id="page-journal-admin" hidden>
  <div class="panel force-delete-panel"><div class="panel-head"><div><h3>Hapus Paksa Jurnal</h3><p>Fitur administratif untuk menghapus seluruh jurnal pada tanggal, bulan, atau tahun tertentu, termasuk jurnal terposting dan Draft.</p></div><span class="tag np-warn">TINDAKAN PERMANEN</span></div><div class="force-delete-controls"><label>Jenis penghapusan<select id="force-delete-mode"><option value="date">Tanggal tertentu</option><option value="month">Satu bulan</option><option value="year">Satu tahun</option></select></label><label id="force-delete-value-label">Tanggal<input type="date" id="force-delete-value"></label><button class="btn btn-danger" id="force-delete-period" type="button">Hapus paksa jurnal</button></div><p class="footnote">Password diminta setiap kali tombol ditekan. Setelah password benar, aplikasi menampilkan jumlah jurnal, jumlah baris, serta total debit/kredit sebelum meminta konfirmasi akhir. Disarankan unduh Backup JSON terlebih dahulu.</p><div id="force-delete-result" class="inline-message" aria-live="polite"></div></div>
 </section>
@@ -441,7 +482,8 @@
   <p class="startup-backup-footnote">Catatan: folder backup bukan sinkronisasi database langsung. Hindari menginput transaksi pada dua perangkat secara bersamaan.</p>
  </div>
 </div>
-<footer class="app-footer"><span>SBP Accounting V19 DEVELOPMENT · Data Terpisah</span><span id="build-stamp" class="build-stamp" data-build="2"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-PRINT-LAYOUT-059</span><span>Perbaikan layout cetak per laporan · Branch development · Database terpisah</span><span class="build-loaded">Kode build termuat</span></span></footer>
+<footer class="app-footer"><span>SBP Accounting V19 DEVELOPMENT · Data Terpisah</span><span id="build-stamp" class="build-stamp" data-build="3"><b>VERSI APLIKASI V.02</b><span>SBP-V19-DEVELOPMENT-SMART-LEDGER-PAGEBREAK-083</span><span>Build 083: pembagian halaman Buku Besar adaptif berdasarkan panjang keterangan · Build 082/081/080/079 dipertahankan · Branch development</span><span class="build-loaded">Kode build termuat</span></span></footer>
 </main></div>
-<script src="app.js?v=169"></script>
+<script src="ledger-print-engine.js?v=084"></script>
+<script src="app.js?v=208"></script>
 </body></html>
