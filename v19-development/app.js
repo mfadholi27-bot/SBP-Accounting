@@ -1772,10 +1772,11 @@ async function printLedger(){
   const openingRow=sourceRows.find(r=>r.kind==='opening')||null;
   const movementRows=sourceRows.filter(r=>r.kind==='movement');
   const pages=[];
-  const firstPageRows=openingRow?[openingRow]:[];
-  if(firstPageRows.length||movementRows.length===0)pages.push(firstPageRows);
-  for(let i=0;i<movementRows.length;i+=PAGE_ROWS)pages.push(movementRows.slice(i,i+PAGE_ROWS));
-  if(!pages.length)pages.push([]);
+  if(movementRows.length){
+   for(let i=0;i<movementRows.length;i+=PAGE_ROWS){
+    pages.push((i===0&&openingRow?[openingRow]:[]).concat(movementRows.slice(i,i+PAGE_ROWS)));
+   }
+  }else pages.push(openingRow?[openingRow]:[]);
   let previousBalance=openingRow?Number(openingRow.balance||0):Number(result.openingNet||0);
   pages.forEach((pageRows,pageIndex)=>{
    const isContinuation=pageIndex>0;
